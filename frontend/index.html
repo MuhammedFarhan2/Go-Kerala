@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyMusics</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+  <header class="header">
+    <h1 class="logo">Saath
+    </h1>
+    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip">
+            <circle cx="12" cy="12" r="11.75"/>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip)">
+          <circle cx="0" cy="0" r="0" fill="none" stroke="#0ff" stroke-width="1.0"/>
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10
+          10-4.48 10-10S17.52 2 12 2zm0 3
+          c1.66 0 3 1.34 3 3s-1.34 3-3 3
+          -3-1.34-3-3 1.34-3 3-3zm0 14.2
+          c-2.5 0-4.71-1.28-6-3.22
+          .03-1.99 4-3.08 6-3.08
+          1.99 0 5.97 1.09 6 3.08
+          -1.29 1.94-3.5 3.22-6 3.22z
+          " fill="#fff"/>
+        </g>
+      </svg>
+    </button>
+    <aside class="account-panel" id="account-panel" aria-hidden="true">
+      <nav class="account-panel-nav">
+        <a href="#" class="account-option">Account</a>
+        <a href="#" class="account-option">History</a>
+        <a href="#" class="account-option">About</a>
+        <a href="#" class="account-option">Feedback</a>
+      </nav>
+    </aside>
+    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
+  </header>
+  <main class="main main-banner">
+    <div class="container">
+      <div class="swiper flip-banner" id="flipBanner" aria-label="Flipkart-style banner slider">
+        <div class="swiper-wrapper">
+          <!-- Slide 1 -->
+          <div class="swiper-slide">
+            <div class="banner-card">
+              <img
+                class="banner-img"
+                src="https://picsum.photos/id/1011/1400/700"
+                alt="Banner slide 1"
+                loading="lazy"
+              />
+            </div>
+          </div>
+
+          <!-- Slide 2 -->
+          <div class="swiper-slide">
+            <div class="banner-card">
+              <img
+                class="banner-img"
+                src="https://picsum.photos/id/1025/1400/700"
+                alt="Banner slide 2"
+                loading="lazy"
+              />
+            </div>
+          </div>
+
+          <!-- Slide 3 -->
+          <div class="swiper-slide">
+            <div class="banner-card">
+              <img
+                class="banner-img"
+                src="https://picsum.photos/id/1035/1400/700"
+                alt="Banner slide 3"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination dots (centered) -->
+        <div class="swiper-pagination" aria-label="Slider navigation dots"></div>
+      </div>
+      <h1 class="vehicle-prompt">Select a Vehicle you want</h1>
+      
+      <div class="product-container" aria-label="Vehicle categories">
+        <a href="route.html?scope=tourist" class="product-box product-box-featured">
+          <span class="product-icon" aria-hidden="true">
+            <img src="tour-bus.png" alt="Tour bus" class="product-icon-image-featured" />
+          </span>
+          <span class="product-copy">
+            <strong>TOURIST BUS</strong>
+            <span>Include all types of buses</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+        <a href="route.html?scope=truck" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="modern-white-box-truck.png" alt="White box truck" class="product-icon-image-vehicle" />
+          </span>
+          <span class="product-copy">
+            <strong>Closed Body Trucks</strong>
+            <span>Includes Closed Body Pickups, Lorries, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+        <a href="route.html?scope=open-truck" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="white-flatbed-truck.png" alt="White flatbed truck" class="product-icon-image-vehicle" />
+          </span>
+          <span class="product-copy">
+            <strong>Open Body Trucks</strong>
+            <span>Includes Open Body Pickups, Lorries, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+        <a href="route.html?scope=excavator" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="yellow-hydraulic-excavator.png" alt="Yellow hydraulic excavator" class="product-icon-image-vehicle product-icon-image-excavator" />
+          </span>
+          <span class="product-copy">
+            <strong>Excavators</strong>
+            <span>Includes all types of excavators like Hitachi, Komatsu, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+        <a href="route.html?scope=backhoe" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="yellow-backhoe-loader.png" alt="Yellow backhoe loader" class="product-icon-image-vehicle" />
+          </span>
+          <span class="product-copy">
+            <strong>Backhoe Loaders</strong>
+            <span>Includes all types of backhoe loaders like JCB, CAT, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    (function () {
+      function markBannerReady() {
+        window.__homeBannerReady = true;
+        window.dispatchEvent(new Event('home-banner-ready'));
+      }
+
+      new Swiper("#flipBanner", {
+        loop: true,
+        speed: 700,
+        autoplay: {
+          delay: 3000,
+          disableOnInteraction: false
+        },
+        spaceBetween: 14,
+        centeredSlides: true,
+        slidesPerView: 1,
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: true
+        },
+        breakpoints: {
+          0: {
+            spaceBetween: 12,
+            centeredSlides: true,
+            slidesPerView: 1
+          },
+          768: {
+            spaceBetween: 14,
+            centeredSlides: true,
+            slidesPerView: 1
+          },
+          1024: {
+            spaceBetween: 14,
+            centeredSlides: true,
+            slidesPerView: 1
+          }
+        },
+        on: {
+          init: function () {
+            requestAnimationFrame(markBannerReady);
+          }
+        }
+      });
+    })();
+  </script>
+  <script src="script.js?v=20260406-2"></script>
+</body>
+</html>

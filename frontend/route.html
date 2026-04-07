@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Route Select</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+  <header class="header">
+    <h1 class="logo">Saath</h1>
+    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip-route">
+            <circle cx="12" cy="12" r="11.75"/>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip-route)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#fff"/>
+        </g>
+      </svg>
+    </button>
+    <aside class="account-panel" id="account-panel" aria-hidden="true">
+      <nav class="account-panel-nav">
+        <a href="#" class="account-option">Account</a>
+        <a href="#" class="account-option">History</a>
+        <a href="#" class="account-option">About</a>
+        <a href="#" class="account-option">Feedback</a>
+      </nav>
+    </aside>
+    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
+  </header>
+
+  <main class="main route-main">
+    <section class="route-sheet" aria-label="Route selectors">
+      <div class="route-field" data-route-field="from">
+        <p class="route-field-label" data-route-label="from">From</p>
+        <div
+          class="route-dropdown-toggle"
+          data-dropdown="from"
+          data-search-field="from"
+          aria-expanded="false"
+          aria-controls="from-list"
+        >
+          <input
+            type="text"
+            class="route-search-input"
+            id="from-value"
+            data-route-input="from"
+            placeholder="Pickup location"
+            autocomplete="off"
+            aria-label="Pickup location"
+          >
+          <span class="route-dropdown-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 9.5 12 15.5 18 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+        <div class="route-dropdown-list" id="from-list" hidden>
+          <button type="button" class="route-dropdown-item is-placeholder">Waiting for your From list</button>
+        </div>
+      </div>
+
+      <div class="route-field" data-route-field="to">
+        <p class="route-field-label" data-route-label="to">To</p>
+        <div
+          class="route-dropdown-toggle"
+          data-dropdown="to"
+          data-search-field="to"
+          aria-expanded="false"
+          aria-controls="to-list"
+        >
+          <input
+            type="text"
+            class="route-search-input"
+            id="to-value"
+            data-route-input="to"
+            placeholder="Dropoff location"
+            autocomplete="off"
+            aria-label="Dropoff location"
+          >
+          <span class="route-dropdown-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 9.5 12 15.5 18 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+        <div class="route-dropdown-list" id="to-list" hidden>
+          <button type="button" class="route-dropdown-item is-placeholder">Waiting for your To list</button>
+        </div>
+      </div>
+
+      <div class="route-field">
+        <p class="route-field-label">Date/Dates</p>
+        <p class="route-field-hint">Select all required dates</p>
+        <section class="route-calendar" aria-label="Travel date calendar">
+          <button
+            type="button"
+            class="route-calendar-nav"
+            data-calendar-nav="prev"
+            aria-label="Show previous month"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M14.5 5 8 12l6.5 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="route-calendar-nav"
+            data-calendar-nav="next"
+            aria-label="Show next month"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M9.5 5 16 12l-6.5 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="route-calendar-months" data-calendar-months></div>
+        </section>
+        <div class="route-bus-counter" aria-label="Required buses selector">
+          <span class="route-bus-counter-text">Required</span>
+          <div class="route-bus-counter-controls">
+            <button type="button" class="route-bus-counter-btn" data-bus-counter="increase" aria-label="Increase required buses">+</button>
+            <span class="route-bus-counter-value" data-bus-counter-value>1</span>
+            <button type="button" class="route-bus-counter-btn" data-bus-counter="decrease" aria-label="Decrease required buses">-</button>
+          </div>
+          <span class="route-bus-counter-text" data-bus-counter-label>Bus/Busses</span>
+        </div>
+        <div class="route-select-action">
+          <a href="submit.html" class="route-select-btn">SUBMIT</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260406-2"></script>
+</body>
+</html>

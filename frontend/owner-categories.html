@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Categories</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main">
+    <section class="owner-sheet owner-categories-sheet" aria-label="Owner categories sheet">
+      <div class="owner-categories-wrap">
+        <h1 class="owner-categories-title"><span class="owner-categories-company" data-owner-company-name>- -</span> deals with</h1>
+
+        <div class="product-container owner-product-container" aria-label="Owner vehicle categories">
+          <button type="button" class="product-box product-box-featured owner-product-box" data-owner-category="tourist">
+            <span class="product-icon" aria-hidden="true">
+              <img src="tour-bus.png" alt="Tour bus" class="product-icon-image-featured" />
+            </span>
+            <span class="product-copy">
+              <strong>TOURIST BUS</strong>
+              <span>Include all types of buses</span>
+            </span>
+          </button>
+
+          <button type="button" class="product-box owner-product-box" data-owner-category="truck">
+            <span class="product-icon" aria-hidden="true">
+              <img src="modern-white-box-truck.png" alt="White box truck" class="product-icon-image-vehicle" />
+            </span>
+            <span class="product-copy">
+              <strong>Closed Body Trucks</strong>
+              <span>Includes Closed Body Pickups, Lorries, etc.</span>
+            </span>
+          </button>
+
+          <button type="button" class="product-box owner-product-box" data-owner-category="open-truck">
+            <span class="product-icon" aria-hidden="true">
+              <img src="white-flatbed-truck.png" alt="White flatbed truck" class="product-icon-image-vehicle" />
+            </span>
+            <span class="product-copy">
+              <strong>Open Body Trucks</strong>
+              <span>Includes Open Body Pickups, Lorries, etc.</span>
+            </span>
+          </button>
+
+          <button type="button" class="product-box owner-product-box" data-owner-category="excavator">
+            <span class="product-icon" aria-hidden="true">
+              <img src="yellow-hydraulic-excavator.png" alt="Yellow hydraulic excavator" class="product-icon-image-vehicle product-icon-image-excavator" />
+            </span>
+            <span class="product-copy">
+              <strong>Excavators</strong>
+              <span>Includes all types of excavators like Hitachi, Komatsu, etc.</span>
+            </span>
+          </button>
+
+          <button type="button" class="product-box owner-product-box" data-owner-category="backhoe">
+            <span class="product-icon" aria-hidden="true">
+              <img src="yellow-backhoe-loader.png" alt="Yellow backhoe loader" class="product-icon-image-vehicle" />
+            </span>
+            <span class="product-copy">
+              <strong>Backhoe Loaders</strong>
+              <span>Includes all types of backhoe loaders like JCB, CAT, etc.</span>
+            </span>
+          </button>
+        </div>
+
+        <p class="owner-categories-helper">Select atlease one</p>
+
+        <div class="owner-name-actions owner-categories-actions" hidden data-owner-categories-actions>
+          <button type="button" class="owner-next-btn" data-owner-categories-next-btn>Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      const companyNameNode = document.querySelector('[data-owner-company-name]');
+      const categoryButtons = Array.from(document.querySelectorAll('.owner-product-box'));
+      const actions = document.querySelector('[data-owner-categories-actions]');
+      const nextButton = document.querySelector('[data-owner-categories-next-btn]');
+
+      if (!companyNameNode) {
+        return;
+      }
+
+      companyNameNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
+
+      function syncCategoryActions() {
+        const selectedCategories = categoryButtons
+          .filter(function (button) {
+            return button.classList.contains('is-selected');
+          })
+          .map(function (button) {
+            return button.getAttribute('data-owner-category');
+          });
+
+        if (actions) {
+          actions.hidden = selectedCategories.length === 0;
+        }
+
+        sessionStorage.setItem('owner-categories', JSON.stringify(selectedCategories));
+      }
+
+      categoryButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          button.classList.toggle('is-selected');
+          syncCategoryActions();
+        });
+      });
+
+      if (nextButton) {
+        nextButton.addEventListener('click', function () {
+          if (!actions || actions.hidden) {
+            return;
+          }
+
+          window.location.href = 'owner-coverage.html';
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

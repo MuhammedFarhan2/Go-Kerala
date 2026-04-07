@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heavy Driving Licence</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Heavy driving licence page">
+      <div class="owner-blank-content">
+        <p class="owner-heavy-licence-text">Add Photo of your heavy driving licence</p>
+        <div class="owner-heavy-licence-frame">
+          <img
+            src="heavy-driving-licence-reference-v2.png"
+            alt="Heavy driving licence example"
+            class="owner-heavy-licence-image"
+          >
+        </div>
+        <p class="owner-heavy-licence-note">
+          Please Upload two side of Driving Licence. Make sure that all information is readable, not blurry and that all corners of the document are visible. If you are uploading a PDF, insert all pages together in one file.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <div class="owner-heavy-bottom-bar">
+    <input
+      type="file"
+      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+      capture="user"
+      hidden
+      data-owner-heavy-take-photo-input
+    >
+    <input
+      type="file"
+      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+      hidden
+      data-owner-heavy-upload-photo-input
+    >
+
+    <div class="owner-heavy-upload-menu" hidden data-owner-heavy-upload-menu>
+      <button type="button" class="owner-heavy-upload-option" data-owner-heavy-action="take-photo">Take Photo with Camera</button>
+      <button type="button" class="owner-heavy-upload-option" data-owner-heavy-action="upload-photo">Upload Photo</button>
+    </div>
+
+    <button type="button" class="owner-next-btn owner-heavy-add-photo-btn" data-owner-heavy-upload-trigger>Add Photo</button>
+  </div>
+
+  <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      const triggerButton = document.querySelector('[data-owner-heavy-upload-trigger]');
+      const uploadMenu = document.querySelector('[data-owner-heavy-upload-menu]');
+      const takePhotoInput = document.querySelector('[data-owner-heavy-take-photo-input]');
+      const uploadPhotoInput = document.querySelector('[data-owner-heavy-upload-photo-input]');
+      const actionButtons = Array.from(document.querySelectorAll('[data-owner-heavy-action]'));
+
+      if (!triggerButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
+        return;
+      }
+
+      function closeMenu() {
+        uploadMenu.classList.remove('is-open');
+        window.setTimeout(function () {
+          if (!uploadMenu.classList.contains('is-open')) {
+            uploadMenu.hidden = true;
+          }
+        }, 220);
+      }
+
+      function readFileAsBase64(file) {
+        return new Promise(function (resolve, reject) {
+          const reader = new FileReader();
+
+          reader.onload = function () {
+            const result = String(reader.result || '');
+            resolve(result.includes(',') ? result.split(',')[1] : result);
+          };
+
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function saveAndOpen(file) {
+        if (!file) {
+          return;
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png'];
+        const maxSizeInBytes = 2 * 1024 * 1024;
+
+        if (!allowedTypes.includes(file.type)) {
+          window.alert('Please upload only JPG, JPEG, or PNG image files.');
+          return;
+        }
+
+        if (file.size > maxSizeInBytes) {
+          window.alert('Image size must be 2MB or less.');
+          return;
+        }
+
+        try {
+          triggerButton.disabled = true;
+          triggerButton.textContent = 'Saving...';
+
+          const base64Data = await readFileAsBase64(file);
+          const response = await fetch('/api/upload-heavy-licence', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fileName: file.name,
+              mimeType: file.type,
+              data: base64Data
+            })
+          });
+
+          const payload = await response.json();
+
+          if (!response.ok || !payload.success) {
+            throw new Error(payload.error || 'Unable to save image.');
+          }
+
+          window.location.href = payload.viewUrl;
+        } catch (error) {
+          window.alert(error.message || 'Unable to save image.');
+          triggerButton.disabled = false;
+          triggerButton.textContent = 'Add Photo';
+        }
+      }
+
+      triggerButton.addEventListener('click', function () {
+        const isOpen = uploadMenu.classList.contains('is-open');
+
+        if (isOpen) {
+          closeMenu();
+          return;
+        }
+
+        uploadMenu.hidden = false;
+        window.requestAnimationFrame(function () {
+          uploadMenu.classList.add('is-open');
+        });
+      });
+
+      actionButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const action = button.getAttribute('data-owner-heavy-action');
+          closeMenu();
+
+          if (action === 'take-photo') {
+            takePhotoInput.click();
+            return;
+          }
+
+          if (action === 'upload-photo') {
+            uploadPhotoInput.click();
+          }
+        });
+      });
+
+      takePhotoInput.addEventListener('change', function () {
+        saveAndOpen(takePhotoInput.files[0]);
+      });
+
+      uploadPhotoInput.addEventListener('change', function () {
+        saveAndOpen(uploadPhotoInput.files[0]);
+      });
+
+      document.addEventListener('click', function (event) {
+        if (!uploadMenu.classList.contains('is-open')) {
+          return;
+        }
+
+        if (uploadMenu.contains(event.target) || triggerButton.contains(event.target)) {
+          return;
+        }
+
+        closeMenu();
+      });
+    })();
+  </script>
+</body>
+</html>

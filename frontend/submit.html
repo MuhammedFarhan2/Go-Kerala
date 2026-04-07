@@ -1,0 +1,393 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header">
+    <h1 class="logo">Saath</h1>
+    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip-submit">
+            <circle cx="12" cy="12" r="11.75"/>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip-submit)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#fff"/>
+        </g>
+      </svg>
+    </button>
+    <aside class="account-panel" id="account-panel" aria-hidden="true">
+      <nav class="account-panel-nav">
+        <a href="#" class="account-option">Account</a>
+        <a href="#" class="account-option">History</a>
+        <a href="#" class="account-option">About</a>
+        <a href="#" class="account-option">Feedback</a>
+      </nav>
+    </aside>
+    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
+  </header>
+
+  <main class="submit-main" aria-label="Admin page">
+    <section class="submit-filter-panel" aria-label="Submit navigation">
+      <section class="submit-layout" aria-label="Submit options">
+        <div class="submit-box submit-box-location">
+          <h2 class="submit-box-title submit-box-title-centered">Location</h2>
+          <p class="submit-box-text submit-box-location-row" data-submit-location-from>- -</p>
+          <p class="submit-box-text submit-box-location-row" data-submit-location-to>- -</p>
+        </div>
+        <div class="submit-box">
+          <h2 class="submit-box-title submit-box-title-centered">Date/Dates</h2>
+          <p class="submit-box-text" data-submit-dates>- -</p>
+        </div>
+      </section>
+
+      <div class="submit-filter-content">
+        <div class="submit-filter-nav" role="tablist" aria-orientation="horizontal">
+          <button
+            type="button"
+            class="submit-filter-tab is-active"
+            data-submit-tab="name"
+            role="tab"
+            aria-controls="submit-pane-name"
+            aria-selected="true"
+            tabindex="0"
+          >
+            <span class="submit-filter-tab-label">Name</span>
+          </button>
+          <button
+            type="button"
+            class="submit-filter-tab"
+            data-submit-tab="filter"
+            role="tab"
+            aria-controls="submit-pane-filter"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            <span class="submit-filter-tab-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="currentColor"/>
+              </svg>
+            </span>
+            <span class="submit-filter-tab-label">Filter</span>
+            <span class="submit-filter-tab-count" data-filter-count hidden>0</span>
+          </button>
+        </div>
+
+        <div
+          class="submit-filter-pane is-active"
+          id="submit-pane-name"
+          data-submit-pane="name"
+          role="tabpanel"
+          aria-hidden="false"
+        >
+        <div class="submit-demo-list" aria-label="Vehicle listings demo">
+            <article class="submit-demo-card" data-demo-card>
+              <div class="submit-demo-card-main">
+                <div class="submit-demo-image-wrap">
+                  <img src="tour-bus.png" alt="Tour bus" class="submit-demo-image" />
+                </div>
+                <div class="submit-demo-content">
+                  <div class="submit-demo-topline">
+                    <h3 class="submit-demo-title">Tourist Bus</h3>
+                    <span class="submit-demo-price">&#8377;12,000 / day</span>
+                  </div>
+                  <p class="submit-demo-meta">Owner: Raj Travels</p>
+                  <p class="submit-demo-meta">Kerala &middot; 45 seats &middot; AC</p>
+                </div>
+              </div>
+              <div class="submit-demo-expand" aria-hidden="true">
+                <div class="submit-demo-expand-inner">
+                  <div class="submit-demo-expand-actions">
+                    <button type="button" class="submit-demo-expand-btn is-view" data-demo-action="view">VIEW</button>
+                    <button type="button" class="submit-demo-expand-btn is-select" data-demo-action="select">SELECT</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="submit-demo-card" data-demo-card>
+              <div class="submit-demo-card-main">
+                <div class="submit-demo-image-wrap">
+                  <img src="white-flatbed-truck.png" alt="Flatbed truck" class="submit-demo-image" />
+                </div>
+                <div class="submit-demo-content">
+                  <div class="submit-demo-topline">
+                    <h3 class="submit-demo-title">Open Body Truck</h3>
+                    <span class="submit-demo-price">&#8377;8,500 / day</span>
+                  </div>
+                  <p class="submit-demo-meta">Owner: Prime Logistics</p>
+                  <p class="submit-demo-meta">Available in Kochi &middot; 5 ton</p>
+                </div>
+              </div>
+              <div class="submit-demo-expand" aria-hidden="true">
+                <div class="submit-demo-expand-inner">
+                  <div class="submit-demo-expand-actions">
+                    <button type="button" class="submit-demo-expand-btn is-view" data-demo-action="view">VIEW</button>
+                    <button type="button" class="submit-demo-expand-btn is-select" data-demo-action="select">SELECT</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="submit-demo-card" data-demo-card>
+              <div class="submit-demo-card-main">
+                <div class="submit-demo-image-wrap">
+                  <img src="modern-white-box-truck.png" alt="Box truck" class="submit-demo-image" />
+                </div>
+                <div class="submit-demo-content">
+                  <div class="submit-demo-topline">
+                    <h3 class="submit-demo-title">Box Container Truck</h3>
+                    <span class="submit-demo-price">&#8377;9,800 / day</span>
+                  </div>
+                  <p class="submit-demo-meta">Owner: Metro Cargo Movers</p>
+                  <p class="submit-demo-meta">Ernakulam &middot; 7 ton &middot; Closed body</p>
+                </div>
+              </div>
+              <div class="submit-demo-expand" aria-hidden="true">
+                <div class="submit-demo-expand-inner">
+                  <div class="submit-demo-expand-actions">
+                    <button type="button" class="submit-demo-expand-btn is-view" data-demo-action="view">VIEW</button>
+                    <button type="button" class="submit-demo-expand-btn is-select" data-demo-action="select">SELECT</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="submit-demo-card" data-demo-card>
+              <div class="submit-demo-card-main">
+                <div class="submit-demo-image-wrap">
+                  <img src="yellow-hydraulic-excavator.png" alt="Hydraulic excavator" class="submit-demo-image" />
+                </div>
+                <div class="submit-demo-content">
+                  <div class="submit-demo-topline">
+                    <h3 class="submit-demo-title">Hydraulic Excavator</h3>
+                    <span class="submit-demo-price">&#8377;14,500 / day</span>
+                  </div>
+                  <p class="submit-demo-meta">Owner: BuildPro Infra</p>
+                  <p class="submit-demo-meta">Kottayam &middot; Operator included</p>
+                </div>
+              </div>
+              <div class="submit-demo-expand" aria-hidden="true">
+                <div class="submit-demo-expand-inner">
+                  <div class="submit-demo-expand-actions">
+                    <button type="button" class="submit-demo-expand-btn is-view" data-demo-action="view">VIEW</button>
+                    <button type="button" class="submit-demo-expand-btn is-select" data-demo-action="select">SELECT</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="submit-demo-card" data-demo-card>
+              <div class="submit-demo-card-main">
+                <div class="submit-demo-image-wrap">
+                  <img src="yellow-backhoe-loader.png" alt="Backhoe loader" class="submit-demo-image" />
+                </div>
+                <div class="submit-demo-content">
+                  <div class="submit-demo-topline">
+                    <h3 class="submit-demo-title">Backhoe Loader</h3>
+                    <span class="submit-demo-price">&#8377;11,200 / day</span>
+                  </div>
+                  <p class="submit-demo-meta">Owner: M.R. Equipments</p>
+                  <p class="submit-demo-meta">Palakkad &middot; Fuel extra</p>
+                </div>
+              </div>
+              <div class="submit-demo-expand" aria-hidden="true">
+                <div class="submit-demo-expand-inner">
+                  <div class="submit-demo-expand-actions">
+                    <button type="button" class="submit-demo-expand-btn is-view" data-demo-action="view">VIEW</button>
+                    <button type="button" class="submit-demo-expand-btn is-select" data-demo-action="select">SELECT</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="submit-demo-card" data-demo-card>
+              <div class="submit-demo-card-main">
+                <div class="submit-demo-image-wrap">
+                  <img src="tour-bus.png" alt="City bus" class="submit-demo-image" />
+                </div>
+                <div class="submit-demo-content">
+                  <div class="submit-demo-topline">
+                    <h3 class="submit-demo-title">City Service Bus</h3>
+                    <span class="submit-demo-price">&#8377;10,500 / day</span>
+                  </div>
+                  <p class="submit-demo-meta">Owner: GreenLine Travels</p>
+                  <p class="submit-demo-meta">Trivandrum &middot; 40 seats &middot; Non-AC</p>
+                </div>
+              </div>
+              <div class="submit-demo-expand" aria-hidden="true">
+                <div class="submit-demo-expand-inner">
+                  <div class="submit-demo-expand-actions">
+                    <button type="button" class="submit-demo-expand-btn is-view" data-demo-action="view">VIEW</button>
+                    <button type="button" class="submit-demo-expand-btn is-select" data-demo-action="select">SELECT</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="submit-demo-card" data-demo-card>
+              <div class="submit-demo-card-main">
+                <div class="submit-demo-image-wrap">
+                  <img src="white-flatbed-truck.png" alt="Heavy flatbed truck" class="submit-demo-image" />
+                </div>
+                <div class="submit-demo-content">
+                  <div class="submit-demo-topline">
+                    <h3 class="submit-demo-title">Heavy Flatbed Truck</h3>
+                    <span class="submit-demo-price">&#8377;13,200 / day</span>
+                  </div>
+                  <p class="submit-demo-meta">Owner: South Haul Logistics</p>
+                  <p class="submit-demo-meta">Thrissur &middot; 10 ton capacity</p>
+                </div>
+              </div>
+              <div class="submit-demo-expand" aria-hidden="true">
+                <div class="submit-demo-expand-inner">
+                  <div class="submit-demo-expand-actions">
+                    <button type="button" class="submit-demo-expand-btn is-view" data-demo-action="view">VIEW</button>
+                    <button type="button" class="submit-demo-expand-btn is-select" data-demo-action="select">SELECT</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="submit-demo-sheet is-open" aria-hidden="false" data-demo-sheet>
+          <div class="submit-demo-sheet-grid" aria-hidden="true">
+            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
+            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
+            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
+            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
+          </div>
+          <p class="submit-demo-sheet-selected-title">Selected</p>
+          <p class="submit-demo-sheet-selected-location" data-demo-selected-location></p>
+          <button type="button" class="submit-demo-sheet-book-btn">Book</button>
+        </div>
+
+        <div
+          class="submit-filter-pane"
+          id="submit-pane-filter"
+          data-submit-pane="filter"
+          role="tabpanel"
+          hidden
+          aria-hidden="true"
+        >
+          <div class="submit-filter-drawer">
+            <div class="submit-filter-categories" role="tablist" aria-label="Filter categories">
+              <button type="button" class="submit-filter-category is-active" data-filter-category="seats" role="tab" aria-selected="true">
+                <span>Seats</span>
+              </button>
+              <button type="button" class="submit-filter-category" data-filter-category="ac" role="tab" aria-selected="false">
+                <span>A/C</span>
+              </button>
+              <button type="button" class="submit-filter-category" data-filter-category="price" role="tab" aria-selected="false">
+                <span>Price</span>
+              </button>
+              <button type="button" class="submit-filter-category" data-filter-category="dealers" role="tab" aria-selected="false">
+                <span>Dealers</span>
+              </button>
+            </div>
+
+            <div class="submit-filter-options">
+              <div class="submit-filter-group is-active" data-filter-group="seats" role="tabpanel">
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="seats-12-20">
+                  <span>12 - 20 Seats</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="seats-21-30">
+                  <span>21 - 30 Seats</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="seats-31-40">
+                  <span>31 - 40 Seats</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="seats-41-plus">
+                  <span>41+ Seats</span>
+                </label>
+              </div>
+
+              <div class="submit-filter-group" data-filter-group="ac" hidden aria-hidden="true">
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="ac-yes">
+                  <span>A/C</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="ac-no">
+                  <span>Non A/C</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="ac-sleeper">
+                  <span>A/C Sleeper</span>
+                </label>
+              </div>
+
+              <div class="submit-filter-group" data-filter-group="price" hidden aria-hidden="true">
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="price-under-10000">
+                  <span>Under Rs. 10,000</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="price-10000-15000">
+                  <span>Rs. 10,000 - 15,000</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="price-15000-20000">
+                  <span>Rs. 15,000 - 20,000</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="price-20000-plus">
+                  <span>Above Rs. 20,000</span>
+                </label>
+              </div>
+
+              <div class="submit-filter-group" data-filter-group="dealers" hidden aria-hidden="true">
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="dealer-raj-travels">
+                  <span>Raj Travels</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="dealer-cityline">
+                  <span>CityLine Dealers</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="dealer-skyway">
+                  <span>Skyway Motors</span>
+                </label>
+                <label class="submit-filter-check">
+                  <input type="checkbox" value="dealer-metro">
+                  <span>Metro Bus Dealers</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="submit-filter-action is-clear" data-filter-action="clear">CLEAR ALL</button>
+      <button type="button" class="submit-filter-action is-apply" data-filter-action="apply">APPLY</button>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260406-2"></script>
+</body>
+</html>

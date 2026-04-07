@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Heavy Driving Licence</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Heavy driving licence upload page">
+      <div class="owner-blank-content">
+        <p class="owner-heavy-licence-text">Upload Photo of your heavy driving licence</p>
+
+        <section class="owner-upload-panel" aria-label="Heavy driving licence upload">
+          <input
+            type="file"
+            id="owner-heavy-licence-upload-input"
+            class="owner-upload-input"
+            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+            hidden
+          >
+
+          <button type="button" class="owner-upload-button" data-owner-upload-trigger>
+            Upload Photo
+          </button>
+
+          <div class="owner-upload-dropzone" data-owner-upload-dropzone tabindex="0" role="button" aria-label="Upload heavy driving licence photo">
+            <div class="owner-upload-dropzone-copy">
+              <span class="owner-upload-dropzone-icon" aria-hidden="true">+</span>
+              <p class="owner-upload-dropzone-title">Drag and drop your licence photo here</p>
+              <p class="owner-upload-dropzone-hint">JPG, JPEG, PNG only. Max file size 2MB.</p>
+            </div>
+          </div>
+
+          <p class="owner-upload-error" data-owner-upload-error hidden></p>
+
+          <div class="owner-upload-preview-wrap">
+            <div class="owner-upload-placeholder" data-owner-upload-placeholder>
+              <div class="owner-upload-placeholder-avatar" aria-hidden="true"></div>
+              <p class="owner-upload-placeholder-text">Your uploaded licence preview will appear here before saving</p>
+            </div>
+
+            <figure class="owner-upload-preview" data-owner-upload-preview hidden>
+              <img src="" alt="Uploaded heavy driving licence preview" class="owner-upload-preview-image" data-owner-upload-image>
+            </figure>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div class="owner-heavy-bottom-bar">
+    <button type="button" class="owner-next-btn owner-heavy-add-photo-btn" data-owner-save-upload-btn disabled>Save and Open</button>
+  </div>
+
+  <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      const fileInput = document.getElementById('owner-heavy-licence-upload-input');
+      const triggerButton = document.querySelector('[data-owner-upload-trigger]');
+      const dropzone = document.querySelector('[data-owner-upload-dropzone]');
+      const errorNode = document.querySelector('[data-owner-upload-error]');
+      const placeholder = document.querySelector('[data-owner-upload-placeholder]');
+      const preview = document.querySelector('[data-owner-upload-preview]');
+      const previewImage = document.querySelector('[data-owner-upload-image]');
+      const saveButton = document.querySelector('[data-owner-save-upload-btn]');
+      let selectedFile = null;
+
+      if (!fileInput || !triggerButton || !dropzone || !errorNode || !placeholder || !preview || !previewImage || !saveButton) {
+        return;
+      }
+
+      function showError(message) {
+        errorNode.textContent = message;
+        errorNode.hidden = false;
+      }
+
+      function clearError() {
+        errorNode.textContent = '';
+        errorNode.hidden = true;
+      }
+
+      function setSaveEnabled(enabled) {
+        saveButton.disabled = !enabled;
+      }
+
+      function showPreview(file) {
+        const objectUrl = URL.createObjectURL(file);
+
+        previewImage.src = objectUrl;
+        preview.hidden = false;
+        preview.classList.remove('is-visible');
+        placeholder.hidden = true;
+
+        window.requestAnimationFrame(function () {
+          preview.classList.add('is-visible');
+        });
+      }
+
+      function validateFile(file) {
+        const allowedTypes = ['image/jpeg', 'image/png'];
+        const maxSizeInBytes = 2 * 1024 * 1024;
+
+        clearError();
+
+        if (!file) {
+          return false;
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+          showError('Please upload only JPG, JPEG, or PNG image files.');
+          return false;
+        }
+
+        if (file.size > maxSizeInBytes) {
+          showError('Image size must be 2MB or less.');
+          return false;
+        }
+
+        return true;
+      }
+
+      function handleFile(file) {
+        if (!validateFile(file)) {
+          selectedFile = null;
+          setSaveEnabled(false);
+          return;
+        }
+
+        selectedFile = file;
+        showPreview(file);
+        setSaveEnabled(true);
+      }
+
+      function readFileAsBase64(file) {
+        return new Promise(function (resolve, reject) {
+          const reader = new FileReader();
+
+          reader.onload = function () {
+            const result = String(reader.result || '');
+            resolve(result.includes(',') ? result.split(',')[1] : result);
+          };
+
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      triggerButton.addEventListener('click', function () {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', function () {
+        handleFile(fileInput.files[0]);
+      });
+
+      dropzone.addEventListener('click', function () {
+        fileInput.click();
+      });
+
+      dropzone.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          fileInput.click();
+        }
+      });
+
+      ['dragenter', 'dragover'].forEach(function (eventName) {
+        dropzone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          dropzone.classList.add('is-drag-over');
+        });
+      });
+
+      ['dragleave', 'dragend', 'drop'].forEach(function (eventName) {
+        dropzone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          dropzone.classList.remove('is-drag-over');
+        });
+      });
+
+      dropzone.addEventListener('drop', function (event) {
+        const file = event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files[0] : null;
+        handleFile(file);
+      });
+
+      saveButton.addEventListener('click', async function () {
+        if (!selectedFile) {
+          showError('Please select an image before saving.');
+          return;
+        }
+
+        try {
+          saveButton.disabled = true;
+          saveButton.textContent = 'Saving...';
+          clearError();
+
+          const base64Data = await readFileAsBase64(selectedFile);
+          const response = await fetch('/api/upload-heavy-licence', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fileName: selectedFile.name,
+              mimeType: selectedFile.type,
+              data: base64Data
+            })
+          });
+
+          const payload = await response.json();
+
+          if (!response.ok || !payload.success) {
+            throw new Error(payload.error || 'Unable to save image.');
+          }
+
+          window.location.href = payload.viewUrl;
+        } catch (error) {
+          showError(error.message || 'Unable to save image.');
+          saveButton.disabled = false;
+          saveButton.textContent = 'Save and Open';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Panel</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main">
+    <section class="owner-sheet owner-sheet-intro" aria-label="Owner setup sheet">
+      <div class="owner-name-card" data-owner-step="name">
+        <h1 class="owner-name-title">What is your name?</h1>
+        <input type="text" class="owner-name-input" placeholder="Enter your full name" aria-label="Your name" data-owner-name-input>
+        <p class="owner-name-error" data-owner-name-error hidden>Enter your name</p>
+        <div class="owner-name-actions">
+          <button type="button" class="owner-next-btn" data-owner-next-btn>Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      const nameInput = document.querySelector('[data-owner-name-input]');
+      const errorText = document.querySelector('[data-owner-name-error]');
+      const nextButton = document.querySelector('[data-owner-next-btn]');
+
+      if (!nameInput || !errorText || !nextButton) {
+        return;
+      }
+
+      function hideError() {
+        errorText.hidden = true;
+      }
+
+      nameInput.addEventListener('input', function () {
+        if (nameInput.value.trim()) {
+          hideError();
+        }
+      });
+
+      nextButton.addEventListener('click', function () {
+        const ownerName = nameInput.value.trim();
+
+        if (!ownerName) {
+          errorText.hidden = false;
+          nameInput.focus();
+          return;
+        }
+
+        hideError();
+        sessionStorage.setItem('owner-name', ownerName);
+        window.location.href = 'owner-details.html';
+      });
+    })();
+  </script>
+</body>
+</html>

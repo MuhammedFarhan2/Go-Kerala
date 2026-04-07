@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Next Step</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Owner blank sheet">
+      <div class="owner-blank-content owner-next-page-content">
+        <h1 class="owner-blank-title">
+          Welcome , <span data-owner-next-company>- -</span>
+        </h1>
+        <p class="owner-blank-subtitle">Please complete these steps to Start</p>
+
+        <div class="owner-next-steps" aria-label="Owner setup steps">
+          <button type="button" class="owner-next-step" data-owner-next-link="owner-heavy-driving-licence.html">
+            <span class="owner-next-step-copy">
+              <span class="owner-next-step-title">Heavy Driving Licence</span>
+            </span>
+            <span class="owner-next-step-arrow" aria-hidden="true">&#8250;</span>
+          </button>
+
+          <button type="button" class="owner-next-step">
+            <span class="owner-next-step-copy">
+              <span class="owner-next-step-title">Profile photo</span>
+            </span>
+            <span class="owner-next-step-arrow" aria-hidden="true">&#8250;</span>
+          </button>
+
+          <button type="button" class="owner-next-step">
+            <span class="owner-next-step-copy">
+              <span class="owner-next-step-title">Aadhaar Card</span>
+            </span>
+            <span class="owner-next-step-arrow" aria-hidden="true">&#8250;</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      const companyNode = document.querySelector('[data-owner-next-company]');
+      const nextStepButtons = Array.from(document.querySelectorAll('[data-owner-next-link]'));
+
+      if (!companyNode) {
+        return;
+      }
+
+      companyNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
+
+      nextStepButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const destination = button.getAttribute('data-owner-next-link');
+
+          if (destination) {
+            window.location.href = destination;
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

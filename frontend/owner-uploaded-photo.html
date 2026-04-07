@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uploaded Photo</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Uploaded photo page">
+      <div class="owner-blank-content">
+        <p class="owner-heavy-licence-text">Uploaded heavy driving licence photo</p>
+        <figure class="owner-uploaded-photo-frame">
+          <img src="" alt="Saved uploaded photo" class="owner-uploaded-photo-image" data-owner-uploaded-photo>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      const imageNode = document.querySelector('[data-owner-uploaded-photo]');
+      const fileName = new URLSearchParams(window.location.search).get('file');
+
+      if (!imageNode || !fileName) {
+        return;
+      }
+
+      imageNode.src = '/uploads/' + encodeURIComponent(fileName);
+    })();
+  </script>
+</body>
+</html>

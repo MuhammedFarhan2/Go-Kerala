@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Coverage</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260406-2">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main">
+    <section class="owner-sheet owner-categories-sheet owner-coverage-sheet" aria-label="Owner coverage sheet">
+      <div class="owner-categories-wrap">
+        <h1 class="owner-categories-title">
+          <span class="owner-categories-company" data-owner-coverage-company>- -</span> operate in
+          <span class="owner-categories-company" data-owner-district-count>0</span>
+          <span data-owner-district-label>Districts</span>
+        </h1>
+
+        <div class="owner-districts-grid" aria-label="Kerala districts">
+          <div class="owner-districts-column">
+            <button type="button" class="owner-district-chip" data-owner-district="Thiruvananthapuram">Thiruvananthapuram</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Kollam">Kollam</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Pathanamthitta">Pathanamthitta</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Alappuzha">Alappuzha</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Kottayam">Kottayam</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Idukki">Idukki</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Ernakulam">Ernakulam</button>
+          </div>
+          <div class="owner-districts-column">
+            <button type="button" class="owner-district-chip" data-owner-district="Thrissur">Thrissur</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Palakkad">Palakkad</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Malappuram">Malappuram</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Kozhikode">Kozhikode</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Wayanad">Wayanad</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Kannur">Kannur</button>
+            <button type="button" class="owner-district-chip" data-owner-district="Kasaragod">Kasaragod</button>
+          </div>
+        </div>
+
+        <div class="owner-name-actions owner-categories-actions" hidden data-owner-district-actions>
+          <button type="button" class="owner-next-btn" data-owner-district-next-btn>Next</button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      const companyNode = document.querySelector('[data-owner-coverage-company]');
+      const districtButtons = Array.from(document.querySelectorAll('.owner-district-chip'));
+      const actions = document.querySelector('[data-owner-district-actions]');
+      const nextButton = document.querySelector('[data-owner-district-next-btn]');
+      const districtCountNode = document.querySelector('[data-owner-district-count]');
+      const districtLabelNode = document.querySelector('[data-owner-district-label]');
+
+      if (companyNode) {
+        companyNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
+      }
+
+      function syncDistrictSelection() {
+        const selectedDistricts = districtButtons
+          .filter(function (button) {
+            return button.classList.contains('is-selected');
+          })
+          .map(function (button) {
+            return button.getAttribute('data-owner-district');
+          });
+
+        if (districtCountNode) {
+          districtCountNode.textContent = String(selectedDistricts.length);
+        }
+
+        if (districtLabelNode) {
+          districtLabelNode.textContent = selectedDistricts.length === 1 ? 'District' : 'Districts';
+        }
+
+        if (actions) {
+          actions.hidden = selectedDistricts.length === 0;
+        }
+
+        sessionStorage.setItem('owner-districts', JSON.stringify(selectedDistricts));
+      }
+
+      districtButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          button.classList.toggle('is-selected');
+          syncDistrictSelection();
+        });
+      });
+
+      if (nextButton) {
+        nextButton.addEventListener('click', function () {
+          if (!actions || actions.hidden) {
+            return;
+          }
+
+          window.location.href = 'owner-next.html';
+        });
+      }
+
+      syncDistrictSelection();
+    })();
+  </script>
+</body>
+</html>
