@@ -27,26 +27,291 @@
 
   <main class="owner-main owner-blank-main">
     <section class="owner-blank-sheet" aria-label="Uploaded photo page">
-      <div class="owner-blank-content">
-        <p class="owner-heavy-licence-text">Uploaded heavy driving licence photo</p>
-        <figure class="owner-uploaded-photo-frame">
-          <img src="" alt="Saved uploaded photo" class="owner-uploaded-photo-image" data-owner-uploaded-photo>
+      <div class="owner-blank-content owner-uploaded-content">
+        <h2 class="owner-uploaded-title">Upload the backside of the licence</h2>
+        <p class="owner-uploaded-note">Make sure all information is readable and not blurry, and that all corners of the document are visible.</p>
+
+        <figure class="owner-uploaded-photo-frame" data-owner-uploaded-frame>
+          <div class="owner-uploaded-photo-grid" data-owner-uploaded-grid>
+            <img src="" alt="Saved uploaded photo 1" class="owner-uploaded-photo-image" data-owner-uploaded-photo>
+          </div>
         </figure>
+
+        <div class="owner-uploaded-list">
+          <div class="owner-uploaded-list-row">
+            <p class="owner-uploaded-list-label">Image 1</p>
+            <button type="button" class="owner-uploaded-delete" data-owner-uploaded-delete aria-label="Delete uploaded image">
+              <span class="owner-uploaded-delete-icon" aria-hidden="true">&#128465;</span>
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   </main>
+
+  <div class="owner-heavy-bottom-bar owner-uploaded-bottom-bar">
+    <input
+      type="file"
+      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+      capture="user"
+      hidden
+      data-owner-uploaded-take-photo-input
+    >
+    <input
+      type="file"
+      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+      hidden
+      data-owner-uploaded-upload-photo-input
+    >
+
+    <div class="owner-heavy-upload-menu" hidden data-owner-uploaded-upload-menu>
+      <button type="button" class="owner-heavy-upload-option" data-owner-uploaded-action="take-photo">Take Photo with Camera</button>
+      <button type="button" class="owner-heavy-upload-option" data-owner-uploaded-action="upload-photo">Upload Photo</button>
+    </div>
+
+    <button type="button" class="owner-next-btn owner-uploaded-next-btn" data-owner-uploaded-next>Next</button>
+  </div>
 
   <script src="script.js?v=20260406-2"></script>
   <script>
     (function () {
       const imageNode = document.querySelector('[data-owner-uploaded-photo]');
-      const fileName = new URLSearchParams(window.location.search).get('file');
+      const imageFrame = document.querySelector('[data-owner-uploaded-frame]');
+      const imageGrid = document.querySelector('[data-owner-uploaded-grid]');
+      const deleteButton = document.querySelector('[data-owner-uploaded-delete]');
+      const imageList = document.querySelector('.owner-uploaded-list');
+      const nextButton = document.querySelector('[data-owner-uploaded-next]');
+      const uploadMenu = document.querySelector('[data-owner-uploaded-upload-menu]');
+      const takePhotoInput = document.querySelector('[data-owner-uploaded-take-photo-input]');
+      const uploadPhotoInput = document.querySelector('[data-owner-uploaded-upload-photo-input]');
+      const actionButtons = Array.from(document.querySelectorAll('[data-owner-uploaded-action]'));
+      const pageParams = new URLSearchParams(window.location.search);
+      const fileName = pageParams.get('file');
+      const secondFileName = pageParams.get('file2');
 
-      if (!imageNode || !fileName) {
+      if (!imageNode || !fileName || !nextButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
         return;
       }
 
       imageNode.src = '/uploads/' + encodeURIComponent(fileName);
+      imageFrame && imageFrame.classList.toggle('is-two-images', Boolean(secondFileName));
+
+      if (secondFileName && imageGrid) {
+        const secondaryImageNode = document.createElement('img');
+        secondaryImageNode.alt = 'Saved uploaded photo 2';
+        secondaryImageNode.className = 'owner-uploaded-photo-image';
+        secondaryImageNode.src = '/uploads/' + encodeURIComponent(secondFileName);
+        imageGrid.appendChild(secondaryImageNode);
+        nextButton.textContent = 'Submit';
+
+        if (imageList) {
+          const secondaryRow = document.createElement('div');
+          secondaryRow.className = 'owner-uploaded-list-row';
+          secondaryRow.innerHTML = '<p class="owner-uploaded-list-label">Image 2</p><button type="button" class="owner-uploaded-delete" data-owner-uploaded-delete-secondary aria-label="Delete uploaded image 2"><span class="owner-uploaded-delete-icon" aria-hidden="true">&#128465;</span></button>';
+          imageList.appendChild(secondaryRow);
+
+          const secondaryDeleteButton = secondaryRow.querySelector('[data-owner-uploaded-delete-secondary]');
+
+          if (secondaryDeleteButton) {
+            secondaryDeleteButton.addEventListener('click', async function () {
+              try {
+                secondaryDeleteButton.disabled = true;
+
+                const response = await fetch('/api/upload-heavy-licence?file=' + encodeURIComponent(secondFileName), {
+                  method: 'DELETE'
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                  throw new Error(payload.error || 'Unable to delete image.');
+                }
+
+                window.location.href = '/owner-uploaded-photo.html?file=' + encodeURIComponent(fileName);
+              } catch (error) {
+                window.alert(error.message || 'Unable to delete image.');
+                secondaryDeleteButton.disabled = false;
+              }
+            });
+          }
+        }
+      }
+
+      function validateFile(file) {
+        const allowedTypes = ['image/jpeg', 'image/png'];
+        const maxSizeInBytes = 2 * 1024 * 1024;
+
+        if (!file) {
+          return 'Please choose an image.';
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+          return 'Please upload only JPG, JPEG, or PNG image files.';
+        }
+
+        if (file.size > maxSizeInBytes) {
+          return 'Image size must be 2MB or less.';
+        }
+
+        return '';
+      }
+
+      function readFileAsBase64(file) {
+        return new Promise(function (resolve, reject) {
+          const reader = new FileReader();
+
+          reader.onload = function () {
+            const result = String(reader.result || '');
+            resolve(result.includes(',') ? result.split(',')[1] : result);
+          };
+
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function uploadSecondPhoto(file) {
+        const validationMessage = validateFile(file);
+
+        if (validationMessage) {
+          window.alert(validationMessage);
+          return;
+        }
+
+        try {
+          nextButton.disabled = true;
+          nextButton.textContent = 'Uploading...';
+
+          const base64Data = await readFileAsBase64(file);
+          const response = await fetch('/api/upload-heavy-licence', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fileName: file.name,
+              mimeType: file.type,
+              data: base64Data
+            })
+          });
+
+          const payload = await response.json();
+
+          if (!response.ok || !payload.success) {
+            throw new Error(payload.error || 'Unable to save image.');
+          }
+
+          window.location.href = '/owner-uploaded-photo.html?file=' + encodeURIComponent(fileName) + '&file2=' + encodeURIComponent(payload.fileName);
+        } catch (error) {
+          window.alert(error.message || 'Unable to save image.');
+          nextButton.disabled = false;
+          nextButton.textContent = secondFileName ? 'Submit' : 'Next';
+        }
+      }
+
+      function closeMenu() {
+        uploadMenu.classList.remove('is-open');
+        window.setTimeout(function () {
+          if (!uploadMenu.classList.contains('is-open')) {
+            uploadMenu.hidden = true;
+          }
+        }, 220);
+      }
+
+      if (deleteButton) {
+        deleteButton.addEventListener('click', async function () {
+          try {
+            deleteButton.disabled = true;
+
+            const response = await fetch('/api/upload-heavy-licence?file=' + encodeURIComponent(fileName), {
+              method: 'DELETE'
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+              throw new Error(payload.error || 'Unable to delete image.');
+            }
+
+            if (secondFileName) {
+              window.location.href = '/owner-uploaded-photo.html?file=' + encodeURIComponent(secondFileName);
+              return;
+            }
+
+            window.location.href = '/owner-heavy-driving-licence.html';
+          } catch (error) {
+            window.alert(error.message || 'Unable to delete image.');
+            deleteButton.disabled = false;
+          }
+        });
+      }
+
+      nextButton.addEventListener('click', function () {
+        if (secondFileName) {
+          window.location.href = '/owner-next.html';
+          return;
+        }
+
+        const isOpen = uploadMenu.classList.contains('is-open');
+
+        if (isOpen) {
+          closeMenu();
+          return;
+        }
+
+        uploadMenu.hidden = false;
+        window.requestAnimationFrame(function () {
+          uploadMenu.classList.add('is-open');
+        });
+      });
+
+      actionButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const action = button.getAttribute('data-owner-uploaded-action');
+          closeMenu();
+
+          if (action === 'take-photo') {
+            takePhotoInput.click();
+            return;
+          }
+
+          if (action === 'upload-photo') {
+            uploadPhotoInput.click();
+          }
+        });
+      });
+
+      takePhotoInput.addEventListener('change', function () {
+        const file = takePhotoInput.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        uploadSecondPhoto(file);
+      });
+
+      uploadPhotoInput.addEventListener('change', function () {
+        const file = uploadPhotoInput.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        uploadSecondPhoto(file);
+      });
+
+      document.addEventListener('click', function (event) {
+        if (!uploadMenu.classList.contains('is-open')) {
+          return;
+        }
+
+        if (uploadMenu.contains(event.target) || nextButton.contains(event.target)) {
+          return;
+        }
+
+        closeMenu();
+      });
     })();
   </script>
 </body>

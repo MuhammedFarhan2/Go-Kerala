@@ -5,8 +5,9 @@ const { URL } = require('url');
 
 const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT) || 3000;
-const ROOT_DIR = __dirname;
-const UPLOADS_DIR = path.join(ROOT_DIR, 'uploads');
+const PROJECT_ROOT = path.join(__dirname, '..');
+const FRONTEND_DIR = path.join(PROJECT_ROOT, 'frontend');
+const UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
 
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -54,9 +55,9 @@ function sendFile(response, filePath) {
 
 function getSafePath(urlPathname) {
   const normalizedPath = decodeURIComponent(urlPathname === '/' ? '/index.html' : urlPathname);
-  const fullPath = path.normalize(path.join(ROOT_DIR, normalizedPath));
+  const fullPath = path.normalize(path.join(FRONTEND_DIR, normalizedPath));
 
-  if (!fullPath.startsWith(ROOT_DIR)) {
+  if (!fullPath.startsWith(FRONTEND_DIR)) {
     return null;
   }
 
@@ -121,11 +122,42 @@ function handleUpload(request, response) {
   });
 }
 
+function handleUploadDelete(requestUrl, response) {
+  const rawFileName = String(requestUrl.searchParams.get('file') || '').trim();
+  const safeFileName = path.basename(rawFileName);
+
+  if (!safeFileName || safeFileName !== rawFileName) {
+    sendJson(response, 400, { error: 'Invalid file name.' });
+    return;
+  }
+
+  const targetPath = path.join(UPLOADS_DIR, safeFileName);
+
+  if (!targetPath.startsWith(UPLOADS_DIR)) {
+    sendJson(response, 403, { error: 'Forbidden.' });
+    return;
+  }
+
+  fs.unlink(targetPath, function (error) {
+    if (error && error.code !== 'ENOENT') {
+      sendJson(response, 500, { error: 'Unable to delete file.' });
+      return;
+    }
+
+    sendJson(response, 200, { success: true });
+  });
+}
+
 const server = http.createServer(function (request, response) {
   const requestUrl = new URL(request.url, 'http://' + request.headers.host);
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/upload-heavy-licence') {
     handleUpload(request, response);
+    return;
+  }
+
+  if (request.method === 'DELETE' && requestUrl.pathname === '/api/upload-heavy-licence') {
+    handleUploadDelete(requestUrl, response);
     return;
   }
 
