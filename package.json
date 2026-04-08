@@ -1,0 +1,12 @@
+{
+  "name": "mymusics",
+  "version": "1.0.0",
+  "private": true,
+  "main": "backend/app.js",
+  "scripts": {
+    "start": "node backend/app.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
