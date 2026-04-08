@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Photo QR</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260408-3">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Profile photo QR page">
+      <div class="owner-blank-content owner-profile-qr-content">
+        <h1 class="owner-profile-qr-title">Open on your phone</h1>
+        <p class="owner-profile-qr-text">Scan this QR code on your mobile device to continue taking your profile photo.</p>
+        <div class="owner-profile-qr-box">
+          <img src="" alt="QR code for opening profile photo on phone" class="owner-profile-qr-image" data-owner-profile-qr-image>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260408-3"></script>
+  <script>
+    (function () {
+      const qrImage = document.querySelector('[data-owner-profile-qr-image]');
+
+      if (!qrImage) {
+        return;
+      }
+
+      const targetUrl = window.location.origin + '/owner-profile-photo.html';
+
+      qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(targetUrl);
+    })();
+  </script>
+</body>
+</html>

@@ -96,6 +96,29 @@
       imageNode.src = '/uploads/' + encodeURIComponent(fileName);
       imageFrame && imageFrame.classList.toggle('is-two-images', Boolean(secondFileName));
 
+      async function deleteImage(targetFileName) {
+        const response = await fetch('/api/upload-heavy-licence?file=' + encodeURIComponent(targetFileName), {
+          method: 'DELETE'
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.error || 'Unable to delete image.');
+        }
+      }
+
+      async function deleteAllImagesAndReturn() {
+        const filesToDelete = [fileName];
+
+        if (secondFileName) {
+          filesToDelete.push(secondFileName);
+        }
+
+        await Promise.all(filesToDelete.map(deleteImage));
+        window.location.href = '/owner-heavy-driving-licence.html';
+      }
+
       if (secondFileName && imageGrid) {
         const secondaryImageNode = document.createElement('img');
         secondaryImageNode.alt = 'Saved uploaded photo 2';
@@ -116,21 +139,12 @@
             secondaryDeleteButton.addEventListener('click', async function () {
               try {
                 secondaryDeleteButton.disabled = true;
-
-                const response = await fetch('/api/upload-heavy-licence?file=' + encodeURIComponent(secondFileName), {
-                  method: 'DELETE'
-                });
-
-                const payload = await response.json();
-
-                if (!response.ok || !payload.success) {
-                  throw new Error(payload.error || 'Unable to delete image.');
-                }
-
-                window.location.href = '/owner-uploaded-photo.html?file=' + encodeURIComponent(fileName);
+                deleteButton && (deleteButton.disabled = true);
+                await deleteAllImagesAndReturn();
               } catch (error) {
                 window.alert(error.message || 'Unable to delete image.');
                 secondaryDeleteButton.disabled = false;
+                deleteButton && (deleteButton.disabled = false);
               }
             });
           }
@@ -223,21 +237,18 @@
           try {
             deleteButton.disabled = true;
 
-            const response = await fetch('/api/upload-heavy-licence?file=' + encodeURIComponent(fileName), {
-              method: 'DELETE'
-            });
-
-            const payload = await response.json();
-
-            if (!response.ok || !payload.success) {
-              throw new Error(payload.error || 'Unable to delete image.');
-            }
-
             if (secondFileName) {
-              window.location.href = '/owner-uploaded-photo.html?file=' + encodeURIComponent(secondFileName);
+              const secondaryDeleteButton = document.querySelector('[data-owner-uploaded-delete-secondary]');
+
+              if (secondaryDeleteButton) {
+                secondaryDeleteButton.disabled = true;
+              }
+
+              await deleteAllImagesAndReturn();
               return;
             }
 
+            await deleteImage(fileName);
             window.location.href = '/owner-heavy-driving-licence.html';
           } catch (error) {
             window.alert(error.message || 'Unable to delete image.');

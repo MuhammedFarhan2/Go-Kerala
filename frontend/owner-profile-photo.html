@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Photo</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260408-3">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Profile photo instructions">
+      <div class="owner-blank-content owner-profile-content">
+        <h1 class="owner-profile-title">Take your profile photo</h1>
+        <ol class="owner-profile-points">
+          <li>Face the camera directly with your eyes and mouth clearly visible</li>
+          <li>Make sure the photo is well lit, free of glare, and in focus</li>
+          <li>No photos of a photo, filters, or alterations</li>
+        </ol>
+
+        <figure class="owner-profile-reference-frame">
+          <img
+            src="profile-photo-reference.avif"
+            alt="Reference example for taking a profile photo"
+            class="owner-profile-reference-image"
+          >
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <div class="owner-heavy-bottom-bar owner-profile-bottom-bar">
+    <input
+      type="file"
+      accept="image/*"
+      capture="user"
+      hidden
+      data-owner-profile-camera-input
+    >
+    <button type="button" class="owner-next-btn owner-profile-action-btn" data-owner-profile-action-btn>
+      Take photo
+    </button>
+  </div>
+
+  <div class="owner-profile-modal-backdrop" hidden data-owner-profile-modal-backdrop>
+    <section class="owner-profile-modal" aria-label="Continue on mobile device">
+      <button type="button" class="owner-profile-modal-close" aria-label="Close dialog" data-owner-profile-modal-close>&times;</button>
+      <h2 class="owner-profile-modal-title">Continue on your mobile device</h2>
+      <p class="owner-profile-modal-text">
+        You can always come back later and continue required steps on this desktop.
+      </p>
+      <button type="button" class="owner-next-btn owner-profile-modal-action" data-owner-profile-qr-btn>Use QR code</button>
+    </section>
+  </div>
+
+  <div class="owner-profile-camera" hidden data-owner-profile-camera>
+    <div class="owner-profile-camera-stage">
+      <video class="owner-profile-camera-video" autoplay playsinline muted data-owner-profile-video></video>
+      <div class="owner-profile-camera-mask" aria-hidden="true">
+        <div class="owner-profile-camera-oval"></div>
+      </div>
+      <div class="owner-profile-camera-copy">
+        <h2 class="owner-profile-camera-title">Take a selfie</h2>
+        <p class="owner-profile-camera-text">Position your face in the oval and hold still.</p>
+      </div>
+      <button type="button" class="owner-profile-camera-capture" aria-label="Capture selfie" data-owner-profile-camera-capture>
+        <span class="owner-profile-camera-capture-ring"></span>
+      </button>
+    </div>
+  </div>
+
+  <script src="script.js?v=20260408-3"></script>
+  <script>
+    (function () {
+      const actionButton = document.querySelector('[data-owner-profile-action-btn]');
+      const cameraInput = document.querySelector('[data-owner-profile-camera-input]');
+      const cameraOverlay = document.querySelector('[data-owner-profile-camera]');
+      const modalBackdrop = document.querySelector('[data-owner-profile-modal-backdrop]');
+      const modalCloseButton = document.querySelector('[data-owner-profile-modal-close]');
+      const qrButton = document.querySelector('[data-owner-profile-qr-btn]');
+      const videoNode = document.querySelector('[data-owner-profile-video]');
+      const captureButton = document.querySelector('[data-owner-profile-camera-capture]');
+      const ovalNode = document.querySelector('.owner-profile-camera-oval');
+      let activeStream = null;
+
+      if (!actionButton || !cameraInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !ovalNode) {
+        return;
+      }
+
+      const isMobileDevice = window.matchMedia('(max-width: 680px)').matches || window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+      actionButton.classList.toggle('is-desktop', !isMobileDevice);
+
+      if (!isMobileDevice) {
+        actionButton.textContent = 'Use my phone';
+      }
+
+      function stopCamera() {
+        if (activeStream) {
+          activeStream.getTracks().forEach(function (track) {
+            track.stop();
+          });
+          activeStream = null;
+        }
+
+        videoNode.srcObject = null;
+        cameraOverlay.hidden = true;
+        document.documentElement.classList.remove('is-camera-open');
+      }
+
+      function closeDesktopModal() {
+        modalBackdrop.hidden = true;
+        document.documentElement.classList.remove('is-profile-modal-open');
+      }
+
+      function openDesktopModal() {
+        modalBackdrop.hidden = false;
+        document.documentElement.classList.add('is-profile-modal-open');
+      }
+
+      async function openCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          cameraInput.click();
+          return;
+        }
+
+        try {
+          activeStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: 'user'
+            },
+            audio: false
+          });
+
+          videoNode.srcObject = activeStream;
+          cameraOverlay.hidden = false;
+          document.documentElement.classList.add('is-camera-open');
+          await videoNode.play();
+        } catch (error) {
+          cameraInput.click();
+        }
+      }
+
+      function captureFromOval() {
+        if (!videoNode.videoWidth || !videoNode.videoHeight) {
+          return;
+        }
+
+        const videoRect = videoNode.getBoundingClientRect();
+        const ovalRect = ovalNode.getBoundingClientRect();
+        const scaleX = videoNode.videoWidth / videoRect.width;
+        const scaleY = videoNode.videoHeight / videoRect.height;
+        const cropX = Math.max(0, (ovalRect.left - videoRect.left) * scaleX);
+        const cropY = Math.max(0, (ovalRect.top - videoRect.top) * scaleY);
+        const cropWidth = Math.min(videoNode.videoWidth - cropX, ovalRect.width * scaleX);
+        const cropHeight = Math.min(videoNode.videoHeight - cropY, ovalRect.height * scaleY);
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = Math.round(cropWidth);
+        canvas.height = Math.round(cropHeight);
+
+        if (!context) {
+          return;
+        }
+
+        context.save();
+        context.beginPath();
+        context.ellipse(canvas.width / 2, canvas.height / 2, canvas.width / 2, canvas.height / 2, 0, 0, Math.PI * 2);
+        context.clip();
+        context.drawImage(
+          videoNode,
+          cropX,
+          cropY,
+          cropWidth,
+          cropHeight,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        context.restore();
+
+        sessionStorage.setItem('owner-profile-photo', canvas.toDataURL('image/png'));
+        stopCamera();
+        window.alert('Profile photo captured.');
+      }
+
+      actionButton.addEventListener('click', function () {
+        if (isMobileDevice) {
+          openCamera();
+          return;
+        }
+
+        openDesktopModal();
+      });
+
+      captureButton.addEventListener('click', captureFromOval);
+      modalCloseButton.addEventListener('click', closeDesktopModal);
+      modalBackdrop.addEventListener('click', function (event) {
+        if (event.target === modalBackdrop) {
+          closeDesktopModal();
+        }
+      });
+      qrButton.addEventListener('click', function () {
+        window.location.href = '/owner-profile-photo-qr.html';
+      });
+
+      cameraInput.addEventListener('change', function () {
+        const file = cameraInput.files && cameraInput.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function () {
+          sessionStorage.setItem('owner-profile-photo', String(reader.result || ''));
+          window.alert('Profile photo selected.');
+        };
+
+        reader.readAsDataURL(file);
+      });
+    })();
+  </script>
+</body>
+</html>
