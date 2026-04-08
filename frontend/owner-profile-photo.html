@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260408-3">
+  <link rel="stylesheet" href="style.css?v=20260408-4">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -86,7 +86,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=20260408-3"></script>
+  <script src="script.js?v=20260408-4"></script>
   <script>
     (function () {
       const actionButton = document.querySelector('[data-owner-profile-action-btn]');
@@ -200,7 +200,7 @@
 
         sessionStorage.setItem('owner-profile-photo', canvas.toDataURL('image/png'));
         stopCamera();
-        window.alert('Profile photo captured.');
+        window.location.href = '/owner-profile-photo-success.html';
       }
 
       actionButton.addEventListener('click', function () {
@@ -234,7 +234,7 @@
 
         reader.onload = function () {
           sessionStorage.setItem('owner-profile-photo', String(reader.result || ''));
-          window.alert('Profile photo selected.');
+          window.location.href = '/owner-profile-photo-success.html';
         };
 
         reader.readAsDataURL(file);

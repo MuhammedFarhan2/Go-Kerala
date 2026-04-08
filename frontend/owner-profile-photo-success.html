@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Photo Submitted</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260408-4">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <main class="owner-profile-success-main">
+    <section class="owner-profile-success-card" aria-label="Profile photo success">
+      <div class="owner-profile-success-check" aria-hidden="true">✓</div>
+      <h1 class="owner-profile-success-title">Thanks for your photo</h1>
+      <p class="owner-profile-success-text">
+        It usually takes less than a day or so for an agent to review your information.
+      </p>
+    </section>
+  </main>
+
+  <div class="owner-heavy-bottom-bar owner-profile-success-bottom-bar">
+    <button type="button" class="owner-next-btn owner-profile-success-btn" data-owner-profile-success-btn>OK</button>
+  </div>
+
+  <script src="script.js?v=20260408-4"></script>
+  <script>
+    (function () {
+      const okButton = document.querySelector('[data-owner-profile-success-btn]');
+
+      if (!okButton) {
+        return;
+      }
+
+      okButton.addEventListener('click', function () {
+        window.location.href = '/owner-next.html';
+      });
+    })();
+  </script>
+</body>
+</html>
