@@ -1,10 +1,10 @@
 {
-  "name": "mymusics",
+  "name": "saath-backend",
   "version": "1.0.0",
   "private": true,
-  "main": "backend/app.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node backend/app.js"
+    "start": "node app.js"
   },
   "engines": {
     "node": ">=18"
