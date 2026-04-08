@@ -138,9 +138,13 @@ function handleUploadDelete(requestUrl, response) {
     return;
   }
 
-  fs.unlink(targetPath, function (error) {
+  fs.rm(targetPath, {
+    force: true,
+    maxRetries: 5,
+    retryDelay: 150
+  }, function (error) {
     if (error && error.code !== 'ENOENT') {
-      sendJson(response, 500, { error: 'Unable to delete file.' });
+      sendJson(response, 500, { error: 'Unable to delete file.', code: error.code || 'UNKNOWN' });
       return;
     }
 
