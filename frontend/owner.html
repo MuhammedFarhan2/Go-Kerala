@@ -8,6 +8,7 @@
     document.documentElement.classList.add('show-page-loader');
   </script>
   <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
@@ -163,7 +164,9 @@
       const passwordErrorText = document.querySelector('[data-owner-password-error]');
       const googleRegisterButton = document.querySelector('[data-google-register-btn]');
       const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const modeLabel = document.querySelector('[data-owner-auth-mode-label]');
       const titleText = document.querySelector('[data-owner-auth-title]');
       const subtitleText = document.querySelector('[data-owner-auth-subtitle]');
@@ -234,6 +237,14 @@
         sessionStorage.setItem('owner-first-name', firstName);
         sessionStorage.setItem('owner-last-name', lastName);
         sessionStorage.setItem('owner-email', email);
+      }
+
+      function getApiUrl(pathName) {
+        if (!apiBaseUrl) {
+          return pathName;
+        }
+
+        return apiBaseUrl + pathName;
       }
 
       [firstNameInput, lastNameInput, emailInput, passwordInput, confirmPasswordInput].forEach(function (input) {
@@ -340,7 +351,7 @@
               return;
             }
 
-            fetch('/api/auth/google', {
+            fetch(getApiUrl('/api/auth/google'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -350,7 +361,17 @@
               })
             })
               .then(function (apiResponse) {
-                return apiResponse.json().then(function (data) {
+                return apiResponse.text().then(function (text) {
+                  let data = {};
+
+                  try {
+                    data = text ? JSON.parse(text) : {};
+                  } catch (error) {
+                    data = {
+                      error: text || 'Unexpected server response.'
+                    };
+                  }
+
                   return {
                     ok: apiResponse.ok,
                     data: data
