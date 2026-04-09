@@ -5,6 +5,7 @@ const { URL } = require('url');
 
 const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT) || 3000;
+const GOOGLE_CLIENT_ID = String(process.env.GOOGLE_CLIENT_ID || '').trim();
 const PROJECT_ROOT = path.join(__dirname, '..');
 const FRONTEND_DIR = path.join(PROJECT_ROOT, 'frontend');
 const UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
@@ -23,6 +24,26 @@ const MIME_TYPES = {
 };
 
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+let googleOAuthClient = null;
+
+function getGoogleOAuthClient() {
+  if (!GOOGLE_CLIENT_ID) {
+    return null;
+  }
+
+  if (googleOAuthClient) {
+    return googleOAuthClient;
+  }
+
+  try {
+    const { OAuth2Client } = require('google-auth-library');
+    googleOAuthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+    return googleOAuthClient;
+  } catch (error) {
+    return null;
+  }
+}
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
@@ -50,6 +71,31 @@ function sendFile(response, filePath) {
       'Content-Type': MIME_TYPES[extension] || 'application/octet-stream'
     });
     response.end(data);
+  });
+}
+
+function readJsonBody(request) {
+  return new Promise(function (resolve, reject) {
+    let body = '';
+
+    request.on('data', function (chunk) {
+      body += chunk;
+
+      if (body.length > 1024 * 1024) {
+        reject(new Error('Payload too large.'));
+        request.destroy();
+      }
+    });
+
+    request.on('end', function () {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (error) {
+        reject(new Error('Invalid JSON payload.'));
+      }
+    });
+
+    request.on('error', reject);
   });
 }
 
@@ -152,8 +198,72 @@ function handleUploadDelete(requestUrl, response) {
   });
 }
 
+async function handleGoogleAuth(request, response) {
+  if (!GOOGLE_CLIENT_ID) {
+    sendJson(response, 500, {
+      error: 'Google sign-in is not configured on the server.'
+    });
+    return;
+  }
+
+  const oauthClient = getGoogleOAuthClient();
+
+  if (!oauthClient) {
+    sendJson(response, 500, {
+      error: 'Google auth library is missing. Run npm install in backend.'
+    });
+    return;
+  }
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const credential = String(payload.credential || '').trim();
+
+  if (!credential) {
+    sendJson(response, 400, { error: 'Missing Google credential.' });
+    return;
+  }
+
+  try {
+    const ticket = await oauthClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID
+    });
+    const googlePayload = ticket.getPayload() || {};
+    const fullName = String(googlePayload.name || '').trim();
+    const splitName = fullName ? fullName.split(/\s+/) : [];
+    const firstName = String(googlePayload.given_name || splitName[0] || '').trim();
+    const lastName = String(googlePayload.family_name || splitName.slice(1).join(' ') || '').trim();
+    const email = String(googlePayload.email || '').trim();
+
+    sendJson(response, 200, {
+      success: true,
+      user: {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        name: [firstName, lastName].filter(Boolean).join(' ').trim() || fullName
+      }
+    });
+  } catch (error) {
+    sendJson(response, 401, { error: 'Google account verification failed.' });
+  }
+}
+
 const server = http.createServer(function (request, response) {
   const requestUrl = new URL(request.url, 'http://' + request.headers.host);
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/auth/google') {
+    handleGoogleAuth(request, response);
+    return;
+  }
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/upload-heavy-licence') {
     handleUpload(request, response);
