@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aadhaar Card</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260408-1">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header owner-fixed-header">
+    <h1 class="logo">Saath</h1>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Aadhaar card page">
+      <div class="owner-blank-content owner-aadhaar-content">
+        <p class="owner-aadhaar-title">Take a photo of your Aadhaar Card</p>
+
+        <div class="owner-aadhaar-card-preview">
+          <img
+            src="Aadhaar-Card.png"
+            alt="Aadhaar card example"
+            class="owner-aadhaar-card-image"
+          >
+        </div>
+
+        <p class="owner-aadhaar-note">
+          By sharing your Aadhar details, you hereby confirm that you have shared such detail voluntarily. You further confirm and consent that your Aadhar details may be shared with relevant Government authorities for the purposes provided herein.
+        </p>
+
+        <p class="owner-aadhaar-status" data-owner-aadhaar-status hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <div class="owner-heavy-bottom-bar">
+    <input
+      type="file"
+      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+      hidden
+      data-owner-aadhaar-upload-input
+    >
+    <input
+      type="file"
+      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+      capture="environment"
+      hidden
+      data-owner-aadhaar-phone-input
+    >
+
+    <div class="owner-heavy-upload-menu owner-aadhaar-upload-menu" hidden data-owner-aadhaar-upload-menu>
+      <button type="button" class="owner-heavy-upload-option owner-aadhaar-upload-option" data-owner-aadhaar-action="upload-photo">Upload photo</button>
+      <button type="button" class="owner-heavy-upload-option owner-aadhaar-upload-option" data-owner-aadhaar-action="use-phone">Take photo with Camera</button>
+    </div>
+
+    <button type="button" class="owner-next-btn owner-heavy-add-photo-btn owner-aadhaar-trigger-btn" data-owner-aadhaar-upload-trigger>Add photo</button>
+  </div>
+
+  <script src="script.js?v=20260408-1"></script>
+  <script>
+    (function () {
+      const triggerButton = document.querySelector('[data-owner-aadhaar-upload-trigger]');
+      const uploadMenu = document.querySelector('[data-owner-aadhaar-upload-menu]');
+      const uploadInput = document.querySelector('[data-owner-aadhaar-upload-input]');
+      const phoneInput = document.querySelector('[data-owner-aadhaar-phone-input]');
+      const actionButtons = Array.from(document.querySelectorAll('[data-owner-aadhaar-action]'));
+      const statusNode = document.querySelector('[data-owner-aadhaar-status]');
+
+      if (!triggerButton || !uploadMenu || !uploadInput || !phoneInput || !statusNode) {
+        return;
+      }
+
+      function closeMenu() {
+        uploadMenu.classList.remove('is-open');
+        window.setTimeout(function () {
+          if (!uploadMenu.classList.contains('is-open')) {
+            uploadMenu.hidden = true;
+          }
+        }, 220);
+      }
+
+      function showSelectedFile(file) {
+        if (!file) {
+          return;
+        }
+
+        statusNode.hidden = false;
+        statusNode.textContent = 'Selected file: ' + file.name;
+        triggerButton.textContent = 'Photo selected';
+      }
+
+      triggerButton.addEventListener('click', function () {
+        const isOpen = uploadMenu.classList.contains('is-open');
+
+        if (isOpen) {
+          closeMenu();
+          return;
+        }
+
+        uploadMenu.hidden = false;
+        window.requestAnimationFrame(function () {
+          uploadMenu.classList.add('is-open');
+        });
+      });
+
+      actionButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const action = button.getAttribute('data-owner-aadhaar-action');
+          closeMenu();
+
+          if (action === 'upload-photo') {
+            uploadInput.click();
+            return;
+          }
+
+          if (action === 'use-phone') {
+            phoneInput.click();
+          }
+        });
+      });
+
+      uploadInput.addEventListener('change', function () {
+        showSelectedFile(uploadInput.files[0]);
+      });
+
+      phoneInput.addEventListener('change', function () {
+        showSelectedFile(phoneInput.files[0]);
+      });
+
+      document.addEventListener('click', function (event) {
+        if (!uploadMenu.classList.contains('is-open')) {
+          return;
+        }
+
+        if (uploadMenu.contains(event.target) || triggerButton.contains(event.target)) {
+          return;
+        }
+
+        closeMenu();
+      });
+    })();
+  </script>
+</body>
+</html>

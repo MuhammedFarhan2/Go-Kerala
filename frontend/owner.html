@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Owner Panel</title>
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
+  <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
 <body>
@@ -21,56 +23,392 @@
     </div>
   </div>
 
-  <header class="header owner-header">
-    <h1 class="logo">Saath</h1>
+  <header class="header owner-auth-header">
+    <h1 class="logo owner-auth-logo">Go Kerala</h1>
   </header>
 
-  <main class="owner-main">
-    <section class="owner-sheet owner-sheet-intro" aria-label="Owner setup sheet">
-      <div class="owner-name-card" data-owner-step="name">
-        <h1 class="owner-name-title">What is your name?</h1>
-        <input type="text" class="owner-name-input" placeholder="Enter your full name" aria-label="Your name" data-owner-name-input>
-        <p class="owner-name-error" data-owner-name-error hidden>Enter your name</p>
-        <div class="owner-name-actions">
-          <button type="button" class="owner-next-btn" data-owner-next-btn>Next</button>
+  <main class="owner-main owner-auth-main">
+    <section class="owner-auth-shell" aria-label="Create account">
+      <div class="owner-auth-visual" aria-hidden="true">
+        <div class="swiper owner-auth-banner" id="ownerBanner" aria-label="Homepage banner slider">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <div class="owner-auth-banner-card">
+                <img
+                  class="owner-auth-banner-img"
+                  src="https://picsum.photos/id/1011/1400/700"
+                  alt="Banner slide 1"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="owner-auth-banner-card">
+                <img
+                  class="owner-auth-banner-img"
+                  src="https://picsum.photos/id/1025/1400/700"
+                  alt="Banner slide 2"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="owner-auth-banner-card">
+                <img
+                  class="owner-auth-banner-img"
+                  src="https://picsum.photos/id/1035/1400/700"
+                  alt="Banner slide 3"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="swiper-pagination owner-auth-banner-pagination" aria-label="Slider navigation dots"></div>
+        </div>
+      </div>
+
+      <div class="owner-auth-panel">
+        <div class="owner-auth-panel-head">
+          <p class="owner-auth-top-link" data-owner-auth-mode-label>Login</p>
+          <h1 class="owner-auth-title" data-owner-auth-title>Create an account</h1>
+          <p class="owner-auth-subtitle" data-owner-auth-subtitle>Already have an account? <a href="owner.html?mode=login" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a></p>
+        </div>
+
+        <form class="owner-auth-form" data-owner-auth-form novalidate>
+          <div class="owner-auth-grid" data-owner-auth-name-grid>
+            <label class="owner-auth-field">
+              <span class="owner-auth-field-label">First name</span>
+              <input type="text" class="owner-auth-input" placeholder="First name" autocomplete="given-name" data-owner-first-name>
+            </label>
+            <label class="owner-auth-field">
+              <span class="owner-auth-field-label">Last name</span>
+              <input type="text" class="owner-auth-input" placeholder="Last name" autocomplete="family-name" data-owner-last-name>
+            </label>
+          </div>
+
+          <label class="owner-auth-field">
+            <span class="owner-auth-field-label">Email</span>
+            <input type="email" class="owner-auth-input" placeholder="Email" autocomplete="email" data-owner-email>
+          </label>
+
+          <label class="owner-auth-field">
+            <span class="owner-auth-field-label">Password</span>
+            <span class="owner-auth-password-wrap">
+              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Enter your password" autocomplete="new-password" data-owner-password>
+              <button type="button" class="owner-auth-password-toggle" data-password-toggle data-password-target="password" aria-label="Show password">
+                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle>
+                </svg>
+                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle>
+                  <path d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+                </svg>
+              </button>
+            </span>
+            <span class="owner-auth-field-error" data-owner-password-error hidden>Password must be at least 6 characters.</span>
+          </label>
+
+          <label class="owner-auth-field" data-owner-confirm-password-field>
+            <span class="owner-auth-field-label">Confirm password</span>
+            <span class="owner-auth-password-wrap">
+              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Confirm your password" autocomplete="new-password" data-owner-confirm-password>
+              <button type="button" class="owner-auth-password-toggle" data-password-toggle data-password-target="confirm-password" aria-label="Show confirm password">
+                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle>
+                </svg>
+                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle>
+                  <path d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+                </svg>
+              </button>
+            </span>
+          </label>
+
+          <p class="owner-auth-error" data-owner-auth-error hidden>Please fill first name, last name, email, and password.</p>
+
+          <button type="submit" class="owner-auth-submit">Create account</button>
+        </form>
+
+        <div class="owner-auth-divider">
+          <span></span>
+          <p>Or register with</p>
+          <span></span>
+        </div>
+
+        <div class="owner-auth-socials" aria-label="Register with social account">
+          <div class="owner-auth-google-wrap">
+            <div class="owner-auth-google-button" data-google-register-btn></div>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="script.js?v=20260406-2"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (function () {
-      const nameInput = document.querySelector('[data-owner-name-input]');
-      const errorText = document.querySelector('[data-owner-name-error]');
-      const nextButton = document.querySelector('[data-owner-next-btn]');
+      const form = document.querySelector('[data-owner-auth-form]');
+      const firstNameInput = document.querySelector('[data-owner-first-name]');
+      const lastNameInput = document.querySelector('[data-owner-last-name]');
+      const emailInput = document.querySelector('[data-owner-email]');
+      const passwordInput = document.querySelector('[data-owner-password]');
+      const confirmPasswordInput = document.querySelector('[data-owner-confirm-password]');
+      const errorText = document.querySelector('[data-owner-auth-error]');
+      const passwordErrorText = document.querySelector('[data-owner-password-error]');
+      const googleRegisterButton = document.querySelector('[data-google-register-btn]');
+      const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
+      const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
+      const modeLabel = document.querySelector('[data-owner-auth-mode-label]');
+      const titleText = document.querySelector('[data-owner-auth-title]');
+      const subtitleText = document.querySelector('[data-owner-auth-subtitle]');
+      const switchLink = document.querySelector('[data-owner-auth-switch-link]');
+      const nameGrid = document.querySelector('[data-owner-auth-name-grid]');
+      const confirmPasswordField = document.querySelector('[data-owner-confirm-password-field]');
+      const passwordToggles = Array.from(document.querySelectorAll('[data-password-toggle]'));
+      const pageParams = new URLSearchParams(window.location.search);
+      const authMode = pageParams.get('mode') === 'login' ? 'login' : 'register';
 
-      if (!nameInput || !errorText || !nextButton) {
+      if (!form || !firstNameInput || !lastNameInput || !emailInput || !passwordInput || !confirmPasswordInput || !errorText || !passwordErrorText) {
         return;
+      }
+
+      function syncAuthMode() {
+        const isLogin = authMode === 'login';
+
+        if (modeLabel) {
+          modeLabel.textContent = isLogin ? 'Login' : 'Register';
+        }
+
+        if (titleText) {
+          titleText.textContent = isLogin ? 'Log in' : 'Create an account';
+        }
+
+        if (subtitleText) {
+          subtitleText.innerHTML = isLogin
+            ? 'Need an account? <a href="owner.html" class="owner-auth-inline-link" data-owner-auth-switch-link>Create account</a>'
+            : 'Already have an account? <a href="owner.html?mode=login" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a>';
+        }
+
+        if (nameGrid) {
+          nameGrid.hidden = isLogin;
+          nameGrid.classList.toggle('is-hidden', isLogin);
+          nameGrid.setAttribute('aria-hidden', isLogin ? 'true' : 'false');
+        }
+
+        if (confirmPasswordField) {
+          confirmPasswordField.hidden = isLogin;
+        }
+
+        firstNameInput.disabled = isLogin;
+        lastNameInput.disabled = isLogin;
+        confirmPasswordInput.disabled = isLogin;
+
+        if (isLogin) {
+          firstNameInput.value = '';
+          lastNameInput.value = '';
+          confirmPasswordInput.value = '';
+        }
       }
 
       function hideError() {
         errorText.hidden = true;
       }
 
-      nameInput.addEventListener('input', function () {
-        if (nameInput.value.trim()) {
-          hideError();
-        }
+      function hidePasswordError() {
+        passwordErrorText.hidden = true;
+      }
+
+      function showError(message) {
+        errorText.textContent = message;
+        errorText.hidden = false;
+      }
+
+      function storeOwnerSession(firstName, lastName, email) {
+        sessionStorage.setItem('owner-name', [firstName, lastName].filter(Boolean).join(' ').trim());
+        sessionStorage.setItem('owner-first-name', firstName);
+        sessionStorage.setItem('owner-last-name', lastName);
+        sessionStorage.setItem('owner-email', email);
+      }
+
+      [firstNameInput, lastNameInput, emailInput, passwordInput, confirmPasswordInput].forEach(function (input) {
+        input.addEventListener('input', function () {
+          if (input === passwordInput && passwordInput.value.trim().length >= 6) {
+            hidePasswordError();
+          }
+
+          if (
+            firstNameInput.value.trim() &&
+            lastNameInput.value.trim() &&
+            emailInput.value.trim() &&
+            passwordInput.value.trim() &&
+            confirmPasswordInput.value.trim()
+          ) {
+            hideError();
+          }
+        });
       });
 
-      nextButton.addEventListener('click', function () {
-        const ownerName = nameInput.value.trim();
+      passwordToggles.forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+          const targetName = toggle.getAttribute('data-password-target');
+          const targetInput = targetName === 'confirm-password' ? confirmPasswordInput : passwordInput;
 
-        if (!ownerName) {
-          errorText.hidden = false;
-          nameInput.focus();
+          if (!targetInput) {
+            return;
+          }
+
+          const nextType = targetInput.type === 'password' ? 'text' : 'password';
+          targetInput.type = nextType;
+          toggle.classList.toggle('is-visible', nextType === 'text');
+          toggle.setAttribute('aria-label', nextType === 'password' ? 'Show password' : 'Hide password');
+        });
+      });
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+        const isLogin = authMode === 'login';
+
+        if ((!isLogin && (!firstName || !lastName || !email || !password || !confirmPassword)) || (isLogin && (!email || !password))) {
+          showError(isLogin ? 'Please fill email and password.' : 'Please fill first name, last name, email, password, and confirm password.');
+          if (!isLogin && !firstName) {
+            firstNameInput.focus();
+          } else if (!isLogin && !lastName) {
+            lastNameInput.focus();
+          } else if (!email) {
+            emailInput.focus();
+          } else if (!password) {
+            passwordInput.focus();
+          } else if (!isLogin && !confirmPassword) {
+            confirmPasswordInput.focus();
+          } else {
+            passwordInput.focus();
+          }
+          return;
+        }
+
+        if (password.length < 6) {
+          passwordErrorText.hidden = false;
+          passwordInput.focus();
+          return;
+        }
+
+        hidePasswordError();
+
+        if (!isLogin && password !== confirmPassword) {
+          showError('Password and confirm password must match.');
+          confirmPasswordInput.focus();
           return;
         }
 
         hideError();
-        sessionStorage.setItem('owner-name', ownerName);
+        storeOwnerSession(isLogin ? '' : firstName, isLogin ? '' : lastName, email);
         window.location.href = 'owner-details.html';
+      });
+
+      function initializeGoogleAuth() {
+        if (!googleRegisterButton) {
+          return;
+        }
+
+        if (!googleClientId || googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
+          showError('Add your Google Client ID in owner.html and backend env to enable Google registration.');
+          return;
+        }
+
+        if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+          showError('Google sign-in could not load.');
+          return;
+        }
+
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: function (response) {
+            if (!response || !response.credential) {
+              showError('Google sign-in did not return a valid credential.');
+              return;
+            }
+
+            fetch('/api/auth/google', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                credential: response.credential
+              })
+            })
+              .then(function (apiResponse) {
+                return apiResponse.json().then(function (data) {
+                  return {
+                    ok: apiResponse.ok,
+                    data: data
+                  };
+                });
+              })
+              .then(function (result) {
+                if (!result.ok || !result.data || !result.data.user) {
+                  throw new Error((result.data && result.data.error) || 'Google registration failed.');
+                }
+
+                const user = result.data.user;
+                hideError();
+                storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
+                window.location.href = 'owner-details.html';
+              })
+              .catch(function (error) {
+                showError(error.message || 'Google registration failed.');
+              });
+          }
+        });
+
+        function renderGoogleButton() {
+          const buttonWidth = Math.max(300, Math.floor(googleRegisterButton.getBoundingClientRect().width || googleRegisterButton.clientWidth || 300));
+          googleRegisterButton.innerHTML = '';
+          window.google.accounts.id.renderButton(googleRegisterButton, {
+            theme: 'outline',
+            size: 'large',
+            text: 'signup_with',
+            shape: 'rectangular',
+            width: buttonWidth
+          });
+        }
+
+        renderGoogleButton();
+        window.addEventListener('resize', renderGoogleButton);
+      }
+
+      syncAuthMode();
+
+      if (window.Swiper) {
+        new Swiper('#ownerBanner', {
+          loop: true,
+          speed: 700,
+          autoplay: {
+            delay: 3000,
+            disableOnInteraction: false
+          },
+          slidesPerView: 1,
+          pagination: {
+            el: '.owner-auth-banner-pagination',
+            clickable: true
+          }
+        });
+      }
+
+      window.addEventListener('load', function () {
+        initializeGoogleAuth();
       });
     })();
   </script>
