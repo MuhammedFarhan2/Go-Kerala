@@ -240,6 +240,17 @@
         sessionStorage.setItem('owner-first-name', firstName);
         sessionStorage.setItem('owner-last-name', lastName);
         sessionStorage.setItem('owner-email', email);
+        localStorage.setItem('owner-authenticated', 'true');
+      }
+
+      function getResumePage() {
+        const savedPage = String(localStorage.getItem('owner-last-page') || '').trim();
+
+        if (!savedPage || savedPage.indexOf('owner.html') === 0) {
+          return 'owner-details.html';
+        }
+
+        return savedPage;
       }
 
       function getApiUrl(pathName) {
@@ -328,7 +339,7 @@
 
         hideError();
         storeOwnerSession(isLogin ? '' : firstName, isLogin ? '' : lastName, email);
-        window.location.href = 'owner-details.html';
+        window.location.href = getResumePage();
       });
 
       function initializeGoogleAuth() {
@@ -389,7 +400,7 @@
                 const user = result.data.user;
                 hideError();
                 storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
-                window.location.href = 'owner-details.html';
+                window.location.href = getResumePage();
               })
               .catch(function (error) {
                 showError(error.message || 'Google registration failed.');
@@ -414,6 +425,11 @@
       }
 
       syncAuthMode();
+
+      if (localStorage.getItem('owner-authenticated') === 'true') {
+        window.location.href = getResumePage();
+        return;
+      }
 
       if (window.Swiper) {
         new Swiper('#ownerBanner', {

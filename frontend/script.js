@@ -93,6 +93,28 @@
 })();
 
 (function () {
+  const currentPath = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  const currentUrl = currentPath + window.location.search;
+  const resumableOwnerPages = new Set([
+    'owner-details.html',
+    'owner-categories.html',
+    'owner-coverage.html',
+    'owner-next.html',
+    'owner-heavy-driving-licence.html',
+    'owner-heavy-driving-licence-upload.html',
+    'owner-aadhaar-card.html',
+    'owner-profile-photo.html',
+    'owner-uploaded-photo.html',
+    'owner-profile-photo-qr.html',
+    'owner-profile-photo-success.html'
+  ]);
+
+  if (resumableOwnerPages.has(currentPath)) {
+    localStorage.setItem('owner-last-page', currentUrl);
+  }
+})();
+
+(function () {
   const accountBtn = document.getElementById('account-btn');
   const accountPanel = document.getElementById('account-panel');
   const backdrop = document.getElementById('account-backdrop');

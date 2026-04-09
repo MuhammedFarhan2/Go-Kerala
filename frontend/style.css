@@ -563,7 +563,7 @@ html {
 
 /* Header - Uber style */
 :root {
-  --header-height: 78px;
+  --header-height: 56px;
   --banner-bg: #0b0f19;
   --dots: rgba(255, 255, 255, 0.55);
   --dots-active: #ffffff;
@@ -580,25 +580,26 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem;
+  padding: 0.65rem 2rem;
   height: var(--header-height);
   background: #fff;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #111;
   position: sticky;
   top: 0;
   z-index: 1200;
 }
 
 .header.panel-open {
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #111;
 }
 
 .logo {
   color: #111;
   font-size: 1.5rem;
   font-weight: 600;
-  margin-left: 1.5px;
+  margin: 0 0 1px 1.5px;
   letter-spacing: 0.06em;
+  line-height: 0.9;
 }
 
 .brand-lockup {
@@ -606,17 +607,21 @@ html {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 4px;
-  min-height: calc(var(--header-height) - 24px);
+  gap: 0;
+  min-height: auto;
 }
 
 .logo-sub {
   margin: 0;
-  color: #555;
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: #111;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.24em;
   line-height: 1;
+  margin-left: 7px;
 }
 
 .index-brand-lockup {
@@ -624,8 +629,8 @@ html {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 4px;
-  min-height: calc(var(--header-height) - 24px);
+  gap: 0;
+  min-height: auto;
 }
 
 .index-logo {
@@ -759,9 +764,9 @@ html {
 
 .owner-auth-header {
   justify-content: flex-start;
-  padding: 1rem 1.4rem;
+  padding: 0.65rem 1.4rem;
   background: #ffffff;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #111;
 }
 
 .owner-auth-brand-lockup {
@@ -769,8 +774,8 @@ html {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 4px;
-  min-height: calc(var(--header-height) - 24px);
+  gap: 0;
+  min-height: auto;
 }
 
 .owner-auth-logo {
@@ -781,11 +786,15 @@ html {
 
 .owner-auth-logo-sub {
   margin: 0;
-  color: #555;
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: #111;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.24em;
   line-height: 1;
+  margin-left: 7px;
 }
 
 .owner-auth-main {
@@ -1163,7 +1172,7 @@ html {
 
 @media (max-width: 640px) {
   :root {
-    --header-height: 72px;
+    --header-height: 52px;
   }
 
   .owner-auth-header {
@@ -1517,11 +1526,12 @@ html {
 }
 
 .owner-blank-header {
-  background: #111;
+  background: #fff;
+  border-bottom: 1px solid #111;
 }
 
 .owner-blank-header .logo {
-  color: #fff;
+  color: #111;
 }
 
 .owner-blank-main {
