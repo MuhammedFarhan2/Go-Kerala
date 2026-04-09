@@ -37,9 +37,10 @@
         <p class="owner-blank-subtitle">Please complete these steps to Start</p>
 
         <div class="owner-next-steps" aria-label="Owner setup steps">
-          <button type="button" class="owner-next-step" data-owner-next-link="owner-heavy-driving-licence.html">
+          <button type="button" class="owner-next-step" data-owner-next-link="owner-heavy-driving-licence.html" data-owner-step-id="heavy-licence">
             <span class="owner-next-step-copy">
               <span class="owner-next-step-title">Heavy Driving Licence</span>
+              <span class="owner-next-step-note" data-owner-step-status hidden>Under valuation</span>
             </span>
             <span class="owner-next-step-arrow" aria-hidden="true">&#8250;</span>
           </button>
@@ -51,9 +52,10 @@
             <span class="owner-next-step-arrow" aria-hidden="true">&#8250;</span>
           </button>
 
-          <button type="button" class="owner-next-step" data-owner-next-link="owner-aadhaar-card.html">
+          <button type="button" class="owner-next-step" data-owner-next-link="owner-aadhaar-card.html" data-owner-step-id="aadhaar">
             <span class="owner-next-step-copy">
               <span class="owner-next-step-title">Aadhaar Card</span>
+              <span class="owner-next-step-note" data-owner-step-status hidden>Under valuation</span>
             </span>
             <span class="owner-next-step-arrow" aria-hidden="true">&#8250;</span>
           </button>
@@ -66,7 +68,10 @@
   <script>
     (function () {
       const companyNode = document.querySelector('[data-owner-next-company]');
+      const stepsContainer = document.querySelector('.owner-next-steps');
       const nextStepButtons = Array.from(document.querySelectorAll('[data-owner-next-link]'));
+      const heavyLicenceButton = document.querySelector('[data-owner-step-id="heavy-licence"]');
+      const aadhaarButton = document.querySelector('[data-owner-step-id="aadhaar"]');
 
       if (!companyNode) {
         return;
@@ -74,8 +79,32 @@
 
       companyNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
 
+      function applyCompletedStep(stepButton, storageKey) {
+        if (!stepsContainer || !stepButton || sessionStorage.getItem(storageKey) !== 'completed') {
+          return;
+        }
+
+        stepButton.classList.add('is-completed');
+        stepButton.removeAttribute('data-owner-next-link');
+        stepButton.setAttribute('aria-disabled', 'true');
+
+        const statusNode = stepButton.querySelector('[data-owner-step-status]');
+        if (statusNode) {
+          statusNode.hidden = false;
+        }
+
+        stepsContainer.appendChild(stepButton);
+      }
+
+      applyCompletedStep(heavyLicenceButton, 'owner-heavy-licence-status');
+      applyCompletedStep(aadhaarButton, 'owner-aadhaar-status');
+
       nextStepButtons.forEach(function (button) {
         button.addEventListener('click', function () {
+          if (button.classList.contains('is-completed')) {
+            return;
+          }
+
           const destination = button.getAttribute('data-owner-next-link');
 
           if (destination) {

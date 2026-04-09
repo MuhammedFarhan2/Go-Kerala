@@ -42,6 +42,8 @@
         <p class="owner-heavy-licence-note">
           Please Upload two side of Driving Licence. Make sure that all information is readable, not blurry and that all corners of the document are visible. If you are uploading a PDF, insert all pages together in one file.
         </p>
+
+        <p class="owner-aadhaar-status" data-owner-heavy-status hidden></p>
       </div>
     </section>
   </main>
@@ -77,8 +79,9 @@
       const takePhotoInput = document.querySelector('[data-owner-heavy-take-photo-input]');
       const uploadPhotoInput = document.querySelector('[data-owner-heavy-upload-photo-input]');
       const actionButtons = Array.from(document.querySelectorAll('[data-owner-heavy-action]'));
+      const statusNode = document.querySelector('[data-owner-heavy-status]');
 
-      if (!triggerButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
+      if (!triggerButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput || !statusNode) {
         return;
       }
 
@@ -91,21 +94,7 @@
         }, 220);
       }
 
-      function readFileAsBase64(file) {
-        return new Promise(function (resolve, reject) {
-          const reader = new FileReader();
-
-          reader.onload = function () {
-            const result = String(reader.result || '');
-            resolve(result.includes(',') ? result.split(',')[1] : result);
-          };
-
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      }
-
-      async function saveAndOpen(file) {
+      function saveAndOpen(file) {
         if (!file) {
           return;
         }
@@ -123,35 +112,13 @@
           return;
         }
 
-        try {
-          triggerButton.disabled = true;
-          triggerButton.textContent = 'Saving...';
-
-          const base64Data = await readFileAsBase64(file);
-          const response = await fetch('/api/upload-heavy-licence', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              fileName: file.name,
-              mimeType: file.type,
-              data: base64Data
-            })
-          });
-
-          const payload = await response.json();
-
-          if (!response.ok || !payload.success) {
-            throw new Error(payload.error || 'Unable to save image.');
-          }
-
-          window.location.href = payload.viewUrl;
-        } catch (error) {
-          window.alert(error.message || 'Unable to save image.');
-          triggerButton.disabled = false;
-          triggerButton.textContent = 'Add Photo';
-        }
+        sessionStorage.setItem('owner-heavy-licence-photo-count', '1');
+        sessionStorage.setItem('owner-heavy-licence-photo-name-1', file.name);
+        sessionStorage.removeItem('owner-heavy-licence-photo-name-2');
+        statusNode.hidden = false;
+        statusNode.textContent = 'Selected photos: 1';
+        triggerButton.textContent = 'Photo selected';
+        window.location.href = 'owner-uploaded-photo.html';
       }
 
       triggerButton.addEventListener('click', function () {

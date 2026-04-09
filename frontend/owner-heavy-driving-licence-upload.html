@@ -7,6 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
 <body>
@@ -86,6 +87,8 @@
       const preview = document.querySelector('[data-owner-upload-preview]');
       const previewImage = document.querySelector('[data-owner-upload-image]');
       const saveButton = document.querySelector('[data-owner-save-upload-btn]');
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       let selectedFile = null;
 
       if (!fileInput || !triggerButton || !dropzone || !errorNode || !placeholder || !preview || !previewImage || !saveButton) {
@@ -168,6 +171,14 @@
         });
       }
 
+      function getApiUrl(pathName) {
+        if (!apiBaseUrl) {
+          return pathName;
+        }
+
+        return apiBaseUrl + pathName;
+      }
+
       triggerButton.addEventListener('click', function () {
         fileInput.click();
       });
@@ -218,7 +229,7 @@
           clearError();
 
           const base64Data = await readFileAsBase64(selectedFile);
-          const response = await fetch('/api/upload-heavy-licence', {
+          const response = await fetch(getApiUrl('/api/upload-heavy-licence'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -229,8 +240,16 @@
               data: base64Data
             })
           });
+          const responseText = await response.text();
+          let payload = {};
 
-          const payload = await response.json();
+          try {
+            payload = responseText ? JSON.parse(responseText) : {};
+          } catch (error) {
+            payload = {
+              error: responseText || 'Unexpected server response.'
+            };
+          }
 
           if (!response.ok || !payload.success) {
             throw new Error(payload.error || 'Unable to save image.');

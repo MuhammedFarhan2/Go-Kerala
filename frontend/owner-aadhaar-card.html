@@ -45,7 +45,12 @@
           By sharing your Aadhar details, you hereby confirm that you have shared such detail voluntarily. You further confirm and consent that your Aadhar details may be shared with relevant Government authorities for the purposes provided herein.
         </p>
 
-        <p class="owner-aadhaar-status" data-owner-aadhaar-status hidden></p>
+        <div class="owner-uploaded-list" data-owner-aadhaar-selection hidden>
+          <div class="owner-uploaded-list-row">
+            <p class="owner-uploaded-list-label" data-owner-aadhaar-status></p>
+            <button type="button" class="owner-uploaded-delete owner-uploaded-delete-text" data-owner-aadhaar-delete>Delete</button>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -71,6 +76,7 @@
     </div>
 
     <button type="button" class="owner-next-btn owner-heavy-add-photo-btn owner-aadhaar-trigger-btn" data-owner-aadhaar-upload-trigger>Add photo</button>
+    <button type="button" class="owner-next-btn owner-aadhaar-next-btn" data-owner-aadhaar-next hidden>Next</button>
   </div>
 
   <script src="script.js?v=20260408-1"></script>
@@ -81,9 +87,13 @@
       const uploadInput = document.querySelector('[data-owner-aadhaar-upload-input]');
       const phoneInput = document.querySelector('[data-owner-aadhaar-phone-input]');
       const actionButtons = Array.from(document.querySelectorAll('[data-owner-aadhaar-action]'));
+      const selectionNode = document.querySelector('[data-owner-aadhaar-selection]');
       const statusNode = document.querySelector('[data-owner-aadhaar-status]');
+      const deleteButton = document.querySelector('[data-owner-aadhaar-delete]');
+      const nextButton = document.querySelector('[data-owner-aadhaar-next]');
+      const STORAGE_KEY = 'owner-aadhaar-photo-name';
 
-      if (!triggerButton || !uploadMenu || !uploadInput || !phoneInput || !statusNode) {
+      if (!triggerButton || !uploadMenu || !uploadInput || !phoneInput || !selectionNode || !statusNode || !deleteButton || !nextButton) {
         return;
       }
 
@@ -96,14 +106,41 @@
         }, 220);
       }
 
+      function resetSelection() {
+        sessionStorage.removeItem(STORAGE_KEY);
+        statusNode.textContent = '';
+        selectionNode.hidden = true;
+        triggerButton.hidden = false;
+        triggerButton.textContent = 'Add photo';
+        nextButton.hidden = true;
+        uploadInput.value = '';
+        phoneInput.value = '';
+      }
+
       function showSelectedFile(file) {
         if (!file) {
           return;
         }
 
-        statusNode.hidden = false;
-        statusNode.textContent = 'Selected file: ' + file.name;
-        triggerButton.textContent = 'Photo selected';
+        sessionStorage.setItem(STORAGE_KEY, file.name);
+        statusNode.textContent = 'Image 1: ' + file.name;
+        selectionNode.hidden = false;
+        triggerButton.hidden = true;
+        nextButton.hidden = false;
+      }
+
+      function restoreSelection() {
+        const selectedFileName = sessionStorage.getItem(STORAGE_KEY);
+
+        if (!selectedFileName) {
+          resetSelection();
+          return;
+        }
+
+        statusNode.textContent = 'Image 1: ' + selectedFileName;
+        selectionNode.hidden = false;
+        triggerButton.hidden = true;
+        nextButton.hidden = false;
       }
 
       triggerButton.addEventListener('click', function () {
@@ -144,6 +181,15 @@
         showSelectedFile(phoneInput.files[0]);
       });
 
+      deleteButton.addEventListener('click', function () {
+        resetSelection();
+      });
+
+      nextButton.addEventListener('click', function () {
+        sessionStorage.setItem('owner-aadhaar-status', 'completed');
+        window.location.href = 'owner-next.html';
+      });
+
       document.addEventListener('click', function (event) {
         if (!uploadMenu.classList.contains('is-open')) {
           return;
@@ -155,6 +201,8 @@
 
         closeMenu();
       });
+
+      restoreSelection();
     })();
   </script>
 </body>

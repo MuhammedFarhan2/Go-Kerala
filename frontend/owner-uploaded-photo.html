@@ -31,21 +31,19 @@
   <main class="owner-main owner-blank-main">
     <section class="owner-blank-sheet" aria-label="Uploaded photo page">
       <div class="owner-blank-content owner-uploaded-content">
-        <h2 class="owner-uploaded-title">Upload the backside of the licence</h2>
+        <h2 class="owner-uploaded-title">Add the backside of the licence</h2>
         <p class="owner-uploaded-note">Make sure all information is readable and not blurry, and that all corners of the document are visible.</p>
 
-        <figure class="owner-uploaded-photo-frame" data-owner-uploaded-frame>
-          <div class="owner-uploaded-photo-grid" data-owner-uploaded-grid>
-            <img src="" alt="Saved uploaded photo 1" class="owner-uploaded-photo-image" data-owner-uploaded-photo>
-          </div>
-        </figure>
+        <p class="owner-aadhaar-status" data-owner-uploaded-status hidden></p>
 
-        <div class="owner-uploaded-list">
+        <div class="owner-uploaded-list" data-owner-uploaded-list hidden>
           <div class="owner-uploaded-list-row">
-            <p class="owner-uploaded-list-label">Image 1</p>
-            <button type="button" class="owner-uploaded-delete" data-owner-uploaded-delete aria-label="Delete uploaded image">
-              <span class="owner-uploaded-delete-icon" aria-hidden="true">&#128465;</span>
-            </button>
+            <p class="owner-uploaded-list-label" data-owner-uploaded-photo-one></p>
+            <button type="button" class="owner-uploaded-delete owner-uploaded-delete-text" data-owner-uploaded-delete-one>Delete</button>
+          </div>
+          <div class="owner-uploaded-list-row" data-owner-uploaded-photo-two-row hidden>
+            <p class="owner-uploaded-list-label" data-owner-uploaded-photo-two></p>
+            <button type="button" class="owner-uploaded-delete owner-uploaded-delete-text" data-owner-uploaded-delete-two hidden>Delete</button>
           </div>
         </div>
       </div>
@@ -72,86 +70,31 @@
       <button type="button" class="owner-heavy-upload-option" data-owner-uploaded-action="upload-photo">Upload Photo</button>
     </div>
 
-    <button type="button" class="owner-next-btn owner-uploaded-next-btn" data-owner-uploaded-next>Next</button>
+    <button type="button" class="owner-next-btn owner-uploaded-next-btn" data-owner-uploaded-next>Add Photo</button>
   </div>
 
   <script src="script.js?v=20260406-2"></script>
   <script>
     (function () {
-      const imageNode = document.querySelector('[data-owner-uploaded-photo]');
-      const imageFrame = document.querySelector('[data-owner-uploaded-frame]');
-      const imageGrid = document.querySelector('[data-owner-uploaded-grid]');
-      const deleteButton = document.querySelector('[data-owner-uploaded-delete]');
-      const imageList = document.querySelector('.owner-uploaded-list');
+      const statusNode = document.querySelector('[data-owner-uploaded-status]');
+      const imageList = document.querySelector('[data-owner-uploaded-list]');
+      const photoOneNode = document.querySelector('[data-owner-uploaded-photo-one]');
+      const photoTwoNode = document.querySelector('[data-owner-uploaded-photo-two]');
+      const photoTwoRow = document.querySelector('[data-owner-uploaded-photo-two-row]');
+      const deleteOneButton = document.querySelector('[data-owner-uploaded-delete-one]');
+      const deleteTwoButton = document.querySelector('[data-owner-uploaded-delete-two]');
       const nextButton = document.querySelector('[data-owner-uploaded-next]');
       const uploadMenu = document.querySelector('[data-owner-uploaded-upload-menu]');
       const takePhotoInput = document.querySelector('[data-owner-uploaded-take-photo-input]');
       const uploadPhotoInput = document.querySelector('[data-owner-uploaded-upload-photo-input]');
       const actionButtons = Array.from(document.querySelectorAll('[data-owner-uploaded-action]'));
-      const pageParams = new URLSearchParams(window.location.search);
-      const fileName = pageParams.get('file');
-      const secondFileName = pageParams.get('file2');
+      const STORAGE_COUNT_KEY = 'owner-heavy-licence-photo-count';
+      const STORAGE_NAME_ONE_KEY = 'owner-heavy-licence-photo-name-1';
+      const STORAGE_NAME_TWO_KEY = 'owner-heavy-licence-photo-name-2';
+      let selectedCount = Math.max(1, Math.min(2, Number(sessionStorage.getItem(STORAGE_COUNT_KEY) || '1')));
 
-      if (!imageNode || !fileName || !nextButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
+      if (!statusNode || !nextButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
         return;
-      }
-
-      imageNode.src = '/uploads/' + encodeURIComponent(fileName);
-      imageFrame && imageFrame.classList.toggle('is-two-images', Boolean(secondFileName));
-
-      async function deleteImage(targetFileName) {
-        const response = await fetch('/api/upload-heavy-licence?file=' + encodeURIComponent(targetFileName), {
-          method: 'DELETE'
-        });
-
-        const payload = await response.json();
-
-        if (!response.ok || !payload.success) {
-          throw new Error(payload.error || 'Unable to delete image.');
-        }
-      }
-
-      async function deleteAllImagesAndReturn() {
-        const filesToDelete = [fileName];
-
-        if (secondFileName) {
-          filesToDelete.push(secondFileName);
-        }
-
-        await Promise.all(filesToDelete.map(deleteImage));
-        window.location.href = '/owner-heavy-driving-licence.html';
-      }
-
-      if (secondFileName && imageGrid) {
-        const secondaryImageNode = document.createElement('img');
-        secondaryImageNode.alt = 'Saved uploaded photo 2';
-        secondaryImageNode.className = 'owner-uploaded-photo-image';
-        secondaryImageNode.src = '/uploads/' + encodeURIComponent(secondFileName);
-        imageGrid.appendChild(secondaryImageNode);
-        nextButton.textContent = 'Submit';
-
-        if (imageList) {
-          const secondaryRow = document.createElement('div');
-          secondaryRow.className = 'owner-uploaded-list-row';
-          secondaryRow.innerHTML = '<p class="owner-uploaded-list-label">Image 2</p><button type="button" class="owner-uploaded-delete" data-owner-uploaded-delete-secondary aria-label="Delete uploaded image 2"><span class="owner-uploaded-delete-icon" aria-hidden="true">&#128465;</span></button>';
-          imageList.appendChild(secondaryRow);
-
-          const secondaryDeleteButton = secondaryRow.querySelector('[data-owner-uploaded-delete-secondary]');
-
-          if (secondaryDeleteButton) {
-            secondaryDeleteButton.addEventListener('click', async function () {
-              try {
-                secondaryDeleteButton.disabled = true;
-                deleteButton && (deleteButton.disabled = true);
-                await deleteAllImagesAndReturn();
-              } catch (error) {
-                window.alert(error.message || 'Unable to delete image.');
-                secondaryDeleteButton.disabled = false;
-                deleteButton && (deleteButton.disabled = false);
-              }
-            });
-          }
-        }
       }
 
       function validateFile(file) {
@@ -173,21 +116,50 @@
         return '';
       }
 
-      function readFileAsBase64(file) {
-        return new Promise(function (resolve, reject) {
-          const reader = new FileReader();
+      function renderSelectedCount() {
+        const firstPhotoName = sessionStorage.getItem(STORAGE_NAME_ONE_KEY) || 'Photo 1 selected';
+        const secondPhotoName = sessionStorage.getItem(STORAGE_NAME_TWO_KEY) || 'Photo 2 selected';
 
-          reader.onload = function () {
-            const result = String(reader.result || '');
-            resolve(result.includes(',') ? result.split(',')[1] : result);
-          };
+        statusNode.hidden = false;
+        statusNode.textContent = 'Selected photos: ' + selectedCount;
+        nextButton.textContent = selectedCount >= 2 ? 'Next' : 'Add Photo';
 
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
+        if (!imageList || !photoOneNode || !photoTwoNode || !photoTwoRow || !deleteOneButton || !deleteTwoButton) {
+          return;
+        }
+
+        imageList.hidden = false;
+        photoOneNode.textContent = 'Image 1: ' + firstPhotoName;
+        deleteOneButton.hidden = false;
+        if (selectedCount < 2) {
+          photoTwoRow.remove();
+          return;
+        }
+
+        if (!photoTwoRow.isConnected) {
+          imageList.appendChild(photoTwoRow);
+        }
+
+        photoTwoRow.hidden = false;
+        photoTwoNode.textContent = 'Image 2: ' + secondPhotoName;
+        deleteTwoButton.hidden = false;
       }
 
-      async function uploadSecondPhoto(file) {
+      function resetToFirstPage() {
+        sessionStorage.removeItem(STORAGE_COUNT_KEY);
+        sessionStorage.removeItem(STORAGE_NAME_ONE_KEY);
+        sessionStorage.removeItem(STORAGE_NAME_TWO_KEY);
+        window.location.href = 'owner-heavy-driving-licence.html';
+      }
+
+      function deleteSecondPhoto() {
+        selectedCount = 1;
+        sessionStorage.setItem(STORAGE_COUNT_KEY, '1');
+        sessionStorage.removeItem(STORAGE_NAME_TWO_KEY);
+        renderSelectedCount();
+      }
+
+      function saveSecondPhoto(file) {
         const validationMessage = validateFile(file);
 
         if (validationMessage) {
@@ -195,35 +167,10 @@
           return;
         }
 
-        try {
-          nextButton.disabled = true;
-          nextButton.textContent = 'Uploading...';
-
-          const base64Data = await readFileAsBase64(file);
-          const response = await fetch('/api/upload-heavy-licence', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              fileName: file.name,
-              mimeType: file.type,
-              data: base64Data
-            })
-          });
-
-          const payload = await response.json();
-
-          if (!response.ok || !payload.success) {
-            throw new Error(payload.error || 'Unable to save image.');
-          }
-
-          window.location.href = '/owner-uploaded-photo.html?file=' + encodeURIComponent(fileName) + '&file2=' + encodeURIComponent(payload.fileName);
-        } catch (error) {
-          window.alert(error.message || 'Unable to save image.');
-          nextButton.disabled = false;
-          nextButton.textContent = secondFileName ? 'Submit' : 'Next';
-        }
+        selectedCount = 2;
+        sessionStorage.setItem(STORAGE_COUNT_KEY, '2');
+        sessionStorage.setItem(STORAGE_NAME_TWO_KEY, file.name);
+        renderSelectedCount();
       }
 
       function closeMenu() {
@@ -235,34 +182,10 @@
         }, 220);
       }
 
-      if (deleteButton) {
-        deleteButton.addEventListener('click', async function () {
-          try {
-            deleteButton.disabled = true;
-
-            if (secondFileName) {
-              const secondaryDeleteButton = document.querySelector('[data-owner-uploaded-delete-secondary]');
-
-              if (secondaryDeleteButton) {
-                secondaryDeleteButton.disabled = true;
-              }
-
-              await deleteAllImagesAndReturn();
-              return;
-            }
-
-            await deleteImage(fileName);
-            window.location.href = '/owner-heavy-driving-licence.html';
-          } catch (error) {
-            window.alert(error.message || 'Unable to delete image.');
-            deleteButton.disabled = false;
-          }
-        });
-      }
-
       nextButton.addEventListener('click', function () {
-        if (secondFileName) {
-          window.location.href = '/owner-next.html';
+        if (selectedCount >= 2) {
+          sessionStorage.setItem('owner-heavy-licence-status', 'completed');
+          window.location.href = 'owner-next.html';
           return;
         }
 
@@ -302,7 +225,8 @@
           return;
         }
 
-        uploadSecondPhoto(file);
+        saveSecondPhoto(file);
+        takePhotoInput.value = '';
       });
 
       uploadPhotoInput.addEventListener('change', function () {
@@ -312,7 +236,8 @@
           return;
         }
 
-        uploadSecondPhoto(file);
+        saveSecondPhoto(file);
+        uploadPhotoInput.value = '';
       });
 
       document.addEventListener('click', function (event) {
@@ -326,6 +251,20 @@
 
         closeMenu();
       });
+
+      if (deleteOneButton) {
+        deleteOneButton.addEventListener('click', function () {
+          resetToFirstPage();
+        });
+      }
+
+      if (deleteTwoButton) {
+        deleteTwoButton.addEventListener('click', function () {
+          deleteSecondPhoto();
+        });
+      }
+
+      renderSelectedCount();
     })();
   </script>
 </body>
