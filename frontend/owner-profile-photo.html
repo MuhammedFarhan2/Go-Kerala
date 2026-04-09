@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260408-4">
+  <link rel="stylesheet" href="style.css?v=20260409-2">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=20260408-4"></script>
+  <script src="script.js?v=20260409-2"></script>
   <script>
     (function () {
       const actionButton = document.querySelector('[data-owner-profile-action-btn]');
@@ -101,6 +101,10 @@
       const videoNode = document.querySelector('[data-owner-profile-video]');
       const captureButton = document.querySelector('[data-owner-profile-camera-capture]');
       const ovalNode = document.querySelector('.owner-profile-camera-oval');
+      const pageParams = new URLSearchParams(window.location.search);
+      const profileSessionToken = String(pageParams.get('profileSession') || '').trim();
+      const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
+      const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
       let activeStream = null;
 
       if (!actionButton || !cameraInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !ovalNode) {
@@ -161,6 +165,34 @@
         }
       }
 
+      async function markProfileSessionComplete() {
+        if (!profileSessionToken) {
+          return;
+        }
+
+        try {
+          await fetch('/api/profile-photo-session/complete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              token: profileSessionToken
+            })
+          });
+        } catch (error) {
+          return;
+        }
+      }
+
+      async function finishProfilePhotoCapture(photoDataUrl) {
+        sessionStorage.setItem('owner-profile-photo', photoDataUrl);
+        sessionStorage.setItem(PROFILE_STATUS_KEY, 'completed');
+        sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
+        await markProfileSessionComplete();
+        window.location.href = 'owner-profile-photo-success.html';
+      }
+
       function captureFromOval() {
         if (!videoNode.videoWidth || !videoNode.videoHeight) {
           return;
@@ -201,9 +233,8 @@
         );
         context.restore();
 
-        sessionStorage.setItem('owner-profile-photo', canvas.toDataURL('image/png'));
         stopCamera();
-        window.location.href = '/owner-profile-photo-success.html';
+        finishProfilePhotoCapture(canvas.toDataURL('image/png'));
       }
 
       actionButton.addEventListener('click', function () {
@@ -223,7 +254,7 @@
         }
       });
       qrButton.addEventListener('click', function () {
-        window.location.href = '/owner-profile-photo-qr.html';
+        window.location.href = 'owner-profile-photo-qr.html';
       });
 
       cameraInput.addEventListener('change', function () {
@@ -236,8 +267,7 @@
         const reader = new FileReader();
 
         reader.onload = function () {
-          sessionStorage.setItem('owner-profile-photo', String(reader.result || ''));
-          window.location.href = '/owner-profile-photo-success.html';
+          finishProfilePhotoCapture(String(reader.result || ''));
         };
 
         reader.readAsDataURL(file);

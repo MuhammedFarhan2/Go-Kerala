@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260408-1">
+  <link rel="stylesheet" href="style.css?v=20260409-2">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -79,7 +79,7 @@
     <button type="button" class="owner-next-btn owner-aadhaar-next-btn" data-owner-aadhaar-next hidden>Next</button>
   </div>
 
-  <script src="script.js?v=20260408-1"></script>
+  <script src="script.js?v=20260409-2"></script>
   <script>
     (function () {
       const triggerButton = document.querySelector('[data-owner-aadhaar-upload-trigger]');
@@ -92,6 +92,8 @@
       const deleteButton = document.querySelector('[data-owner-aadhaar-delete]');
       const nextButton = document.querySelector('[data-owner-aadhaar-next]');
       const STORAGE_KEY = 'owner-aadhaar-photo-name';
+      const SUBMITTED_KEY = 'owner-aadhaar-submitted-v2';
+      const STATUS_KEY = 'owner-aadhaar-status-v2';
 
       if (!triggerButton || !uploadMenu || !uploadInput || !phoneInput || !selectionNode || !statusNode || !deleteButton || !nextButton) {
         return;
@@ -108,6 +110,10 @@
 
       function resetSelection() {
         sessionStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem('owner-aadhaar-status');
+        sessionStorage.removeItem('owner-aadhaar-submitted');
+        sessionStorage.removeItem(STATUS_KEY);
+        sessionStorage.removeItem(SUBMITTED_KEY);
         statusNode.textContent = '';
         selectionNode.hidden = true;
         triggerButton.hidden = false;
@@ -186,7 +192,8 @@
       });
 
       nextButton.addEventListener('click', function () {
-        sessionStorage.setItem('owner-aadhaar-status', 'completed');
+        sessionStorage.setItem(STATUS_KEY, 'completed');
+        sessionStorage.setItem(SUBMITTED_KEY, 'yes');
         window.location.href = 'owner-next.html';
       });
 

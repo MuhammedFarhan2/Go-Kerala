@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260408-4">
+  <link rel="stylesheet" href="style.css?v=20260409-2">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -35,17 +35,22 @@
     <button type="button" class="owner-next-btn owner-profile-success-btn" data-owner-profile-success-btn>OK</button>
   </div>
 
-  <script src="script.js?v=20260408-4"></script>
+  <script src="script.js?v=20260409-2"></script>
   <script>
     (function () {
       const okButton = document.querySelector('[data-owner-profile-success-btn]');
+      const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
+      const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
 
       if (!okButton) {
         return;
       }
 
+      sessionStorage.setItem(PROFILE_STATUS_KEY, 'completed');
+      sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
+
       okButton.addEventListener('click', function () {
-        window.location.href = '/owner-next.html';
+        window.location.href = 'owner-next.html';
       });
     })();
   </script>

@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260408-3">
+  <link rel="stylesheet" href="style.css?v=20260409-3">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -33,25 +33,127 @@
       <div class="owner-blank-content owner-profile-qr-content">
         <h1 class="owner-profile-qr-title">Open on your phone</h1>
         <p class="owner-profile-qr-text">Scan this QR code on your mobile device to continue taking your profile photo.</p>
+        <p class="owner-aadhaar-status" data-owner-profile-qr-status hidden></p>
         <div class="owner-profile-qr-box">
           <img src="" alt="QR code for opening profile photo on phone" class="owner-profile-qr-image" data-owner-profile-qr-image>
         </div>
+        <p class="owner-profile-qr-link">
+          If the QR image does not load, open this link on your phone:
+          <a href="#" data-owner-profile-qr-link></a>
+        </p>
       </div>
     </section>
   </main>
 
-  <script src="script.js?v=20260408-3"></script>
+  <script src="script.js?v=20260409-3"></script>
   <script>
-    (function () {
+    (async function () {
       const qrImage = document.querySelector('[data-owner-profile-qr-image]');
+      const fallbackLink = document.querySelector('[data-owner-profile-qr-link]');
+      const statusNode = document.querySelector('[data-owner-profile-qr-status]');
+      const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
+      const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
 
-      if (!qrImage) {
+      if (!qrImage || !fallbackLink || !statusNode) {
         return;
       }
 
-      const targetUrl = window.location.origin + '/owner-profile-photo.html';
+      async function createSessionToken() {
+        const response = await fetch('/api/profile-photo-session', {
+          method: 'POST'
+        });
+        const responseText = await response.text();
+        let payload = {};
 
-      qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(targetUrl);
+        try {
+          payload = responseText ? JSON.parse(responseText) : {};
+        } catch (error) {
+          payload = {};
+        }
+
+        if (!response.ok || !payload.success || !payload.token) {
+          throw new Error(payload.error || 'Unable to create session.');
+        }
+
+        return payload.token;
+      }
+
+      async function getSessionStatus(token) {
+        const response = await fetch('/api/profile-photo-session?token=' + encodeURIComponent(token));
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.error || 'Unable to fetch session status.');
+        }
+
+        return String(payload.status || '');
+      }
+
+      let token = String(new URLSearchParams(window.location.search).get('profileSession') || '').trim();
+      let liveSyncEnabled = true;
+
+      if (!token) {
+        try {
+          token = await createSessionToken();
+          window.history.replaceState({}, '', 'owner-profile-photo-qr.html?profileSession=' + encodeURIComponent(token));
+        } catch (error) {
+          liveSyncEnabled = false;
+        }
+      }
+
+      const profilePath = token
+        ? 'owner-profile-photo.html?profileSession=' + encodeURIComponent(token)
+        : 'owner-profile-photo.html';
+      const targetUrl = new URL(profilePath, window.location.href).toString();
+      const qrProviders = [
+        'https://quickchart.io/qr?size=220&text=' + encodeURIComponent(targetUrl),
+        'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(targetUrl)
+      ];
+      let providerIndex = 0;
+
+      fallbackLink.href = targetUrl;
+      fallbackLink.textContent = targetUrl;
+
+      function loadQrFromCurrentProvider() {
+        qrImage.src = qrProviders[providerIndex];
+      }
+
+      qrImage.addEventListener('error', function () {
+        if (providerIndex >= qrProviders.length - 1) {
+          qrImage.hidden = true;
+          statusNode.hidden = false;
+          statusNode.textContent = 'QR image could not load. Use the link below on your phone.';
+          return;
+        }
+
+        providerIndex += 1;
+        loadQrFromCurrentProvider();
+      });
+
+      loadQrFromCurrentProvider();
+
+      if (!liveSyncEnabled) {
+        statusNode.hidden = false;
+        statusNode.textContent = 'QR is ready. Live laptop sync will work after backend restart/redeploy.';
+        return;
+      }
+
+      const pollTimer = window.setInterval(async function () {
+        try {
+          const status = await getSessionStatus(token);
+
+          if (status !== 'completed') {
+            return;
+          }
+
+          window.clearInterval(pollTimer);
+          sessionStorage.setItem(PROFILE_STATUS_KEY, 'completed');
+          sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
+          window.location.href = 'owner-profile-photo-success.html';
+        } catch (error) {
+          return;
+        }
+      }, 2000);
     })();
   </script>
 </body>

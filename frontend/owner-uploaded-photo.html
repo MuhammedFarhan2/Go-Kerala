@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260406-2">
+  <link rel="stylesheet" href="style.css?v=20260409-2">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -73,7 +73,7 @@
     <button type="button" class="owner-next-btn owner-uploaded-next-btn" data-owner-uploaded-next>Add Photo</button>
   </div>
 
-  <script src="script.js?v=20260406-2"></script>
+  <script src="script.js?v=20260409-2"></script>
   <script>
     (function () {
       const statusNode = document.querySelector('[data-owner-uploaded-status]');
@@ -91,6 +91,8 @@
       const STORAGE_COUNT_KEY = 'owner-heavy-licence-photo-count';
       const STORAGE_NAME_ONE_KEY = 'owner-heavy-licence-photo-name-1';
       const STORAGE_NAME_TWO_KEY = 'owner-heavy-licence-photo-name-2';
+      const SUBMITTED_KEY = 'owner-heavy-licence-submitted-v2';
+      const STATUS_KEY = 'owner-heavy-licence-status-v2';
       let selectedCount = Math.max(1, Math.min(2, Number(sessionStorage.getItem(STORAGE_COUNT_KEY) || '1')));
 
       if (!statusNode || !nextButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
@@ -149,6 +151,10 @@
         sessionStorage.removeItem(STORAGE_COUNT_KEY);
         sessionStorage.removeItem(STORAGE_NAME_ONE_KEY);
         sessionStorage.removeItem(STORAGE_NAME_TWO_KEY);
+        sessionStorage.removeItem('owner-heavy-licence-status');
+        sessionStorage.removeItem('owner-heavy-licence-submitted');
+        sessionStorage.removeItem(STATUS_KEY);
+        sessionStorage.removeItem(SUBMITTED_KEY);
         window.location.href = 'owner-heavy-driving-licence.html';
       }
 
@@ -156,6 +162,10 @@
         selectedCount = 1;
         sessionStorage.setItem(STORAGE_COUNT_KEY, '1');
         sessionStorage.removeItem(STORAGE_NAME_TWO_KEY);
+        sessionStorage.removeItem('owner-heavy-licence-status');
+        sessionStorage.removeItem('owner-heavy-licence-submitted');
+        sessionStorage.removeItem(STATUS_KEY);
+        sessionStorage.removeItem(SUBMITTED_KEY);
         renderSelectedCount();
       }
 
@@ -184,7 +194,8 @@
 
       nextButton.addEventListener('click', function () {
         if (selectedCount >= 2) {
-          sessionStorage.setItem('owner-heavy-licence-status', 'completed');
+          sessionStorage.setItem(STATUS_KEY, 'completed');
+          sessionStorage.setItem(SUBMITTED_KEY, 'yes');
           window.location.href = 'owner-next.html';
           return;
         }

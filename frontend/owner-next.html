@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260406-2">
+  <link rel="stylesheet" href="style.css?v=20260409-3">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -40,12 +40,11 @@
           <button type="button" class="owner-next-step" data-owner-next-link="owner-heavy-driving-licence.html" data-owner-step-id="heavy-licence">
             <span class="owner-next-step-copy">
               <span class="owner-next-step-title">Heavy Driving Licence</span>
-              <span class="owner-next-step-note" data-owner-step-status hidden>Under valuation</span>
             </span>
             <span class="owner-next-step-arrow" aria-hidden="true">&#8250;</span>
           </button>
 
-          <button type="button" class="owner-next-step" data-owner-next-link="owner-profile-photo.html">
+          <button type="button" class="owner-next-step" data-owner-next-link="owner-profile-photo.html" data-owner-step-id="profile-photo">
             <span class="owner-next-step-copy">
               <span class="owner-next-step-title">Profile photo</span>
             </span>
@@ -55,7 +54,6 @@
           <button type="button" class="owner-next-step" data-owner-next-link="owner-aadhaar-card.html" data-owner-step-id="aadhaar">
             <span class="owner-next-step-copy">
               <span class="owner-next-step-title">Aadhaar Card</span>
-              <span class="owner-next-step-note" data-owner-step-status hidden>Under valuation</span>
             </span>
             <span class="owner-next-step-arrow" aria-hidden="true">&#8250;</span>
           </button>
@@ -64,13 +62,14 @@
     </section>
   </main>
 
-  <script src="script.js?v=20260406-2"></script>
+  <script src="script.js?v=20260409-3"></script>
   <script>
     (function () {
       const companyNode = document.querySelector('[data-owner-next-company]');
       const stepsContainer = document.querySelector('.owner-next-steps');
       const nextStepButtons = Array.from(document.querySelectorAll('[data-owner-next-link]'));
       const heavyLicenceButton = document.querySelector('[data-owner-step-id="heavy-licence"]');
+      const profilePhotoButton = document.querySelector('[data-owner-step-id="profile-photo"]');
       const aadhaarButton = document.querySelector('[data-owner-step-id="aadhaar"]');
 
       if (!companyNode) {
@@ -78,6 +77,48 @@
       }
 
       companyNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
+
+      const hasHeavyLicenceSubmission =
+        sessionStorage.getItem('owner-heavy-licence-submitted-v2') === 'yes' &&
+        sessionStorage.getItem('owner-heavy-licence-photo-count') === '2';
+
+      const hasAadhaarSubmission =
+        sessionStorage.getItem('owner-aadhaar-submitted-v2') === 'yes' &&
+        Boolean(sessionStorage.getItem('owner-aadhaar-photo-name'));
+
+      const hasProfilePhotoSubmission =
+        sessionStorage.getItem('owner-profile-photo-submitted-v2') === 'yes';
+
+      if (!hasHeavyLicenceSubmission) {
+        sessionStorage.removeItem('owner-heavy-licence-status');
+        sessionStorage.removeItem('owner-heavy-licence-submitted');
+        sessionStorage.removeItem('owner-heavy-licence-status-v2');
+        sessionStorage.removeItem('owner-heavy-licence-submitted-v2');
+      }
+
+      if (!hasHeavyLicenceSubmission && sessionStorage.getItem('owner-heavy-licence-status-v2') === 'completed') {
+        sessionStorage.removeItem('owner-heavy-licence-status-v2');
+      }
+
+      if (!hasAadhaarSubmission) {
+        sessionStorage.removeItem('owner-aadhaar-status');
+        sessionStorage.removeItem('owner-aadhaar-submitted');
+        sessionStorage.removeItem('owner-aadhaar-status-v2');
+        sessionStorage.removeItem('owner-aadhaar-submitted-v2');
+      }
+
+      if (!hasAadhaarSubmission && sessionStorage.getItem('owner-aadhaar-status-v2') === 'completed') {
+        sessionStorage.removeItem('owner-aadhaar-status-v2');
+      }
+
+      if (!hasProfilePhotoSubmission) {
+        sessionStorage.removeItem('owner-profile-photo-status-v2');
+        sessionStorage.removeItem('owner-profile-photo-submitted-v2');
+      }
+
+      if (!hasProfilePhotoSubmission && sessionStorage.getItem('owner-profile-photo-status-v2') === 'completed') {
+        sessionStorage.removeItem('owner-profile-photo-status-v2');
+      }
 
       function applyCompletedStep(stepButton, storageKey) {
         if (!stepsContainer || !stepButton || sessionStorage.getItem(storageKey) !== 'completed') {
@@ -88,16 +129,23 @@
         stepButton.removeAttribute('data-owner-next-link');
         stepButton.setAttribute('aria-disabled', 'true');
 
-        const statusNode = stepButton.querySelector('[data-owner-step-status]');
-        if (statusNode) {
-          statusNode.hidden = false;
+        const copyNode = stepButton.querySelector('.owner-next-step-copy');
+        let statusNode = stepButton.querySelector('[data-owner-step-status]');
+
+        if (copyNode && !statusNode) {
+          statusNode = document.createElement('span');
+          statusNode.className = 'owner-next-step-note';
+          statusNode.setAttribute('data-owner-step-status', '');
+          statusNode.textContent = 'Under valuation';
+          copyNode.appendChild(statusNode);
         }
 
         stepsContainer.appendChild(stepButton);
       }
 
-      applyCompletedStep(heavyLicenceButton, 'owner-heavy-licence-status');
-      applyCompletedStep(aadhaarButton, 'owner-aadhaar-status');
+      applyCompletedStep(heavyLicenceButton, 'owner-heavy-licence-status-v2');
+      applyCompletedStep(profilePhotoButton, 'owner-profile-photo-status-v2');
+      applyCompletedStep(aadhaarButton, 'owner-aadhaar-status-v2');
 
       nextStepButtons.forEach(function (button) {
         button.addEventListener('click', function () {
