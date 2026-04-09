@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { URL } = require('url');
 
 const HOST = '0.0.0.0';
@@ -26,6 +27,8 @@ const MIME_TYPES = {
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 let googleOAuthClient = null;
+const profilePhotoSessions = new Map();
+const PROFILE_PHOTO_SESSION_TTL_MS = 30 * 60 * 1000;
 
 function getGoogleOAuthClient() {
   if (!GOOGLE_CLIENT_ID) {
@@ -77,6 +80,16 @@ function sendFile(response, filePath) {
       'Content-Type': MIME_TYPES[extension] || 'application/octet-stream'
     });
     response.end(data);
+  });
+}
+
+function cleanupProfilePhotoSessions() {
+  const now = Date.now();
+
+  profilePhotoSessions.forEach(function (session, token) {
+    if (!session || now - session.createdAt > PROFILE_PHOTO_SESSION_TTL_MS) {
+      profilePhotoSessions.delete(token);
+    }
   });
 }
 
@@ -263,6 +276,84 @@ async function handleGoogleAuth(request, response) {
   }
 }
 
+function handleCreateProfilePhotoSession(response) {
+  cleanupProfilePhotoSessions();
+
+  const token = crypto.randomBytes(18).toString('hex');
+
+  profilePhotoSessions.set(token, {
+    createdAt: Date.now(),
+    status: 'pending'
+  });
+
+  sendJson(response, 200, {
+    success: true,
+    token: token,
+    status: 'pending'
+  });
+}
+
+function handleGetProfilePhotoSession(requestUrl, response) {
+  cleanupProfilePhotoSessions();
+
+  const token = String(requestUrl.searchParams.get('token') || '').trim();
+
+  if (!token) {
+    sendJson(response, 400, { error: 'Missing token.' });
+    return;
+  }
+
+  const session = profilePhotoSessions.get(token);
+
+  if (!session) {
+    sendJson(response, 404, { error: 'Session not found.' });
+    return;
+  }
+
+  sendJson(response, 200, {
+    success: true,
+    token: token,
+    status: session.status
+  });
+}
+
+async function handleCompleteProfilePhotoSession(request, response) {
+  cleanupProfilePhotoSessions();
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const token = String(payload.token || '').trim();
+
+  if (!token) {
+    sendJson(response, 400, { error: 'Missing token.' });
+    return;
+  }
+
+  const session = profilePhotoSessions.get(token);
+
+  if (!session) {
+    sendJson(response, 404, { error: 'Session not found.' });
+    return;
+  }
+
+  session.status = 'completed';
+  session.completedAt = Date.now();
+  profilePhotoSessions.set(token, session);
+
+  sendJson(response, 200, {
+    success: true,
+    token: token,
+    status: session.status
+  });
+}
+
 const server = http.createServer(function (request, response) {
   const requestUrl = new URL(request.url, 'http://' + request.headers.host);
 
@@ -278,6 +369,21 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/auth/google') {
     handleGoogleAuth(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/profile-photo-session') {
+    handleCreateProfilePhotoSession(response);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/api/profile-photo-session') {
+    handleGetProfilePhotoSession(requestUrl, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/profile-photo-session/complete') {
+    handleCompleteProfilePhotoSession(request, response);
     return;
   }
 
