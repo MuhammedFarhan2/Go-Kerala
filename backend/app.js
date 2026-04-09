@@ -47,6 +47,9 @@ function getGoogleOAuthClient() {
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json; charset=utf-8'
   });
   response.end(JSON.stringify(payload));
@@ -54,6 +57,9 @@ function sendJson(response, statusCode, payload) {
 
 function sendText(response, statusCode, message) {
   response.writeHead(statusCode, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'text/plain; charset=utf-8'
   });
   response.end(message);
@@ -259,6 +265,16 @@ async function handleGoogleAuth(request, response) {
 
 const server = http.createServer(function (request, response) {
   const requestUrl = new URL(request.url, 'http://' + request.headers.host);
+
+  if (request.method === 'OPTIONS') {
+    response.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+    response.end();
+    return;
+  }
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/auth/google') {
     handleGoogleAuth(request, response);
