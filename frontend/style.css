@@ -563,7 +563,7 @@ html {
 
 /* Header - Uber style */
 :root {
-  --header-height: 56px;
+  --header-height: 78px;
   --banner-bg: #0b0f19;
   --dots: rgba(255, 255, 255, 0.55);
   --dots-active: #ffffff;
@@ -598,13 +598,34 @@ html {
   font-size: 1.5rem;
   font-weight: 600;
   margin-left: 1.5px;
+  letter-spacing: 0.06em;
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  min-height: calc(var(--header-height) - 24px);
+}
+
+.logo-sub {
+  margin: 0;
+  color: #555;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  line-height: 1;
 }
 
 .index-brand-lockup {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  justify-content: center;
+  gap: 4px;
+  min-height: calc(var(--header-height) - 24px);
 }
 
 .index-logo {
@@ -747,12 +768,14 @@ html {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  justify-content: center;
+  gap: 4px;
+  min-height: calc(var(--header-height) - 24px);
 }
 
 .owner-auth-logo {
   color: #111;
-  letter-spacing: -0.04em;
+  letter-spacing: 0.1em;
   line-height: 1;
 }
 
@@ -1139,6 +1162,10 @@ html {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --header-height: 72px;
+  }
+
   .owner-auth-header {
     justify-content: flex-start;
     padding-left: 12px;
