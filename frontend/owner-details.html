@@ -53,6 +53,8 @@
         return;
       }
 
+      companyInput.value = sessionStorage.getItem('owner-company-name') || '';
+
       companyInput.addEventListener('input', function () {
         if (companyInput.value.trim()) {
           errorText.hidden = true;

@@ -107,6 +107,22 @@
       }
 
       companyNameNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
+      let savedCategories = [];
+
+      try {
+        savedCategories = JSON.parse(sessionStorage.getItem('owner-categories') || '[]');
+      } catch (error) {
+        savedCategories = [];
+      }
+
+      if (!Array.isArray(savedCategories)) {
+        savedCategories = [];
+      }
+
+      categoryButtons.forEach(function (button) {
+        const category = button.getAttribute('data-owner-category');
+        button.classList.toggle('is-selected', savedCategories.indexOf(category) !== -1);
+      });
 
       function syncCategoryActions() {
         const selectedCategories = categoryButtons
@@ -130,6 +146,8 @@
           syncCategoryActions();
         });
       });
+
+      syncCategoryActions();
 
       if (nextButton) {
         nextButton.addEventListener('click', function () {

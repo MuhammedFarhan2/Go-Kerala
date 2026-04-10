@@ -80,6 +80,23 @@
         companyNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
       }
 
+      let savedDistricts = [];
+
+      try {
+        savedDistricts = JSON.parse(sessionStorage.getItem('owner-districts') || '[]');
+      } catch (error) {
+        savedDistricts = [];
+      }
+
+      if (!Array.isArray(savedDistricts)) {
+        savedDistricts = [];
+      }
+
+      districtButtons.forEach(function (button) {
+        const districtName = button.getAttribute('data-owner-district');
+        button.classList.toggle('is-selected', savedDistricts.indexOf(districtName) !== -1);
+      });
+
       function syncDistrictSelection() {
         const selectedDistricts = districtButtons
           .filter(function (button) {
