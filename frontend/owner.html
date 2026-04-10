@@ -73,68 +73,19 @@
 
       <div class="owner-auth-panel">
         <div class="owner-auth-panel-head">
-          <p class="owner-auth-top-link" data-owner-auth-mode-label>Login</p>
           <h1 class="owner-auth-title" data-owner-auth-title>Create an account</h1>
           <p class="owner-auth-subtitle" data-owner-auth-subtitle>Already have an account? <a href="owner.html?mode=login" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a></p>
         </div>
 
         <form class="owner-auth-form" data-owner-auth-form novalidate>
-          <div class="owner-auth-grid" data-owner-auth-name-grid>
-            <label class="owner-auth-field">
-              <span class="owner-auth-field-label">First name</span>
-              <input type="text" class="owner-auth-input" placeholder="First name" autocomplete="given-name" data-owner-first-name>
-            </label>
-            <label class="owner-auth-field">
-              <span class="owner-auth-field-label">Last name</span>
-              <input type="text" class="owner-auth-input" placeholder="Last name" autocomplete="family-name" data-owner-last-name>
-            </label>
-          </div>
-
           <label class="owner-auth-field">
-            <span class="owner-auth-field-label">Email</span>
-            <input type="email" class="owner-auth-input" placeholder="Email" autocomplete="email" data-owner-email>
+            <span class="owner-auth-field-label">Email or Phone Number</span>
+            <input type="text" class="owner-auth-input" placeholder="Email or Phone Number" autocomplete="username" data-owner-email>
           </label>
 
-          <label class="owner-auth-field">
-            <span class="owner-auth-field-label">Password</span>
-            <span class="owner-auth-password-wrap">
-              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Enter your password" autocomplete="new-password" data-owner-password>
-              <button type="button" class="owner-auth-password-toggle" data-password-toggle data-password-target="password" aria-label="Show password">
-                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                  <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle>
-                </svg>
-                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                  <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle>
-                  <path d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
-                </svg>
-              </button>
-            </span>
-            <span class="owner-auth-field-error" data-owner-password-error hidden>Password must be at least 6 characters.</span>
-          </label>
+          <p class="owner-auth-error" data-owner-auth-error hidden>Please fill your email or phone number.</p>
 
-          <label class="owner-auth-field" data-owner-confirm-password-field>
-            <span class="owner-auth-field-label">Confirm password</span>
-            <span class="owner-auth-password-wrap">
-              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Confirm your password" autocomplete="new-password" data-owner-confirm-password>
-              <button type="button" class="owner-auth-password-toggle" data-password-toggle data-password-target="confirm-password" aria-label="Show confirm password">
-                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                  <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle>
-                </svg>
-                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                  <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"></circle>
-                  <path d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
-                </svg>
-              </button>
-            </span>
-          </label>
-
-          <p class="owner-auth-error" data-owner-auth-error hidden>Please fill first name, last name, email, and password.</p>
-
-          <button type="submit" class="owner-auth-submit">Create account</button>
+          <button type="submit" class="owner-auth-submit">Next</button>
         </form>
 
         <div class="owner-auth-divider">
@@ -158,38 +109,25 @@
   <script>
     (function () {
       const form = document.querySelector('[data-owner-auth-form]');
-      const firstNameInput = document.querySelector('[data-owner-first-name]');
-      const lastNameInput = document.querySelector('[data-owner-last-name]');
       const emailInput = document.querySelector('[data-owner-email]');
-      const passwordInput = document.querySelector('[data-owner-password]');
-      const confirmPasswordInput = document.querySelector('[data-owner-confirm-password]');
       const errorText = document.querySelector('[data-owner-auth-error]');
-      const passwordErrorText = document.querySelector('[data-owner-password-error]');
       const googleRegisterButton = document.querySelector('[data-google-register-btn]');
       const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
-      const modeLabel = document.querySelector('[data-owner-auth-mode-label]');
       const titleText = document.querySelector('[data-owner-auth-title]');
       const subtitleText = document.querySelector('[data-owner-auth-subtitle]');
       const switchLink = document.querySelector('[data-owner-auth-switch-link]');
-      const nameGrid = document.querySelector('[data-owner-auth-name-grid]');
-      const confirmPasswordField = document.querySelector('[data-owner-confirm-password-field]');
-      const passwordToggles = Array.from(document.querySelectorAll('[data-password-toggle]'));
       const pageParams = new URLSearchParams(window.location.search);
       const authMode = pageParams.get('mode') === 'login' ? 'login' : 'register';
 
-      if (!form || !firstNameInput || !lastNameInput || !emailInput || !passwordInput || !confirmPasswordInput || !errorText || !passwordErrorText) {
+      if (!form || !emailInput || !errorText) {
         return;
       }
 
       function syncAuthMode() {
         const isLogin = authMode === 'login';
-
-        if (modeLabel) {
-          modeLabel.textContent = isLogin ? 'Login' : 'Register';
-        }
 
         if (titleText) {
           titleText.textContent = isLogin ? 'Log in' : 'Create an account';
@@ -201,33 +139,10 @@
             : 'Already have an account? <a href="owner.html?mode=login" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a>';
         }
 
-        if (nameGrid) {
-          nameGrid.hidden = isLogin;
-          nameGrid.classList.toggle('is-hidden', isLogin);
-          nameGrid.setAttribute('aria-hidden', isLogin ? 'true' : 'false');
-        }
-
-        if (confirmPasswordField) {
-          confirmPasswordField.hidden = isLogin;
-        }
-
-        firstNameInput.disabled = isLogin;
-        lastNameInput.disabled = isLogin;
-        confirmPasswordInput.disabled = isLogin;
-
-        if (isLogin) {
-          firstNameInput.value = '';
-          lastNameInput.value = '';
-          confirmPasswordInput.value = '';
-        }
       }
 
       function hideError() {
         errorText.hidden = true;
-      }
-
-      function hidePasswordError() {
-        passwordErrorText.hidden = true;
       }
 
       function showError(message) {
@@ -240,17 +155,12 @@
         sessionStorage.setItem('owner-first-name', firstName);
         sessionStorage.setItem('owner-last-name', lastName);
         sessionStorage.setItem('owner-email', email);
+        sessionStorage.setItem('owner-api-base-url', apiBaseUrl);
         localStorage.setItem('owner-authenticated', 'true');
       }
 
-      function getResumePage() {
-        const savedPage = String(localStorage.getItem('owner-last-page') || '').trim();
-
-        if (!savedPage || savedPage.indexOf('owner.html') === 0) {
-          return 'owner-details.html';
-        }
-
-        return savedPage;
+      function getVerificationPage() {
+        return 'auth/verify.html';
       }
 
       function getApiUrl(pathName) {
@@ -261,85 +171,67 @@
         return apiBaseUrl + pathName;
       }
 
-      [firstNameInput, lastNameInput, emailInput, passwordInput, confirmPasswordInput].forEach(function (input) {
+      [emailInput].forEach(function (input) {
         input.addEventListener('input', function () {
-          if (input === passwordInput && passwordInput.value.trim().length >= 6) {
-            hidePasswordError();
-          }
-
-          if (
-            firstNameInput.value.trim() &&
-            lastNameInput.value.trim() &&
-            emailInput.value.trim() &&
-            passwordInput.value.trim() &&
-            confirmPasswordInput.value.trim()
-          ) {
+          if (emailInput.value.trim()) {
             hideError();
           }
-        });
-      });
-
-      passwordToggles.forEach(function (toggle) {
-        toggle.addEventListener('click', function () {
-          const targetName = toggle.getAttribute('data-password-target');
-          const targetInput = targetName === 'confirm-password' ? confirmPasswordInput : passwordInput;
-
-          if (!targetInput) {
-            return;
-          }
-
-          const nextType = targetInput.type === 'password' ? 'text' : 'password';
-          targetInput.type = nextType;
-          toggle.classList.toggle('is-visible', nextType === 'text');
-          toggle.setAttribute('aria-label', nextType === 'password' ? 'Show password' : 'Hide password');
         });
       });
 
       form.addEventListener('submit', function (event) {
         event.preventDefault();
 
-        const firstName = firstNameInput.value.trim();
-        const lastName = lastNameInput.value.trim();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        const confirmPassword = confirmPasswordInput.value.trim();
-        const isLogin = authMode === 'login';
+        const contact = emailInput.value.trim();
 
-        if ((!isLogin && (!firstName || !lastName || !email || !password || !confirmPassword)) || (isLogin && (!email || !password))) {
-          showError(isLogin ? 'Please fill email and password.' : 'Please fill first name, last name, email, password, and confirm password.');
-          if (!isLogin && !firstName) {
-            firstNameInput.focus();
-          } else if (!isLogin && !lastName) {
-            lastNameInput.focus();
-          } else if (!email) {
+        if (!contact) {
+          showError('Please fill your email or phone number.');
+          if (!contact) {
             emailInput.focus();
-          } else if (!password) {
-            passwordInput.focus();
-          } else if (!isLogin && !confirmPassword) {
-            confirmPasswordInput.focus();
-          } else {
-            passwordInput.focus();
           }
           return;
         }
 
-        if (password.length < 6) {
-          passwordErrorText.hidden = false;
-          passwordInput.focus();
-          return;
-        }
+        fetch(getApiUrl('/api/auth/request-otp'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contact: contact
+          })
+        })
+          .then(function (apiResponse) {
+            return apiResponse.text().then(function (text) {
+              let data = {};
 
-        hidePasswordError();
+              try {
+                data = text ? JSON.parse(text) : {};
+              } catch (error) {
+                data = {
+                  error: text || 'Unexpected server response.'
+                };
+              }
 
-        if (!isLogin && password !== confirmPassword) {
-          showError('Password and confirm password must match.');
-          confirmPasswordInput.focus();
-          return;
-        }
+              return {
+                ok: apiResponse.ok,
+                data: data
+              };
+            });
+          })
+          .then(function (result) {
+            if (!result.ok) {
+              throw new Error((result.data && result.data.error) || 'Unable to send OTP.');
+            }
 
-        hideError();
-        storeOwnerSession(isLogin ? '' : firstName, isLogin ? '' : lastName, email);
-        window.location.href = getResumePage();
+            const contactValue = (result.data && result.data.contact) ? String(result.data.contact) : contact;
+            hideError();
+            storeOwnerSession('', '', contactValue);
+            window.location.href = getVerificationPage();
+          })
+          .catch(function (error) {
+            showError(error.message || 'Unable to send OTP.');
+          });
       });
 
       function initializeGoogleAuth() {
@@ -400,7 +292,7 @@
                 const user = result.data.user;
                 hideError();
                 storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
-                window.location.href = getResumePage();
+                window.location.href = 'owner-details.html';
               })
               .catch(function (error) {
                 showError(error.message || 'Google registration failed.');
@@ -425,11 +317,6 @@
       }
 
       syncAuthMode();
-
-      if (localStorage.getItem('owner-authenticated') === 'true') {
-        window.location.href = getResumePage();
-        return;
-      }
 
       if (window.Swiper) {
         new Swiper('#ownerBanner', {

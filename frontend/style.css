@@ -774,6 +774,7 @@ html {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  margin-left: 18px;
   gap: 0;
   min-height: auto;
 }
@@ -814,7 +815,7 @@ html {
   box-shadow: 0 8px 24px rgba(17, 17, 17, 0.06);
   display: grid;
   grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr);
-  gap: 16px;
+  gap: 6px;
 }
 
 .owner-auth-visual {
@@ -837,7 +838,7 @@ html {
 .owner-auth-banner {
   width: 100%;
   height: 100%;
-  min-height: 620px;
+  min-height: 560px;
   overflow: hidden;
   background: #ffffff;
 }
@@ -1087,25 +1088,33 @@ html {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 8px;
 }
 
 .owner-auth-google-wrap {
   display: flex;
   align-items: stretch;
+  justify-content: center;
   width: 100%;
 }
 
+
 .owner-auth-google-button {
-  width: 100%;
-  min-height: 64px;
+  width: min(100%, 320px);
+  min-height: 41px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
 }
 
 .owner-auth-google-button > div {
   margin: 0 auto !important;
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 .owner-auth-social-btn {
@@ -1157,12 +1166,12 @@ html {
   }
 
   .owner-auth-visual {
-    min-height: 420px;
+    min-height: 360px;
   }
 
   .owner-auth-banner,
   .owner-auth-banner-card {
-    min-height: 420px;
+    min-height: 360px;
   }
 
   .owner-auth-panel {
@@ -1181,6 +1190,10 @@ html {
     padding-right: 12px;
   }
 
+  .owner-auth-brand-lockup {
+    margin-left: 8px;
+  }
+
   .owner-auth-main {
     padding: 10px;
     display: flex;
@@ -1193,22 +1206,23 @@ html {
     padding: 10px;
     border-radius: 22px;
     margin: 0 auto;
-    gap: 12px;
+    gap: 0;
   }
 
   .owner-auth-visual {
-    min-height: 220px;
+    min-height: 120px;
     width: 100%;
   }
 
   .owner-auth-banner,
   .owner-auth-banner-card {
-    min-height: 220px;
+    min-height: 120px;
   }
 
   .owner-auth-panel {
     width: 100%;
-    padding: 20px 14px;
+    padding: 0 14px 20px;
+    margin-top: -8px;
     align-items: center;
   }
 
