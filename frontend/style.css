@@ -1065,6 +1065,15 @@ html {
   box-shadow: none;
 }
 
+.owner-auth-submit + .owner-auth-submit {
+  margin-top: 10px;
+}
+
+.owner-auth-submit-secondary {
+  background: #ece9ff;
+  color: #2f2566;
+}
+
 .owner-auth-divider {
   display: flex;
   align-items: center;
