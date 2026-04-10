@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email</title>
+    <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+    <link rel="stylesheet" href="style.css?v=20260410-2">
+  </head>
+  <body>
+    <header class="header owner-auth-header">
+      <div class="owner-auth-brand-lockup">
+        <h1 class="logo owner-auth-logo">VECT</h1>
+        <p class="owner-auth-logo-sub">MOVERS</p>
+      </div>
+    </header>
+
+    <main class="owner-main owner-auth-main">
+      <section class="owner-auth-shell" aria-label="Verify account">
+        <div class="owner-auth-panel owner-auth-verify-panel">
+          <div class="owner-auth-panel-head">
+            <h1 class="owner-auth-title">Email verification</h1>
+            <p class="owner-auth-subtitle" data-verify-subtitle>Enter the OTP sent to your email.</p>
+          </div>
+
+          <form class="owner-auth-form" data-verify-form novalidate>
+            <label class="owner-auth-field">
+              <span class="owner-auth-field-label">OTP code</span>
+              <input
+                type="text"
+                class="owner-auth-input"
+                placeholder="Enter 4-digit OTP"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="6"
+                data-verify-otp
+              >
+            </label>
+
+            <p class="owner-auth-error" data-verify-error hidden></p>
+
+            <button type="submit" class="owner-auth-submit">Verify OTP</button>
+            <button type="button" class="owner-auth-submit owner-auth-submit-secondary" data-resend-btn>Resend OTP</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const verifyForm = document.querySelector('[data-verify-form]');
+        const otpInput = document.querySelector('[data-verify-otp]');
+        const errorNode = document.querySelector('[data-verify-error]');
+        const subtitleNode = document.querySelector('[data-verify-subtitle]');
+        const resendBtn = document.querySelector('[data-resend-btn]');
+        const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+        const email = String(sessionStorage.getItem('owner-email') || '').trim();
+        const apiBaseFromStorage = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
+        const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
+        const apiBaseUrl = (apiBaseFromStorage || apiBaseFromMeta).replace(/\/$/, '');
+
+        if (!verifyForm || !otpInput || !errorNode) {
+          return;
+        }
+
+        function getApiUrl(pathName) {
+          if (!apiBaseUrl) {
+            return pathName;
+          }
+
+          return apiBaseUrl + pathName;
+        }
+
+        function hideError() {
+          errorNode.hidden = true;
+          errorNode.textContent = '';
+        }
+
+        function showError(message) {
+          errorNode.textContent = message;
+          errorNode.hidden = false;
+        }
+
+        if (!email) {
+          showError('Session expired. Please go back and request OTP again.');
+          verifyForm.querySelector('button[type="submit"]').disabled = true;
+          if (resendBtn) {
+            resendBtn.disabled = true;
+          }
+          return;
+        }
+
+        if (subtitleNode) {
+          subtitleNode.textContent = 'Enter the OTP sent to ' + email + '.';
+        }
+
+        otpInput.addEventListener('input', function () {
+          const cleaned = otpInput.value.replace(/[^0-9]/g, '');
+          if (otpInput.value !== cleaned) {
+            otpInput.value = cleaned;
+          }
+          hideError();
+        });
+
+        verifyForm.addEventListener('submit', function (event) {
+          event.preventDefault();
+          const code = String(otpInput.value || '').trim();
+
+          if (!code) {
+            showError('Please enter OTP code.');
+            otpInput.focus();
+            return;
+          }
+
+          fetch(getApiUrl('/api/auth/verify-otp'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              contact: email,
+              code: code
+            })
+          })
+            .then(function (apiResponse) {
+              return apiResponse.text().then(function (text) {
+                let data = {};
+
+                try {
+                  data = text ? JSON.parse(text) : {};
+                } catch (error) {
+                  data = { error: text || 'Unexpected server response.' };
+                }
+
+                return {
+                  ok: apiResponse.ok,
+                  data: data
+                };
+              });
+            })
+            .then(function (result) {
+              if (!result.ok) {
+                throw new Error((result.data && result.data.error) || 'OTP verification failed.');
+              }
+
+              localStorage.setItem('owner-authenticated', 'true');
+              window.location.href = 'owner-details.html';
+            })
+            .catch(function (error) {
+              showError(error.message || 'OTP verification failed.');
+            });
+        });
+
+        if (resendBtn) {
+          resendBtn.addEventListener('click', function () {
+            fetch(getApiUrl('/api/auth/request-otp'), {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                contact: email
+              })
+            })
+              .then(function (apiResponse) {
+                return apiResponse.text().then(function (text) {
+                  let data = {};
+
+                  try {
+                    data = text ? JSON.parse(text) : {};
+                  } catch (error) {
+                    data = { error: text || 'Unexpected server response.' };
+                  }
+
+                  return {
+                    ok: apiResponse.ok,
+                    data: data
+                  };
+                });
+              })
+              .then(function (result) {
+                if (!result.ok) {
+                  throw new Error((result.data && result.data.error) || 'Unable to resend OTP.');
+                }
+
+                hideError();
+              })
+              .catch(function (error) {
+                showError(error.message || 'Unable to resend OTP.');
+              });
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
