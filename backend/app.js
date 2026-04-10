@@ -7,6 +7,10 @@ const { URL } = require('url');
 const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT) || 3000;
 const GOOGLE_CLIENT_ID = String(process.env.GOOGLE_CLIENT_ID || '').trim();
+const APPLE_CLIENT_ID = String(process.env.APPLE_CLIENT_ID || '').trim();
+const GMAIL_USER = String(process.env.GMAIL_USER || '').trim();
+const GMAIL_APP_PASSWORD = String(process.env.GMAIL_APP_PASSWORD || '').trim();
+const OTP_FROM_EMAIL = String(process.env.OTP_FROM_EMAIL || GMAIL_USER || '').trim();
 const PROJECT_ROOT = path.join(__dirname, '..');
 const FRONTEND_DIR = path.join(PROJECT_ROOT, 'frontend');
 const UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
@@ -27,8 +31,13 @@ const MIME_TYPES = {
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 let googleOAuthClient = null;
+let appleKeysCache = null;
+let mailTransporter = null;
 const profilePhotoSessions = new Map();
+const otpSessions = new Map();
 const PROFILE_PHOTO_SESSION_TTL_MS = 30 * 60 * 1000;
+const APPLE_KEYS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const OTP_TTL_MS = 5 * 60 * 1000;
 
 function getGoogleOAuthClient() {
   if (!GOOGLE_CLIENT_ID) {
@@ -46,6 +55,179 @@ function getGoogleOAuthClient() {
   } catch (error) {
     return null;
   }
+}
+
+function getMailTransporter() {
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    return null;
+  }
+
+  if (mailTransporter) {
+    return mailTransporter;
+  }
+
+  try {
+    const nodemailer = require('nodemailer');
+    mailTransporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: GMAIL_USER,
+        pass: GMAIL_APP_PASSWORD
+      }
+    });
+    return mailTransporter;
+  } catch (error) {
+    return null;
+  }
+}
+
+function isEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+
+function normalizeContact(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function cleanupOtpSessions() {
+  const now = Date.now();
+  otpSessions.forEach(function (session, key) {
+    if (!session || !session.expiresAt || now > session.expiresAt) {
+      otpSessions.delete(key);
+    }
+  });
+}
+
+function generateOtp() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+async function sendOtpEmail(contact, otpCode) {
+  const transporter = getMailTransporter();
+
+  if (!transporter || !OTP_FROM_EMAIL) {
+    throw new Error('Email OTP is not configured on the server.');
+  }
+
+  await transporter.sendMail({
+    from: OTP_FROM_EMAIL,
+    to: contact,
+    subject: 'VECT MOVERS verification code',
+    text: 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.'
+  });
+}
+
+function decodeBase64Url(input) {
+  const normalized = String(input || '')
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  const padding = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
+  return Buffer.from(normalized + padding, 'base64');
+}
+
+function parseJwt(token) {
+  const tokenParts = String(token || '').split('.');
+
+  if (tokenParts.length !== 3) {
+    throw new Error('Invalid token format.');
+  }
+
+  return {
+    header: JSON.parse(decodeBase64Url(tokenParts[0]).toString('utf8')),
+    payload: JSON.parse(decodeBase64Url(tokenParts[1]).toString('utf8')),
+    signingInput: tokenParts[0] + '.' + tokenParts[1],
+    signature: decodeBase64Url(tokenParts[2])
+  };
+}
+
+async function getAppleSigningKeys() {
+  const now = Date.now();
+
+  if (appleKeysCache && now - appleKeysCache.fetchedAt < APPLE_KEYS_CACHE_TTL_MS) {
+    return appleKeysCache.keys;
+  }
+
+  const appleResponse = await fetch('https://appleid.apple.com/auth/keys');
+
+  if (!appleResponse.ok) {
+    throw new Error('Unable to download Apple signing keys.');
+  }
+
+  const appleData = await appleResponse.json();
+  const keys = Array.isArray(appleData && appleData.keys) ? appleData.keys : [];
+
+  if (!keys.length) {
+    throw new Error('Apple signing keys are missing.');
+  }
+
+  appleKeysCache = {
+    fetchedAt: now,
+    keys: keys
+  };
+
+  return keys;
+}
+
+async function verifyAppleIdentityToken(identityToken) {
+  if (!APPLE_CLIENT_ID) {
+    throw new Error('Apple sign-in is not configured on the server.');
+  }
+
+  const parsedToken = parseJwt(identityToken);
+  const header = parsedToken.header || {};
+  const payload = parsedToken.payload || {};
+
+  if (header.alg !== 'ES256' || !header.kid) {
+    throw new Error('Unsupported Apple token header.');
+  }
+
+  const appleKeys = await getAppleSigningKeys();
+  const signingKey = appleKeys.find(function (key) {
+    return key && key.kid === header.kid && key.kty === 'EC';
+  });
+
+  if (!signingKey) {
+    throw new Error('Matching Apple signing key was not found.');
+  }
+
+  const publicKey = crypto.createPublicKey({
+    key: signingKey,
+    format: 'jwk'
+  });
+  const isSignatureValid = crypto.verify(
+    'sha256',
+    Buffer.from(parsedToken.signingInput, 'utf8'),
+    {
+      key: publicKey,
+      dsaEncoding: 'ieee-p1363'
+    },
+    parsedToken.signature
+  );
+
+  if (!isSignatureValid) {
+    throw new Error('Apple token signature is invalid.');
+  }
+
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  const issuer = String(payload.iss || '').trim();
+  const audience = payload.aud;
+  const audienceMatches = Array.isArray(audience)
+    ? audience.includes(APPLE_CLIENT_ID)
+    : String(audience || '').trim() === APPLE_CLIENT_ID;
+
+  if (issuer !== 'https://appleid.apple.com') {
+    throw new Error('Apple token issuer is invalid.');
+  }
+
+  if (!audienceMatches) {
+    throw new Error('Apple token audience is invalid.');
+  }
+
+  if (!payload.exp || Number(payload.exp) <= nowInSeconds) {
+    throw new Error('Apple token has expired.');
+  }
+
+  return payload;
 }
 
 function sendJson(response, statusCode, payload) {
@@ -276,6 +458,150 @@ async function handleGoogleAuth(request, response) {
   }
 }
 
+async function handleAppleAuth(request, response) {
+  if (!APPLE_CLIENT_ID) {
+    sendJson(response, 500, {
+      error: 'Apple sign-in is not configured on the server.'
+    });
+    return;
+  }
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const identityToken = String(payload.idToken || '').trim();
+  const appleUser = payload.user && typeof payload.user === 'object' ? payload.user : {};
+  const appleName = appleUser.name && typeof appleUser.name === 'object' ? appleUser.name : {};
+
+  if (!identityToken) {
+    sendJson(response, 400, { error: 'Missing Apple identity token.' });
+    return;
+  }
+
+  try {
+    const applePayload = await verifyAppleIdentityToken(identityToken);
+    const email = String(applePayload.email || appleUser.email || '').trim();
+    const firstName = String(appleName.firstName || '').trim();
+    const lastName = String(appleName.lastName || '').trim();
+    const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+
+    sendJson(response, 200, {
+      success: true,
+      user: {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        name: fullName || email || 'Apple user'
+      }
+    });
+  } catch (error) {
+    sendJson(response, 401, {
+      error: error.message || 'Apple account verification failed.'
+    });
+  }
+}
+
+async function handleRequestOtp(request, response) {
+  cleanupOtpSessions();
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const contact = String(payload.contact || '').trim();
+  const normalizedContact = normalizeContact(contact);
+
+  if (!contact) {
+    sendJson(response, 400, { error: 'Email is required.' });
+    return;
+  }
+
+  if (!isEmail(normalizedContact)) {
+    sendJson(response, 400, { error: 'Please enter a valid email address.' });
+    return;
+  }
+
+  const otpCode = generateOtp();
+  const now = Date.now();
+
+  otpSessions.set(normalizedContact, {
+    otpCode: otpCode,
+    createdAt: now,
+    expiresAt: now + OTP_TTL_MS
+  });
+
+  try {
+    await sendOtpEmail(normalizedContact, otpCode);
+    sendJson(response, 200, {
+      success: true,
+      contact: normalizedContact
+    });
+  } catch (error) {
+    otpSessions.delete(normalizedContact);
+    sendJson(response, 500, {
+      error: error.message || 'Unable to send OTP email.'
+    });
+  }
+}
+
+async function handleVerifyOtp(request, response) {
+  cleanupOtpSessions();
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const contact = normalizeContact(payload.contact || '');
+  const otpCode = String(payload.code || '').trim();
+
+  if (!contact || !otpCode) {
+    sendJson(response, 400, { error: 'Contact and OTP code are required.' });
+    return;
+  }
+
+  const session = otpSessions.get(contact);
+
+  if (!session) {
+    sendJson(response, 404, { error: 'OTP session not found or expired.' });
+    return;
+  }
+
+  if (Date.now() > session.expiresAt) {
+    otpSessions.delete(contact);
+    sendJson(response, 410, { error: 'OTP code expired. Request a new code.' });
+    return;
+  }
+
+  if (session.otpCode !== otpCode) {
+    sendJson(response, 401, { error: 'Invalid OTP code.' });
+    return;
+  }
+
+  otpSessions.delete(contact);
+
+  sendJson(response, 200, {
+    success: true,
+    verified: true,
+    contact: contact
+  });
+}
+
 function handleCreateProfilePhotoSession(response) {
   cleanupProfilePhotoSessions();
 
@@ -369,6 +695,21 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/auth/google') {
     handleGoogleAuth(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/auth/apple') {
+    handleAppleAuth(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/auth/request-otp') {
+    handleRequestOtp(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/auth/verify-otp') {
+    handleVerifyOtp(request, response);
     return;
   }
 
