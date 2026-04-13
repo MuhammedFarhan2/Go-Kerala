@@ -271,8 +271,38 @@
         return getDocumentFieldKeys().concat([
           'owner-heavy-licence-photo-name-1',
           'owner-heavy-licence-photo-name-2',
-          'owner-aadhaar-photo-name'
+          'owner-aadhaar-photo-name',
+          'owner-heavy-licence-status',
+          'owner-heavy-licence-status-v2',
+          'owner-heavy-licence-submitted',
+          'owner-heavy-licence-submitted-v2',
+          'owner-heavy-licence-photo-count',
+          'owner-aadhaar-status',
+          'owner-aadhaar-status-v2',
+          'owner-aadhaar-submitted',
+          'owner-aadhaar-submitted-v2',
+          'owner-profile-photo-status-v2',
+          'owner-profile-photo-submitted-v2'
         ]);
+      }
+
+      function resolveStoredUploadUrl(urlValue, fileNameValue) {
+        const directUrl = getImageUrl(urlValue);
+        const safeFileName = String(fileNameValue || '').trim();
+
+        if (directUrl) {
+          return directUrl;
+        }
+
+        if (!safeFileName || /completed|yes/i.test(safeFileName)) {
+          return '';
+        }
+
+        if (!/\.(png|jpe?g|webp|gif)$/i.test(safeFileName)) {
+          return '';
+        }
+
+        return getApiUrl('/uploads/' + encodeURIComponent(safeFileName));
       }
 
       function openImagePreview(imageUrl, label) {
@@ -339,15 +369,24 @@
         const documents = [
           {
             label: 'Licence Front',
-            value: safeFields['owner-heavy-licence-photo-url-1']
+            value: resolveStoredUploadUrl(
+              safeFields['owner-heavy-licence-photo-url-1'],
+              safeFields['owner-heavy-licence-photo-name-1']
+            )
           },
           {
             label: 'Licence Back',
-            value: safeFields['owner-heavy-licence-photo-url-2']
+            value: resolveStoredUploadUrl(
+              safeFields['owner-heavy-licence-photo-url-2'],
+              safeFields['owner-heavy-licence-photo-name-2']
+            )
           },
           {
             label: 'Aadhaar',
-            value: safeFields['owner-aadhaar-photo-url']
+            value: resolveStoredUploadUrl(
+              safeFields['owner-aadhaar-photo-url'],
+              safeFields['owner-aadhaar-photo-name']
+            )
           },
           {
             label: 'Profile Photo',
