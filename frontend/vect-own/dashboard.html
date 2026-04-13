@@ -135,6 +135,14 @@
     </section>
   </main>
 
+  <div class="vect-own-lightbox" hidden data-vect-own-lightbox>
+    <div class="vect-own-lightbox-backdrop" data-vect-own-lightbox-close></div>
+    <div class="vect-own-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Full image preview">
+      <button type="button" class="vect-own-lightbox-close" aria-label="Close image preview" data-vect-own-lightbox-close>&times;</button>
+      <img src="" alt="" class="vect-own-lightbox-image" data-vect-own-lightbox-image>
+    </div>
+  </div>
+
   <script>
     (function () {
       const listNode = document.querySelector('[data-vect-own-list]');
@@ -155,6 +163,8 @@
       const idNode = document.querySelector('[data-vect-own-id]');
       const fieldsNode = document.querySelector('[data-vect-own-fields]');
       const documentsNode = document.querySelector('[data-vect-own-documents]');
+      const lightboxNode = document.querySelector('[data-vect-own-lightbox]');
+      const lightboxImageNode = document.querySelector('[data-vect-own-lightbox-image]');
       const tabs = Array.from(document.querySelectorAll('[data-vect-own-tab]'));
       const metricNodes = Array.from(document.querySelectorAll('[data-vect-own-metric]'));
       const actionButtons = Array.from(document.querySelectorAll('[data-vect-own-action]'));
@@ -306,35 +316,25 @@
       }
 
       function openImagePreview(imageUrl, label) {
-        if (!imageUrl) {
+        if (!imageUrl || !lightboxNode || !lightboxImageNode) {
           return;
         }
 
-        const previewWindow = window.open('', '_blank', 'noopener,noreferrer');
+        lightboxImageNode.src = imageUrl;
+        lightboxImageNode.alt = label || 'Submitted image';
+        lightboxNode.hidden = false;
+        document.documentElement.classList.add('is-vect-own-lightbox-open');
+      }
 
-        if (!previewWindow) {
-          window.alert('Please allow popups to view the image.');
+      function closeImagePreview() {
+        if (!lightboxNode || !lightboxImageNode) {
           return;
         }
 
-        previewWindow.document.write([
-          '<!DOCTYPE html>',
-          '<html lang="en">',
-          '<head>',
-          '<meta charset="UTF-8">',
-          '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
-          '<title>' + escapeHtml(label || 'Image preview') + '</title>',
-          '<style>',
-          'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0f172a;padding:24px;font-family:Arial,sans-serif;}',
-          'img{max-width:100%;max-height:calc(100vh - 48px);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,0.35);background:#fff;}',
-          '</style>',
-          '</head>',
-          '<body>',
-          '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(label || 'Submitted image') + '">',
-          '</body>',
-          '</html>'
-        ].join(''));
-        previewWindow.document.close();
+        lightboxNode.hidden = true;
+        lightboxImageNode.src = '';
+        lightboxImageNode.alt = '';
+        document.documentElement.classList.remove('is-vect-own-lightbox-open');
       }
 
       function renderFieldValue(key, value) {
@@ -770,6 +770,12 @@
         const trigger = event.target.closest('[data-vect-own-image-url]');
 
         if (!trigger) {
+          const closeTrigger = event.target.closest('[data-vect-own-lightbox-close]');
+
+          if (closeTrigger) {
+            closeImagePreview();
+          }
+
           return;
         }
 
@@ -777,6 +783,12 @@
           String(trigger.getAttribute('data-vect-own-image-url') || '').trim(),
           String(trigger.getAttribute('data-vect-own-image-label') || '').trim()
         );
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          closeImagePreview();
+        }
       });
     })();
   </script>

@@ -5116,6 +5116,65 @@ h1 {
   text-decoration: underline;
 }
 
+.is-vect-own-lightbox-open,
+.is-vect-own-lightbox-open body {
+  overflow: hidden;
+}
+
+.vect-own-lightbox[hidden] {
+  display: none !important;
+}
+
+.vect-own-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.vect-own-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.86);
+}
+
+.vect-own-lightbox-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(960px, 100%);
+  max-height: calc(100vh - 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vect-own-lightbox-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.72);
+  color: #fff;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.vect-own-lightbox-image {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 40px);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+}
+
 .vect-own-note-input {
   width: 100%;
   min-height: 110px;
@@ -5206,5 +5265,18 @@ h1 {
 
   .vect-own-detail-actions {
     grid-template-columns: 1fr;
+  }
+
+  .vect-own-lightbox {
+    padding: 12px;
+  }
+
+  .vect-own-lightbox-dialog {
+    max-height: calc(100vh - 24px);
+  }
+
+  .vect-own-lightbox-image {
+    max-height: calc(100vh - 24px);
+    border-radius: 14px;
   }
 }
