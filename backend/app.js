@@ -14,6 +14,7 @@ const OTP_FROM_EMAIL = String(process.env.OTP_FROM_EMAIL || GMAIL_USER || '').tr
 const TWILIO_ACCOUNT_SID = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
 const TWILIO_AUTH_TOKEN = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
 const TWILIO_FROM_NUMBER = String(process.env.TWILIO_FROM_NUMBER || '').trim();
+const TWILIO_WHATSAPP_FROM_NUMBER = String(process.env.TWILIO_WHATSAPP_FROM_NUMBER || process.env.TWILIO_WHATSAPP_FROM || '').trim();
 const PROJECT_ROOT = path.join(__dirname, '..');
 const FRONTEND_DIR = path.join(PROJECT_ROOT, 'frontend');
 const UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
@@ -23,6 +24,10 @@ const VECT_OWN_SESSION_COOKIE = 'vect_own_session';
 const VECT_OWN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const VECT_OWN_PASSWORD = String(process.env.VECT_OWN_PASSWORD || 'vectown1234').trim();
 const VECT_OWN_SESSION_HEADER = 'x-vect-own-session';
+const VECT_OWN_SELECTION_WHATSAPP_MESSAGE = String(
+  process.env.VECT_OWN_SELECTION_WHATSAPP_MESSAGE ||
+  'Congratulation you have selected as a member of VECT Movers. For continue fffffff'
+).trim();
 
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -202,6 +207,71 @@ async function sendOtpSms(contact, otpCode) {
 
   if (!twilioResponse.ok) {
     let errorMessage = 'Unable to send SMS OTP.';
+
+    try {
+      const responseData = await twilioResponse.json();
+      if (responseData && responseData.message) {
+        errorMessage = String(responseData.message);
+      }
+    } catch (error) {
+      try {
+        const responseText = await twilioResponse.text();
+        if (responseText) {
+          errorMessage = responseText;
+        }
+      } catch (nestedError) {
+        // Keep default error message.
+      }
+    }
+
+    throw new Error(errorMessage);
+  }
+}
+
+function formatWhatsappAddress(value) {
+  const normalized = normalizePhoneNumber(value);
+
+  if (!normalized) {
+    return '';
+  }
+
+  return 'whatsapp:' + normalized;
+}
+
+async function sendWhatsAppMessage(contact, messageText) {
+  const whatsappFrom = String(TWILIO_WHATSAPP_FROM_NUMBER || '').trim();
+  const toAddress = formatWhatsappAddress(contact);
+  const fromAddress = /^whatsapp:/i.test(whatsappFrom) ? whatsappFrom : formatWhatsappAddress(whatsappFrom);
+
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !fromAddress) {
+    throw new Error('WhatsApp messaging is not configured on the server.');
+  }
+
+  if (!toAddress) {
+    throw new Error('A valid WhatsApp number is required.');
+  }
+
+  const authHeader = Buffer.from(TWILIO_ACCOUNT_SID + ':' + TWILIO_AUTH_TOKEN).toString('base64');
+  const body = new URLSearchParams({
+    To: toAddress,
+    From: fromAddress,
+    Body: String(messageText || '').trim()
+  });
+
+  const twilioResponse = await fetch(
+    'https://api.twilio.com/2010-04-01/Accounts/' + encodeURIComponent(TWILIO_ACCOUNT_SID) + '/Messages.json',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: 'Basic ' + authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    }
+  );
+
+  if (!twilioResponse.ok) {
+    let errorMessage = 'Unable to send WhatsApp message.';
 
     try {
       const responseData = await twilioResponse.json();
@@ -1231,6 +1301,7 @@ async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
     return;
   }
 
+  const previousStatus = submission.status;
   submission.status = nextStatus;
   submission.reviewNote = reviewNote;
   submission.reviewedBy = session.role || 'owner';
@@ -1239,9 +1310,23 @@ async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
 
   persistVectOwnSubmissions();
 
+  let notificationError = '';
+
+  if (previousStatus !== 'accepted' && nextStatus === 'accepted') {
+    try {
+      await sendWhatsAppMessage(
+        submission.whatsappNumber || (submission.fields && submission.fields['owner-whatsapp-number']) || '',
+        VECT_OWN_SELECTION_WHATSAPP_MESSAGE
+      );
+    } catch (error) {
+      notificationError = error && error.message ? String(error.message) : 'Unable to send WhatsApp message.';
+    }
+  }
+
   sendJson(response, 200, {
     success: true,
-    submission: serializeSubmissionForList(submission)
+    submission: serializeSubmissionForList(submission),
+    notificationError: notificationError
   });
 }
 
@@ -1251,7 +1336,7 @@ const server = http.createServer(function (request, response) {
   if (request.method === 'OPTIONS') {
     response.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+      'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session'
     });
     response.end();
