@@ -305,9 +305,7 @@
       function getPreferredFieldOrder() {
         return [
           'owner-company-name',
-          'owner-name',
           'owner-first-name',
-          'owner-last-name',
           'owner-email',
           'owner-whatsapp-number',
           'owner-categories',
@@ -322,9 +320,7 @@
       function getFieldLabel(key) {
         const labels = {
           'owner-company-name': 'Company Name',
-          'owner-name': 'Full Name',
           'owner-first-name': 'First Name',
-          'owner-last-name': 'Last Name',
           'owner-email': 'Email',
           'owner-whatsapp-number': 'WhatsApp Number',
           'owner-categories': 'Categories',
@@ -653,7 +649,8 @@
         }
 
         if (ownerNode) {
-          ownerNode.textContent = summary.ownerName || 'Owner name not captured';
+          ownerNode.textContent = '';
+          ownerNode.hidden = true;
         }
 
         if (phoneNode) {
