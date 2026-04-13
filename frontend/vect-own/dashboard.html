@@ -94,22 +94,18 @@
 
           <div class="vect-own-detail-meta-grid">
             <div class="vect-own-detail-meta-card">
-              <button type="button" class="vect-own-inline-accept">Accept</button>
               <span class="vect-own-detail-label">Phone</span>
               <strong class="vect-own-detail-value" data-vect-own-phone>-</strong>
             </div>
             <div class="vect-own-detail-meta-card">
-              <button type="button" class="vect-own-inline-accept">Accept</button>
               <span class="vect-own-detail-label">Submitted</span>
               <strong class="vect-own-detail-value" data-vect-own-created>-</strong>
             </div>
             <div class="vect-own-detail-meta-card">
-              <button type="button" class="vect-own-inline-accept">Accept</button>
               <span class="vect-own-detail-label">Email</span>
               <strong class="vect-own-detail-value" data-vect-own-email>-</strong>
             </div>
             <div class="vect-own-detail-meta-card">
-              <button type="button" class="vect-own-inline-accept">Accept</button>
               <span class="vect-own-detail-label">Submission Id</span>
               <strong class="vect-own-detail-value vect-own-detail-id" data-vect-own-id>-</strong>
             </div>
@@ -216,6 +212,29 @@
 
         if (value === null || value === undefined || value === '') {
           return '-';
+        }
+
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+
+          if ((trimmed.indexOf('["') === 0 && trimmed.lastIndexOf('"]') === trimmed.length - 2) ||
+              (trimmed.indexOf("['") === 0 && trimmed.lastIndexOf("']") === trimmed.length - 2)) {
+            try {
+              const parsed = JSON.parse(trimmed.replace(/'/g, '"'));
+              if (Array.isArray(parsed)) {
+                return parsed.filter(Boolean).join(', ') || '-';
+              }
+            } catch (error) {
+              return trimmed
+                .replace(/^\[\s*/, '')
+                .replace(/\s*\]$/, '')
+                .replace(/['"]/g, '')
+                .split(',')
+                .map(function (item) { return item.trim(); })
+                .filter(Boolean)
+                .join(', ') || '-';
+            }
+          }
         }
 
         return String(value).replace(/-/g, ' ');
