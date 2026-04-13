@@ -112,13 +112,13 @@
           </div>
 
           <div class="vect-own-detail-section">
-            <h3 class="vect-own-detail-section-title">Uploaded documents</h3>
-            <div class="vect-own-document-grid" data-vect-own-documents></div>
+            <h3 class="vect-own-detail-section-title">Captured details</h3>
+            <dl class="vect-own-field-list" data-vect-own-fields></dl>
           </div>
 
           <div class="vect-own-detail-section">
-            <h3 class="vect-own-detail-section-title">Captured details</h3>
-            <dl class="vect-own-field-list" data-vect-own-fields></dl>
+            <h3 class="vect-own-detail-section-title">Uploaded documents</h3>
+            <div class="vect-own-document-grid" data-vect-own-documents></div>
           </div>
 
           <div class="vect-own-detail-section">
@@ -294,6 +294,51 @@
           'owner-profile-photo-status-v2',
           'owner-profile-photo-submitted-v2'
         ]);
+      }
+
+      function getPreferredFieldOrder() {
+        return [
+          'owner-company-name',
+          'owner-name',
+          'owner-first-name',
+          'owner-last-name',
+          'owner-email',
+          'owner-whatsapp-number',
+          'owner-categories',
+          'owner-districts',
+          'owner-address',
+          'owner-city',
+          'owner-state',
+          'owner-pincode'
+        ];
+      }
+
+      function getFieldLabel(key) {
+        const labels = {
+          'owner-company-name': 'Company Name',
+          'owner-name': 'Full Name',
+          'owner-first-name': 'First Name',
+          'owner-last-name': 'Last Name',
+          'owner-email': 'Email',
+          'owner-whatsapp-number': 'WhatsApp Number',
+          'owner-categories': 'Categories',
+          'owner-districts': 'Districts',
+          'owner-address': 'Address',
+          'owner-city': 'City',
+          'owner-state': 'State',
+          'owner-pincode': 'Pincode'
+        };
+
+        if (labels[key]) {
+          return labels[key];
+        }
+
+        return String(key || '')
+          .replace(/^owner-/, '')
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, function (char) {
+            return char.toUpperCase();
+          });
       }
 
       function resolveStoredUploadUrl(urlValue, fileNameValue) {
@@ -541,8 +586,26 @@
 
       function renderFields(fields) {
         const hiddenFieldKeys = getHiddenFieldKeys();
+        const preferredOrder = getPreferredFieldOrder();
         const entries = Object.entries(fields || {}).filter(function (entry) {
           return hiddenFieldKeys.indexOf(entry[0]) === -1;
+        }).sort(function (left, right) {
+          const leftIndex = preferredOrder.indexOf(left[0]);
+          const rightIndex = preferredOrder.indexOf(right[0]);
+
+          if (leftIndex !== -1 || rightIndex !== -1) {
+            if (leftIndex === -1) {
+              return 1;
+            }
+
+            if (rightIndex === -1) {
+              return -1;
+            }
+
+            return leftIndex - rightIndex;
+          }
+
+          return left[0].localeCompare(right[0]);
         });
 
         if (!entries.length) {
@@ -555,7 +618,7 @@
           const value = entry[1];
           return [
             '<div class="vect-own-field-row">',
-            '<dt class="vect-own-field-key">' + escapeHtml(key) + '</dt>',
+            '<dt class="vect-own-field-key">' + escapeHtml(getFieldLabel(key)) + '</dt>',
             '<dd class="vect-own-field-value">' + renderFieldValue(key, value) + '</dd>',
             '</div>'
           ].join('');

@@ -113,7 +113,12 @@
         }
 
         if (subtitleNode) {
-          subtitleNode.textContent = 'Complete your basic details to continue.';
+          subtitleNode.textContent = 'Continue with Google by adding your first name and last name. Password is not required.';
+        }
+
+        const submitButton = form.querySelector('.owner-auth-submit');
+        if (submitButton) {
+          submitButton.textContent = 'Continue with Google';
         }
       }
 
