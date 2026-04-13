@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260406-2">
+  <link rel="stylesheet" href="style.css?v=20260413-1">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -31,9 +31,13 @@
   <main class="owner-main">
     <section class="owner-sheet owner-sheet-intro" aria-label="Owner details sheet">
       <div class="owner-name-card">
+        <div class="owner-name-review-note" data-owner-company-review-note hidden>
+          <p class="owner-name-review-title">Sorry, your valuation have rejected because</p>
+          <p class="owner-name-review-message">The Company Name you have entered is invalid/incorrect. Please check it and clarify.</p>
+        </div>
         <h1 class="owner-name-title">Enter your company name</h1>
         <input type="text" class="owner-name-input" placeholder="Company name" aria-label="Company name" data-owner-company-input>
-        <p class="owner-name-hint"><span class="owner-name-hint-icon">i</span> Company names like ***** Holidays, ***** Movers etc</p>
+        <p class="owner-name-hint"><span class="owner-name-hint-icon">i</span> Company names like ABC Holidays, ABC Movers, ABC Logistics etc</p>
         <p class="owner-name-error" data-owner-company-error hidden>Enter company name</p>
         <div class="owner-name-actions">
           <button type="button" class="owner-next-btn" data-owner-company-next-btn>Next</button>
@@ -42,15 +46,27 @@
     </section>
   </main>
 
-  <script src="script.js?v=20260406-2"></script>
+  <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim();
       const companyInput = document.querySelector('[data-owner-company-input]');
       const errorText = document.querySelector('[data-owner-company-error]');
       const nextButton = document.querySelector('[data-owner-company-next-btn]');
+      const reviewNote = document.querySelector('[data-owner-company-review-note]');
+      const isCompanyReview = reviewItem === 'owner-company-name';
 
-      if (!companyInput || !errorText || !nextButton) {
+      if (!companyInput || !errorText || !nextButton || !reviewNote) {
         return;
+      }
+
+      reviewNote.hidden = !isCompanyReview;
+      nextButton.textContent = isCompanyReview ? 'Save company name' : 'Next';
+
+      if (isCompanyReview) {
+        sessionStorage.setItem('owner-company-name-return-page', returnPage || 'owner-next.html');
       }
 
       companyInput.value = sessionStorage.getItem('owner-company-name') || '';
@@ -72,6 +88,11 @@
 
         errorText.hidden = true;
         sessionStorage.setItem('owner-company-name', companyName);
+        if (isCompanyReview) {
+          window.location.href = 'owner-company-name-done.html';
+          return;
+        }
+
         window.location.href = 'owner-categories.html';
       });
     })();

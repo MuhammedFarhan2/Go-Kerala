@@ -248,6 +248,61 @@
 })();
 
 (function () {
+  const currentPath = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  const ownerStateBackupKey = 'owner-form-backup-v1';
+  const isOwnerFlowPage = currentPath.indexOf('owner-') === 0 || currentPath === 'owner.html' || currentPath === 'verify.html';
+
+  if (!isOwnerFlowPage) {
+    return;
+  }
+
+  function loadBackup() {
+    try {
+      const savedValue = localStorage.getItem(ownerStateBackupKey);
+      return savedValue ? JSON.parse(savedValue) : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function restoreOwnerSession() {
+    const savedState = loadBackup();
+
+    Object.keys(savedState).forEach(function (key) {
+      if (key.indexOf('owner-') !== 0 || key === 'owner-password') {
+        return;
+      }
+
+      if (sessionStorage.getItem(key) === null) {
+        sessionStorage.setItem(key, String(savedState[key]));
+      }
+    });
+  }
+
+  function backupOwnerSession() {
+    const nextState = loadBackup();
+
+    for (let index = 0; index < sessionStorage.length; index += 1) {
+      const key = sessionStorage.key(index);
+
+      if (!key || key.indexOf('owner-') !== 0 || key === 'owner-password') {
+        continue;
+      }
+
+      nextState[key] = String(sessionStorage.getItem(key) || '');
+    }
+
+    localStorage.setItem(ownerStateBackupKey, JSON.stringify(nextState));
+  }
+
+  restoreOwnerSession();
+  backupOwnerSession();
+
+  window.addEventListener('pagehide', backupOwnerSession);
+  window.addEventListener('beforeunload', backupOwnerSession);
+})();
+
+(function () {
   const accountBtn = document.getElementById('account-btn');
   const accountPanel = document.getElementById('account-panel');
   const backdrop = document.getElementById('account-backdrop');

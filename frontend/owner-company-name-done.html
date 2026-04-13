@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Name Updated</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260413-1">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Company name updated">
+      <div class="owner-blank-content owner-company-done-card">
+        <p class="owner-company-done-kicker">Company Name Updated</p>
+        <h1 class="owner-blank-title">Done</h1>
+        <p class="owner-blank-subtitle">
+          Your company name has been saved as <strong data-owner-company-done-name>This company</strong>.
+        </p>
+        <p class="owner-company-done-example">
+          Example format: ABC Movers, ABC Holidays, ABC Logistics
+        </p>
+        <div class="owner-name-actions owner-company-done-actions">
+          <button type="button" class="owner-next-btn" data-owner-company-done-btn>Continue</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260413-1"></script>
+  <script>
+    (function () {
+      const companyNameNode = document.querySelector('[data-owner-company-done-name]');
+      const continueButton = document.querySelector('[data-owner-company-done-btn]');
+      const fallbackPage = 'owner-next.html';
+      const returnPage = String(sessionStorage.getItem('owner-company-name-return-page') || fallbackPage).trim() || fallbackPage;
+
+      if (!companyNameNode || !continueButton) {
+        return;
+      }
+
+      companyNameNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
+
+      continueButton.addEventListener('click', function () {
+        window.location.href = returnPage;
+      });
+    })();
+  </script>
+</body>
+</html>
