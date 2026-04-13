@@ -117,6 +117,10 @@ function normalizePhoneNumber(value) {
     return '';
   }
 
+  if (!hasPlusPrefix && digitsOnly.length === 10) {
+    return '+91' + digitsOnly;
+  }
+
   return (hasPlusPrefix ? '+' : '') + digitsOnly;
 }
 
