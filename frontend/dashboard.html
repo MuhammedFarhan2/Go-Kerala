@@ -197,73 +197,6 @@
         return String(value);
       }
 
-      function isImageValue(value) {
-        const text = String(value || '').trim();
-
-        if (!text) {
-          return false;
-        }
-
-        if (/^data:image\//i.test(text)) {
-          return true;
-        }
-
-        if (/^https?:\/\/.+\.(png|jpe?g|webp|gif|svg)$/i.test(text)) {
-          return true;
-        }
-
-        if (/^\/uploads\/.+\.(png|jpe?g|webp|gif)$/i.test(text)) {
-          return true;
-        }
-
-        return false;
-      }
-
-      function getImageUrl(value) {
-        const text = String(value || '').trim();
-
-        if (!text) {
-          return '';
-        }
-
-        if (/^data:image\//i.test(text)) {
-          return text;
-        }
-
-        if (/^https?:\/\//i.test(text)) {
-          return text;
-        }
-
-        if (/^\//.test(text)) {
-          return getApiUrl(text);
-        }
-
-        return '';
-      }
-
-      function renderFieldValue(value) {
-        if (Array.isArray(value)) {
-          return escapeHtml(value.length ? value.join(', ') : '-');
-        }
-
-        if (value && typeof value === 'object') {
-          return escapeHtml(JSON.stringify(value));
-        }
-
-        if (isImageValue(value)) {
-          const imageUrl = getImageUrl(value);
-
-          return [
-            '<div class="vect-own-image-field">',
-            '<img src="' + escapeHtml(imageUrl) + '" alt="Submitted document" class="vect-own-image-preview">',
-            '<a href="' + escapeHtml(imageUrl) + '" target="_blank" rel="noopener noreferrer" class="vect-own-image-link">View full image</a>',
-            '</div>'
-          ].join('');
-        }
-
-        return escapeHtml(valueToText(value));
-      }
-
       function getApiUrl(pathName) {
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
@@ -404,7 +337,7 @@
           return [
             '<div class="vect-own-field-row">',
             '<dt class="vect-own-field-key">' + escapeHtml(key) + '</dt>',
-            '<dd class="vect-own-field-value">' + renderFieldValue(value) + '</dd>',
+            '<dd class="vect-own-field-value">' + escapeHtml(valueToText(value)) + '</dd>',
             '</div>'
           ].join('');
         }).join('');

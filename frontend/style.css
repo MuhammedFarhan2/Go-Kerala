@@ -5062,6 +5062,32 @@ h1 {
   word-break: break-word;
 }
 
+.vect-own-image-field {
+  display: grid;
+  gap: 10px;
+}
+
+.vect-own-image-preview {
+  display: block;
+  width: min(240px, 100%);
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid #dbe2ea;
+  background: #f8fafc;
+}
+
+.vect-own-image-link {
+  color: #0f4aa3;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.vect-own-image-link:hover {
+  text-decoration: underline;
+}
+
 .vect-own-note-input {
   width: 100%;
   min-height: 110px;
