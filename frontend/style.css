@@ -5100,11 +5100,17 @@ h1 {
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .vect-own-document-accept {
   top: 50%;
   transform: translateY(-50%);
+}
+
+.vect-own-inline-accept.is-deselected {
+  background: #dc2626 !important;
+  color: #fff !important;
 }
 
 .vect-own-field-key {

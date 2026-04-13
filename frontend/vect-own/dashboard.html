@@ -893,6 +893,14 @@
         });
 
       document.addEventListener('click', function (event) {
+        const acceptToggle = event.target.closest('.vect-own-inline-accept');
+
+        if (acceptToggle) {
+          const isDeselected = acceptToggle.classList.toggle('is-deselected');
+          acceptToggle.textContent = isDeselected ? 'Deselect' : 'Accept';
+          return;
+        }
+
         const trigger = event.target.closest('[data-vect-own-image-url]');
 
         if (!trigger) {
