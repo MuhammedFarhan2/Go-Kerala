@@ -559,6 +559,18 @@
         const filtered = getFilteredSubmissions();
         listNode.innerHTML = '';
 
+        if (selectedSubmissionId) {
+          const stillVisible = filtered.some(function (submission) {
+            return submission.id === selectedSubmissionId;
+          });
+
+          if (!stillVisible) {
+            selectedSubmissionId = '';
+            noteSectionOpen = false;
+            renderDetail(null);
+          }
+        }
+
         if (listSubtitle) {
           listSubtitle.textContent = filtered.length + ' visible';
         }
@@ -654,8 +666,16 @@
 
       function renderDetail(submission) {
         if (!submission) {
+          selectedSubmissionId = '';
+          noteSectionOpen = false;
           emptyNode.hidden = false;
           detailNode.hidden = true;
+          if (noteSection) {
+            noteSection.hidden = true;
+          }
+          if (noteToggleButton) {
+            noteToggleButton.hidden = true;
+          }
           return;
         }
 
