@@ -197,6 +197,84 @@
         return String(value);
       }
 
+      function normalizeImageText(value) {
+        return String(value || '')
+          .replace(/\s+/g, '')
+          .trim();
+      }
+
+      function isImageValue(value, key) {
+        const text = normalizeImageText(value);
+        const fieldKey = String(key || '').trim().toLowerCase();
+
+        if (!text) {
+          return false;
+        }
+
+        if (text.indexOf('data:image/') === 0) {
+          return true;
+        }
+
+        if (/^https?:\/\/.+\.(png|jpe?g|webp|gif|svg)$/i.test(text)) {
+          return true;
+        }
+
+        if (/^\/uploads\/.+\.(png|jpe?g|webp|gif)$/i.test(text)) {
+          return true;
+        }
+
+        if ((/photo|image|aadhaar|licence|license/i).test(fieldKey) && text.indexOf('base64,') > -1) {
+          return true;
+        }
+
+        return false;
+      }
+
+      function getImageUrl(value) {
+        const text = normalizeImageText(value);
+
+        if (!text) {
+          return '';
+        }
+
+        if (/^data:image\//i.test(text)) {
+          return text;
+        }
+
+        if (/^https?:\/\//i.test(text)) {
+          return text;
+        }
+
+        if (/^\//.test(text)) {
+          return getApiUrl(text);
+        }
+
+        return '';
+      }
+
+      function renderFieldValue(key, value) {
+        if (Array.isArray(value)) {
+          return escapeHtml(value.length ? value.join(', ') : '-');
+        }
+
+        if (value && typeof value === 'object') {
+          return escapeHtml(JSON.stringify(value));
+        }
+
+        if (isImageValue(value, key)) {
+          const imageUrl = getImageUrl(value);
+
+          return [
+            '<div class="vect-own-image-field">',
+            '<img src="' + escapeHtml(imageUrl) + '" alt="Submitted document" class="vect-own-image-preview">',
+            '<a href="' + escapeHtml(imageUrl) + '" target="_blank" rel="noopener noreferrer" class="vect-own-image-link">View full image</a>',
+            '</div>'
+          ].join('');
+        }
+
+        return escapeHtml(valueToText(value));
+      }
+
       function getApiUrl(pathName) {
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
@@ -337,7 +415,7 @@
           return [
             '<div class="vect-own-field-row">',
             '<dt class="vect-own-field-key">' + escapeHtml(key) + '</dt>',
-            '<dd class="vect-own-field-value">' + escapeHtml(valueToText(value)) + '</dd>',
+            '<dd class="vect-own-field-value">' + renderFieldValue(key, value) + '</dd>',
             '</div>'
           ].join('');
         }).join('');
