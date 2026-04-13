@@ -5060,9 +5060,10 @@ h1 {
 }
 
 .vect-own-document-card {
+  position: relative;
   display: grid;
   gap: 10px;
-  padding: 12px;
+  padding: 12px 96px 12px 12px;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   background: #fff;
@@ -5099,6 +5100,11 @@ h1 {
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+.vect-own-document-accept {
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .vect-own-field-key {
@@ -5225,7 +5231,7 @@ h1 {
 
 .vect-own-detail-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -5247,6 +5253,11 @@ h1 {
 .vect-own-action.is-reject {
   background: #dc2626;
   color: #fff;
+}
+
+.vect-own-action.is-note {
+  background: #e5e7eb;
+  color: #111827;
 }
 
 .vect-own-detail-empty {

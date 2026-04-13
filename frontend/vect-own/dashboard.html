@@ -125,12 +125,13 @@
             <div class="vect-own-document-grid" data-vect-own-documents></div>
           </div>
 
-          <div class="vect-own-detail-section">
+          <div class="vect-own-detail-section vect-own-note-section" hidden data-vect-own-note-section>
             <h3 class="vect-own-detail-section-title">Owner note</h3>
             <textarea class="vect-own-note-input" rows="4" placeholder="Optional review note" data-vect-own-note></textarea>
           </div>
 
           <div class="vect-own-detail-actions">
+            <button type="button" class="vect-own-action is-note" data-vect-own-note-toggle>Review note</button>
             <button type="button" class="vect-own-action is-reject" data-vect-own-action="rejected">Reject</button>
             <button type="button" class="vect-own-action is-accept" data-vect-own-action="accepted">Accept</button>
           </div>
@@ -158,6 +159,8 @@
       const searchInput = document.querySelector('[data-vect-own-search]');
       const logoutButton = document.querySelector('[data-vect-own-logout]');
       const noteInput = document.querySelector('[data-vect-own-note]');
+      const noteSection = document.querySelector('[data-vect-own-note-section]');
+      const noteToggleButton = document.querySelector('[data-vect-own-note-toggle]');
       const statusChip = document.querySelector('[data-vect-own-status]');
       const companyNode = document.querySelector('[data-vect-own-company]');
       const ownerNode = document.querySelector('[data-vect-own-owner]');
@@ -179,6 +182,7 @@
       let selectedSubmissionId = '';
       let activeFilter = 'all';
       let searchTerm = '';
+      let noteSectionOpen = false;
 
       if (!listNode || !detailNode || !emptyNode) {
         return;
@@ -452,6 +456,7 @@
           const imageUrl = getImageUrl(item.value);
           return [
             '<article class="vect-own-document-card">',
+            '<button type="button" class="vect-own-inline-accept vect-own-document-accept">Accept</button>',
             '<p class="vect-own-document-label">' + escapeHtml(item.label) + '</p>',
             '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(item.label) + '" class="vect-own-image-preview">',
             '<button type="button" class="vect-own-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(item.label) + '">View full image</button>',
@@ -678,6 +683,15 @@
           noteInput.value = submission.reviewNote || '';
         }
 
+        if (noteSection) {
+          noteSection.hidden = !noteSectionOpen;
+        }
+
+        if (noteToggleButton) {
+          noteToggleButton.hidden = false;
+          noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
+        }
+
         renderDocuments(submission.fields || {});
         renderFields(submission.fields || {});
         renderList();
@@ -692,6 +706,7 @@
           return;
         }
 
+        noteSectionOpen = false;
         selectedSubmissionId = submissionId;
         renderList();
 
@@ -772,6 +787,18 @@
             window.location.replace('index.html');
           });
       });
+
+      if (noteToggleButton) {
+        noteToggleButton.addEventListener('click', function () {
+          noteSectionOpen = !noteSectionOpen;
+
+          if (noteSection) {
+            noteSection.hidden = !noteSectionOpen;
+          }
+
+          noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
+        });
+      }
 
       actionButtons.forEach(function (button) {
         button.addEventListener('click', function () {
