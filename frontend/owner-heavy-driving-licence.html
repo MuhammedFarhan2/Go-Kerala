@@ -124,6 +124,14 @@
         }, 220);
       }
 
+      function goToNextPage(nextPage) {
+        if (nextPage === 'owner-details-done.html') {
+          sessionStorage.setItem('owner-review-done-allowed', 'yes');
+        }
+
+        window.location.href = nextPage;
+      }
+
       async function saveAndOpen(file) {
         if (!file) {
           return;
@@ -162,7 +170,7 @@
           if (isFrontReviewOnly) {
             sessionStorage.setItem('owner-heavy-licence-status-v2', 'completed');
             sessionStorage.setItem('owner-heavy-licence-submitted-v2', 'yes');
-            window.location.href = returnPage;
+            goToNextPage(returnPage);
             return;
           }
 

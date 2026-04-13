@@ -207,6 +207,14 @@
         nextButton.hidden = false;
       }
 
+      function goToNextPage() {
+        if (isAadhaarReview && returnPage === 'owner-details-done.html') {
+          sessionStorage.setItem('owner-review-done-allowed', 'yes');
+        }
+
+        window.location.href = isAadhaarReview ? returnPage : 'owner-next.html';
+      }
+
       triggerButton.addEventListener('click', function () {
         const isOpen = uploadMenu.classList.contains('is-open');
 
@@ -252,7 +260,7 @@
       nextButton.addEventListener('click', function () {
         sessionStorage.setItem(STATUS_KEY, 'completed');
         sessionStorage.setItem(SUBMITTED_KEY, 'yes');
-        window.location.href = isAadhaarReview ? returnPage : 'owner-next.html';
+        goToNextPage();
       });
 
       document.addEventListener('click', function (event) {

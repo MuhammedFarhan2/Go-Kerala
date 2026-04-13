@@ -251,11 +251,21 @@
         }, 220);
       }
 
+      function goToNextPage() {
+        const nextPage = isBackReviewOnly ? returnPage : 'owner-next.html';
+
+        if (nextPage === 'owner-details-done.html') {
+          sessionStorage.setItem('owner-review-done-allowed', 'yes');
+        }
+
+        window.location.href = nextPage;
+      }
+
       nextButton.addEventListener('click', function () {
         if (selectedCount >= 2) {
           sessionStorage.setItem(STATUS_KEY, 'completed');
           sessionStorage.setItem(SUBMITTED_KEY, 'yes');
-          window.location.href = isBackReviewOnly ? returnPage : 'owner-next.html';
+          goToNextPage();
           return;
         }
 

@@ -144,6 +144,14 @@
         sessionStorage.setItem('owner-categories', JSON.stringify(selectedCategories));
       }
 
+      function goToNextPage() {
+        if (isCategoryReview && returnPage === 'owner-details-done.html') {
+          sessionStorage.setItem('owner-review-done-allowed', 'yes');
+        }
+
+        window.location.href = isCategoryReview ? returnPage : 'owner-coverage.html';
+      }
+
       categoryButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           button.classList.toggle('is-selected');
@@ -159,7 +167,7 @@
             return;
           }
 
-          window.location.href = isCategoryReview ? returnPage : 'owner-coverage.html';
+          goToNextPage();
         });
       }
     })();

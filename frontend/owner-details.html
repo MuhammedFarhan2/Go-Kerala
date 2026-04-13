@@ -51,7 +51,7 @@
     (function () {
       const pageParams = new URLSearchParams(window.location.search);
       const reviewItem = String(pageParams.get('review') || '').trim();
-      const returnPage = String(pageParams.get('return') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details-done.html';
       const companyInput = document.querySelector('[data-owner-company-input]');
       const errorText = document.querySelector('[data-owner-company-error]');
       const nextButton = document.querySelector('[data-owner-company-next-btn]');
@@ -66,7 +66,7 @@
       nextButton.textContent = isCompanyReview ? 'Save company name' : 'Next';
 
       if (isCompanyReview) {
-        sessionStorage.setItem('owner-company-name-return-page', returnPage || 'owner-next.html');
+        sessionStorage.setItem('owner-company-name-return-page', returnPage);
       }
 
       companyInput.value = sessionStorage.getItem('owner-company-name') || '';
@@ -76,6 +76,14 @@
           errorText.hidden = true;
         }
       });
+
+      function goToReturnPage() {
+        if (returnPage === 'owner-details-done.html') {
+          sessionStorage.setItem('owner-review-done-allowed', 'yes');
+        }
+
+        window.location.href = returnPage;
+      }
 
       nextButton.addEventListener('click', function () {
         const companyName = companyInput.value.trim();
@@ -89,7 +97,7 @@
         errorText.hidden = true;
         sessionStorage.setItem('owner-company-name', companyName);
         if (isCompanyReview) {
-          window.location.href = 'owner-company-name-done.html';
+          goToReturnPage();
           return;
         }
 

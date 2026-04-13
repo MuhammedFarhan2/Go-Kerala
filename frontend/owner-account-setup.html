@@ -136,6 +136,14 @@
         errorNode.hidden = false;
       }
 
+      function goToNextPage() {
+        if (isReviewFlow && returnPage === 'owner-details-done.html') {
+          sessionStorage.setItem('owner-review-done-allowed', 'yes');
+        }
+
+        window.location.href = isReviewFlow ? returnPage : 'owner-details.html';
+      }
+
       [firstNameInput, lastNameInput, passwordInput, confirmPasswordInput].forEach(function (input) {
         input.addEventListener('input', hideError);
       });
@@ -215,7 +223,7 @@
         }
 
         hideError();
-        window.location.href = isReviewFlow ? returnPage : 'owner-details.html';
+        goToNextPage();
       });
     })();
   </script>

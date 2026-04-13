@@ -197,6 +197,7 @@
 
         submitSubmission()
           .then(function () {
+            sessionStorage.setItem('owner-final-submission-done-allowed', 'yes');
             window.location.href = 'owner-details-done.html';
           })
           .catch(function (error) {

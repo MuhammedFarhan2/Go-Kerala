@@ -125,6 +125,14 @@
         sessionStorage.setItem('owner-districts', JSON.stringify(selectedDistricts));
       }
 
+      function goToNextPage() {
+        if (isDistrictReview && returnPage === 'owner-details-done.html') {
+          sessionStorage.setItem('owner-review-done-allowed', 'yes');
+        }
+
+        window.location.href = isDistrictReview ? returnPage : 'owner-next.html';
+      }
+
       districtButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           button.classList.toggle('is-selected');
@@ -138,7 +146,7 @@
             return;
           }
 
-          window.location.href = isDistrictReview ? returnPage : 'owner-next.html';
+          goToNextPage();
         });
       }
 

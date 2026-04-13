@@ -51,6 +51,9 @@
       sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
 
       okButton.addEventListener('click', function () {
+        if (returnPage === 'owner-details-done.html') {
+          sessionStorage.setItem('owner-review-done-allowed', 'yes');
+        }
         window.location.href = returnPage;
       });
     })();
