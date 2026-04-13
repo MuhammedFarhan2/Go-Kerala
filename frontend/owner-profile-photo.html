@@ -105,6 +105,7 @@
       const profileSessionToken = String(pageParams.get('profileSession') || '').trim();
       const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
       const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
+      const PROFILE_IMAGE_KEY = 'owner-profile-photo';
       let activeStream = null;
 
       if (!actionButton || !cameraInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !ovalNode) {
@@ -186,7 +187,11 @@
       }
 
       async function finishProfilePhotoCapture(photoDataUrl) {
-        sessionStorage.setItem('owner-profile-photo', photoDataUrl);
+        if (!window.ownerMediaStore) {
+          throw new Error('Image storage is not available on this device.');
+        }
+
+        await window.ownerMediaStore.setItem(PROFILE_IMAGE_KEY, photoDataUrl);
         sessionStorage.setItem(PROFILE_STATUS_KEY, 'completed');
         sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
         await markProfileSessionComplete();
@@ -234,7 +239,9 @@
         context.restore();
 
         stopCamera();
-        finishProfilePhotoCapture(canvas.toDataURL('image/png'));
+        finishProfilePhotoCapture(canvas.toDataURL('image/png')).catch(function (error) {
+          window.alert(error.message || 'Unable to save profile photo.');
+        });
       }
 
       actionButton.addEventListener('click', function () {
@@ -267,7 +274,9 @@
         const reader = new FileReader();
 
         reader.onload = function () {
-          finishProfilePhotoCapture(String(reader.result || ''));
+          finishProfilePhotoCapture(String(reader.result || '')).catch(function (error) {
+            window.alert(error.message || 'Unable to save profile photo.');
+          });
         };
 
         reader.readAsDataURL(file);

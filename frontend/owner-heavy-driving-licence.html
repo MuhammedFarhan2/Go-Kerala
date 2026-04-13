@@ -136,9 +136,13 @@
           const imageDataUrl = await readFileAsDataUrl(file);
           sessionStorage.setItem('owner-heavy-licence-photo-count', '1');
           sessionStorage.setItem('owner-heavy-licence-photo-name-1', file.name);
-          sessionStorage.setItem(PHOTO_URL_ONE_KEY, imageDataUrl);
+          if (!window.ownerMediaStore) {
+            throw new Error('Image storage is not available on this device.');
+          }
+
+          await window.ownerMediaStore.setItem(PHOTO_URL_ONE_KEY, imageDataUrl);
           sessionStorage.removeItem('owner-heavy-licence-photo-name-2');
-          sessionStorage.removeItem('owner-heavy-licence-photo-url-2');
+          await window.ownerMediaStore.removeItem('owner-heavy-licence-photo-url-2');
           statusNode.hidden = false;
           statusNode.textContent = 'Selected photos: 1';
           triggerButton.textContent = 'Photo selected';

@@ -126,7 +126,6 @@
 
       function resetSelection() {
         sessionStorage.removeItem(STORAGE_KEY);
-        sessionStorage.removeItem(STORAGE_URL_KEY);
         sessionStorage.removeItem('owner-aadhaar-status');
         sessionStorage.removeItem('owner-aadhaar-submitted');
         sessionStorage.removeItem(STATUS_KEY);
@@ -138,6 +137,10 @@
         nextButton.hidden = true;
         uploadInput.value = '';
         phoneInput.value = '';
+
+        if (window.ownerMediaStore) {
+          window.ownerMediaStore.removeItem(STORAGE_URL_KEY);
+        }
       }
 
       async function showSelectedFile(file) {
@@ -151,7 +154,11 @@
         try {
           const imageDataUrl = await readFileAsDataUrl(file);
           sessionStorage.setItem(STORAGE_KEY, file.name);
-          sessionStorage.setItem(STORAGE_URL_KEY, imageDataUrl);
+          if (!window.ownerMediaStore) {
+            throw new Error('Image storage is not available on this device.');
+          }
+
+          await window.ownerMediaStore.setItem(STORAGE_URL_KEY, imageDataUrl);
           statusNode.textContent = 'Image 1: ' + file.name;
           selectionNode.hidden = false;
           triggerButton.hidden = true;

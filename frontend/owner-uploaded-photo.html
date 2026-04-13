@@ -169,25 +169,34 @@
         sessionStorage.removeItem(STORAGE_COUNT_KEY);
         sessionStorage.removeItem(STORAGE_NAME_ONE_KEY);
         sessionStorage.removeItem(STORAGE_NAME_TWO_KEY);
-        sessionStorage.removeItem(STORAGE_URL_ONE_KEY);
-        sessionStorage.removeItem(STORAGE_URL_TWO_KEY);
         sessionStorage.removeItem('owner-heavy-licence-status');
         sessionStorage.removeItem('owner-heavy-licence-submitted');
         sessionStorage.removeItem(STATUS_KEY);
         sessionStorage.removeItem(SUBMITTED_KEY);
-        window.location.href = 'owner-heavy-driving-licence.html';
+        Promise.all([
+          window.ownerMediaStore ? window.ownerMediaStore.removeItem(STORAGE_URL_ONE_KEY) : Promise.resolve(),
+          window.ownerMediaStore ? window.ownerMediaStore.removeItem(STORAGE_URL_TWO_KEY) : Promise.resolve()
+        ]).finally(function () {
+          window.location.href = 'owner-heavy-driving-licence.html';
+        });
       }
 
       function deleteSecondPhoto() {
         selectedCount = 1;
         sessionStorage.setItem(STORAGE_COUNT_KEY, '1');
         sessionStorage.removeItem(STORAGE_NAME_TWO_KEY);
-        sessionStorage.removeItem(STORAGE_URL_TWO_KEY);
         sessionStorage.removeItem('owner-heavy-licence-status');
         sessionStorage.removeItem('owner-heavy-licence-submitted');
         sessionStorage.removeItem(STATUS_KEY);
         sessionStorage.removeItem(SUBMITTED_KEY);
-        renderSelectedCount();
+        if (!window.ownerMediaStore) {
+          renderSelectedCount();
+          return;
+        }
+
+        window.ownerMediaStore.removeItem(STORAGE_URL_TWO_KEY).finally(function () {
+          renderSelectedCount();
+        });
       }
 
       async function saveSecondPhoto(file) {
@@ -206,7 +215,11 @@
           selectedCount = 2;
           sessionStorage.setItem(STORAGE_COUNT_KEY, '2');
           sessionStorage.setItem(STORAGE_NAME_TWO_KEY, file.name);
-          sessionStorage.setItem(STORAGE_URL_TWO_KEY, imageDataUrl);
+          if (!window.ownerMediaStore) {
+            throw new Error('Image storage is not available on this device.');
+          }
+
+          await window.ownerMediaStore.setItem(STORAGE_URL_TWO_KEY, imageDataUrl);
           renderSelectedCount();
         } catch (error) {
           nextButton.textContent = 'Add Photo';

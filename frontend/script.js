@@ -93,6 +93,82 @@
 })();
 
 (function () {
+  const DB_NAME = 'vectOwnerMedia';
+  const STORE_NAME = 'images';
+
+  function openDatabase() {
+    return new Promise(function (resolve, reject) {
+      if (!window.indexedDB) {
+        reject(new Error('IndexedDB is not supported on this device.'));
+        return;
+      }
+
+      const request = window.indexedDB.open(DB_NAME, 1);
+
+      request.onerror = function () {
+        reject(new Error('Unable to open local media storage.'));
+      };
+
+      request.onupgradeneeded = function () {
+        const database = request.result;
+
+        if (!database.objectStoreNames.contains(STORE_NAME)) {
+          database.createObjectStore(STORE_NAME);
+        }
+      };
+
+      request.onsuccess = function () {
+        resolve(request.result);
+      };
+    });
+  }
+
+  function runStoreOperation(mode, handler) {
+    return openDatabase().then(function (database) {
+      return new Promise(function (resolve, reject) {
+        const transaction = database.transaction(STORE_NAME, mode);
+        const store = transaction.objectStore(STORE_NAME);
+        const request = handler(store);
+
+        transaction.oncomplete = function () {
+          resolve(request && request.result);
+        };
+
+        transaction.onerror = function () {
+          reject(transaction.error || new Error('Media storage transaction failed.'));
+        };
+
+        transaction.onabort = function () {
+          reject(transaction.error || new Error('Media storage transaction was aborted.'));
+        };
+      }).finally(function () {
+        database.close();
+      });
+    });
+  }
+
+  window.ownerMediaStore = {
+    setItem: function (key, value) {
+      return runStoreOperation('readwrite', function (store) {
+        return store.put(String(value || ''), String(key || ''));
+      });
+    },
+    getItem: function (key) {
+      return runStoreOperation('readonly', function (store) {
+        return store.get(String(key || ''));
+      }).then(function (value) {
+        return typeof value === 'string' ? value : '';
+      });
+    },
+    removeItem: function (key) {
+      return runStoreOperation('readwrite', function (store) {
+        return store.delete(String(key || ''));
+      });
+    }
+  };
+})();
+
+(function () {
   const currentPath = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
   const currentUrl = currentPath + window.location.search;
   const resumableOwnerPages = new Set([

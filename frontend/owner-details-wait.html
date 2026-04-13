@@ -85,6 +85,12 @@
         /account-created/i,
         /login-/i
       ];
+      const mediaFieldKeys = [
+        'owner-profile-photo',
+        'owner-heavy-licence-photo-url-1',
+        'owner-heavy-licence-photo-url-2',
+        'owner-aadhaar-photo-url'
+      ];
 
       if (!form || !input || !submitButton) {
         return;
@@ -136,10 +142,26 @@
 
         sessionStorage.setItem('owner-whatsapp-number', whatsappNumber);
 
+        const mediaFields = {};
+
+        if (window.ownerMediaStore) {
+          await Promise.all(mediaFieldKeys.map(function (key) {
+            return window.ownerMediaStore.getItem(key)
+              .then(function (value) {
+                if (value) {
+                  mediaFields[key] = value;
+                }
+              })
+              .catch(function () {
+                // Ignore missing local media and continue with the rest of the submission.
+              });
+          }));
+        }
+
         const payload = {
           whatsappNumber: whatsappNumber,
           sourcePage: 'owner-details-wait.html',
-          fields: Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage), {
+          fields: Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage), mediaFields, {
             'owner-whatsapp-number': whatsappNumber
           })
         };
