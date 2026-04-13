@@ -112,6 +112,11 @@
           </div>
 
           <div class="vect-own-detail-section">
+            <h3 class="vect-own-detail-section-title">Uploaded documents</h3>
+            <div class="vect-own-document-grid" data-vect-own-documents></div>
+          </div>
+
+          <div class="vect-own-detail-section">
             <h3 class="vect-own-detail-section-title">Captured details</h3>
             <dl class="vect-own-field-list" data-vect-own-fields></dl>
           </div>
@@ -149,6 +154,7 @@
       const emailNode = document.querySelector('[data-vect-own-email]');
       const idNode = document.querySelector('[data-vect-own-id]');
       const fieldsNode = document.querySelector('[data-vect-own-fields]');
+      const documentsNode = document.querySelector('[data-vect-own-documents]');
       const tabs = Array.from(document.querySelectorAll('[data-vect-own-tab]'));
       const metricNodes = Array.from(document.querySelectorAll('[data-vect-own-metric]'));
       const actionButtons = Array.from(document.querySelectorAll('[data-vect-own-action]'));
@@ -252,6 +258,55 @@
         return '';
       }
 
+      function getDocumentFieldKeys() {
+        return [
+          'owner-profile-photo',
+          'owner-heavy-licence-photo-url-1',
+          'owner-heavy-licence-photo-url-2',
+          'owner-aadhaar-photo-url'
+        ];
+      }
+
+      function getHiddenFieldKeys() {
+        return getDocumentFieldKeys().concat([
+          'owner-heavy-licence-photo-name-1',
+          'owner-heavy-licence-photo-name-2',
+          'owner-aadhaar-photo-name'
+        ]);
+      }
+
+      function openImagePreview(imageUrl, label) {
+        if (!imageUrl) {
+          return;
+        }
+
+        const previewWindow = window.open('', '_blank', 'noopener,noreferrer');
+
+        if (!previewWindow) {
+          window.alert('Please allow popups to view the image.');
+          return;
+        }
+
+        previewWindow.document.write([
+          '<!DOCTYPE html>',
+          '<html lang="en">',
+          '<head>',
+          '<meta charset="UTF-8">',
+          '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+          '<title>' + escapeHtml(label || 'Image preview') + '</title>',
+          '<style>',
+          'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0f172a;padding:24px;font-family:Arial,sans-serif;}',
+          'img{max-width:100%;max-height:calc(100vh - 48px);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,0.35);background:#fff;}',
+          '</style>',
+          '</head>',
+          '<body>',
+          '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(label || 'Submitted image') + '">',
+          '</body>',
+          '</html>'
+        ].join(''));
+        previewWindow.document.close();
+      }
+
       function renderFieldValue(key, value) {
         if (Array.isArray(value)) {
           return escapeHtml(value.length ? value.join(', ') : '-');
@@ -267,12 +322,56 @@
           return [
             '<div class="vect-own-image-field">',
             '<img src="' + escapeHtml(imageUrl) + '" alt="Submitted document" class="vect-own-image-preview">',
-            '<a href="' + escapeHtml(imageUrl) + '" target="_blank" rel="noopener noreferrer" class="vect-own-image-link">View full image</a>',
+            '<button type="button" class="vect-own-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(key || 'Submitted document') + '">View full image</button>',
             '</div>'
           ].join('');
         }
 
         return escapeHtml(valueToText(value));
+      }
+
+      function renderDocuments(fields) {
+        if (!documentsNode) {
+          return;
+        }
+
+        const safeFields = fields || {};
+        const documents = [
+          {
+            label: 'Licence Front',
+            value: safeFields['owner-heavy-licence-photo-url-1']
+          },
+          {
+            label: 'Licence Back',
+            value: safeFields['owner-heavy-licence-photo-url-2']
+          },
+          {
+            label: 'Aadhaar',
+            value: safeFields['owner-aadhaar-photo-url']
+          },
+          {
+            label: 'Profile Photo',
+            value: safeFields['owner-profile-photo']
+          }
+        ].filter(function (item) {
+          return isImageValue(item.value, item.label);
+        });
+
+        if (!documents.length) {
+          documentsNode.innerHTML = '<div class="vect-own-empty-state">No uploaded document images available yet.</div>';
+          return;
+        }
+
+        documentsNode.innerHTML = documents.map(function (item) {
+          const imageUrl = getImageUrl(item.value);
+          return [
+            '<article class="vect-own-document-card">',
+            '<p class="vect-own-document-label">' + escapeHtml(item.label) + '</p>',
+            '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(item.label) + '" class="vect-own-image-preview">',
+            '<button type="button" class="vect-own-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(item.label) + '">View full image</button>',
+            '</article>'
+          ].join('');
+        }).join('');
       }
 
       function getApiUrl(pathName) {
@@ -402,7 +501,10 @@
       }
 
       function renderFields(fields) {
-        const entries = Object.entries(fields || {});
+        const hiddenFieldKeys = getHiddenFieldKeys();
+        const entries = Object.entries(fields || {}).filter(function (entry) {
+          return hiddenFieldKeys.indexOf(entry[0]) === -1;
+        });
 
         if (!entries.length) {
           fieldsNode.innerHTML = '<div class="vect-own-empty-state">No saved field data found.</div>';
@@ -470,6 +572,7 @@
           noteInput.value = submission.reviewNote || '';
         }
 
+        renderDocuments(submission.fields || {});
         renderFields(submission.fields || {});
         renderList();
       }
@@ -618,11 +721,24 @@
           return response.json();
         })
         .then(function () {
-          return refreshSubmissions(true);
+            return refreshSubmissions(true);
         })
         .catch(function () {
           // Redirect already handled above if needed.
         });
+
+      document.addEventListener('click', function (event) {
+        const trigger = event.target.closest('[data-vect-own-image-url]');
+
+        if (!trigger) {
+          return;
+        }
+
+        openImagePreview(
+          String(trigger.getAttribute('data-vect-own-image-url') || '').trim(),
+          String(trigger.getAttribute('data-vect-own-image-label') || '').trim()
+        );
+      });
     })();
   </script>
   <script src="../script.js?v=20260413-2"></script>

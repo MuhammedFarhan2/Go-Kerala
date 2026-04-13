@@ -5039,6 +5039,28 @@ h1 {
   margin: 0;
 }
 
+.vect-own-document-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.vect-own-document-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.vect-own-document-label {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #111827;
+}
+
 .vect-own-field-row {
   display: grid;
   gap: 4px;
@@ -5078,10 +5100,16 @@ h1 {
 }
 
 .vect-own-image-link {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: #0f4aa3;
   font-size: 0.88rem;
   font-weight: 700;
   text-decoration: none;
+  text-align: left;
+  cursor: pointer;
 }
 
 .vect-own-image-link:hover {
@@ -5149,6 +5177,10 @@ h1 {
   }
 
   .vect-own-detail-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vect-own-document-grid {
     grid-template-columns: 1fr;
   }
 }
