@@ -29,8 +29,8 @@
           </label>
 
           <label class="owner-auth-field">
-            <span class="owner-auth-field-label">Last name</span>
-            <input type="text" class="owner-auth-input" placeholder="Last name" autocomplete="family-name" data-last-name>
+            <span class="owner-auth-field-label">Last Name (Optional)</span>
+            <input type="text" class="owner-auth-input" placeholder="Last Name (Optional)" autocomplete="family-name" data-last-name>
           </label>
 
           <label class="owner-auth-field" data-password-field>
@@ -168,12 +168,6 @@
         if (!firstName) {
           showError('Please enter first name.');
           firstNameInput.focus();
-          return;
-        }
-
-        if (!lastName) {
-          showError('Please enter last name.');
-          lastNameInput.focus();
           return;
         }
 

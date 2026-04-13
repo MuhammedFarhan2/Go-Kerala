@@ -103,7 +103,7 @@
 
       function validateFile(file) {
         const allowedTypes = ['image/jpeg', 'image/png'];
-        const maxSizeInBytes = 2 * 1024 * 1024;
+        const maxSizeInBytes = 5 * 1024 * 1024;
 
         if (!file) {
           return 'Please choose an image.';
@@ -114,7 +114,7 @@
         }
 
         if (file.size > maxSizeInBytes) {
-          return 'Image size must be 2MB or less.';
+          return 'Image size must be 5MB or less.';
         }
 
         return '';

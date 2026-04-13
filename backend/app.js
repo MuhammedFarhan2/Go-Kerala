@@ -688,8 +688,8 @@ function handleUpload(request, response) {
     try {
       const buffer = Buffer.from(data, 'base64');
 
-      if (buffer.length > 2 * 1024 * 1024) {
-        sendJson(response, 400, { error: 'Image size must be 2MB or less.' });
+      if (buffer.length > 5 * 1024 * 1024) {
+        sendJson(response, 400, { error: 'Image size must be 5MB or less.' });
         return;
       }
 

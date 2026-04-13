@@ -51,7 +51,7 @@
             <div class="owner-upload-dropzone-copy">
               <span class="owner-upload-dropzone-icon" aria-hidden="true">+</span>
               <p class="owner-upload-dropzone-title">Drag and drop your licence photo here</p>
-              <p class="owner-upload-dropzone-hint">JPG, JPEG, PNG only. Max file size 2MB.</p>
+              <p class="owner-upload-dropzone-hint">JPG, JPEG, PNG only. Max file size 5MB.</p>
             </div>
           </div>
 
@@ -124,7 +124,7 @@
 
       function validateFile(file) {
         const allowedTypes = ['image/jpeg', 'image/png'];
-        const maxSizeInBytes = 2 * 1024 * 1024;
+        const maxSizeInBytes = 5 * 1024 * 1024;
 
         clearError();
 
@@ -138,7 +138,7 @@
         }
 
         if (file.size > maxSizeInBytes) {
-          showError('Image size must be 2MB or less.');
+          showError('Image size must be 5MB or less.');
           return false;
         }
 

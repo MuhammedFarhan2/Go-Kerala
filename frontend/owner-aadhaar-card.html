@@ -157,6 +157,16 @@
           return;
         }
 
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+          window.alert('Please upload only JPG, JPEG, or PNG image files.');
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          window.alert('Image size must be 5MB or less.');
+          return;
+        }
+
         triggerButton.disabled = true;
         triggerButton.textContent = 'Uploading...';
 
