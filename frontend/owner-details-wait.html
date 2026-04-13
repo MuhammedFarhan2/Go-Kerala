@@ -77,6 +77,7 @@
       const form = document.querySelector('.owner-evaluation-whatsapp-form');
       const input = document.getElementById('owner-whatsapp-number');
       const submitButton = document.querySelector('.owner-evaluation-whatsapp-submit');
+      const apiBaseUrl = String(sessionStorage.getItem('owner-api-base-url') || '').trim().replace(/\/$/, '');
       const blockedKeys = [
         /password/i,
         /authenticated/i,
@@ -117,6 +118,14 @@
         return data;
       }
 
+      function getApiUrl(pathName) {
+        if (!apiBaseUrl) {
+          return pathName;
+        }
+
+        return apiBaseUrl + pathName;
+      }
+
       async function submitSubmission() {
         const whatsappNumber = String(input.value || '').trim();
 
@@ -135,7 +144,7 @@
           })
         };
 
-        const response = await fetch('/api/submissions', {
+        const response = await fetch(getApiUrl('/api/submissions'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

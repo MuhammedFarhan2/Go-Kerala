@@ -116,19 +116,6 @@
 })();
 
 (function () {
-  const form = document.querySelector('.owner-evaluation-whatsapp-form');
-
-  if (!form) {
-    return;
-  }
-
-  form.addEventListener('submit', function (event) {
-    event.preventDefault();
-    window.location.href = 'owner-details-done.html';
-  });
-})();
-
-(function () {
   const accountBtn = document.getElementById('account-btn');
   const accountPanel = document.getElementById('account-panel');
   const backdrop = document.getElementById('account-backdrop');
