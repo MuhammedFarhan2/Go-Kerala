@@ -703,11 +703,11 @@
         }
 
         if (noteSection) {
-          noteSection.hidden = !noteSectionOpen;
+          noteSection.hidden = submission.status !== 'pending' || !noteSectionOpen;
         }
 
         if (noteToggleButton) {
-          noteToggleButton.hidden = false;
+          noteToggleButton.hidden = submission.status !== 'pending';
           noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
         }
 
@@ -809,6 +809,19 @@
 
       if (noteToggleButton) {
         noteToggleButton.addEventListener('click', function () {
+          const currentSubmission = allSubmissions.find(function (submission) {
+            return submission.id === selectedSubmissionId;
+          });
+
+          if (!currentSubmission || currentSubmission.status !== 'pending') {
+            noteSectionOpen = false;
+            if (noteSection) {
+              noteSection.hidden = true;
+            }
+            noteToggleButton.hidden = true;
+            return;
+          }
+
           noteSectionOpen = !noteSectionOpen;
 
           if (noteSection) {
