@@ -107,16 +107,16 @@
           <button type="submit" class="owner-auth-submit">Next</button>
         </form>
 
-        <div data-owner-register-extras>
+        <div data-owner-auth-extras>
           <div class="owner-auth-divider">
             <span></span>
-            <p>Or register with</p>
+            <p data-owner-auth-divider-text>Or register with</p>
             <span></span>
           </div>
 
-          <div class="owner-auth-socials" aria-label="Register with social account">
+          <div class="owner-auth-socials" aria-label="Owner social account access">
             <div class="owner-auth-google-wrap">
-              <div class="owner-auth-google-button" data-google-register-btn></div>
+              <div class="owner-auth-google-button" data-google-auth-btn></div>
             </div>
           </div>
         </div>
@@ -135,9 +135,10 @@
       const passwordField = document.querySelector('[data-owner-password-field]');
       const passwordInput = document.querySelector('[data-owner-password]');
       const passwordToggle = document.querySelector('[data-owner-password-toggle]');
-      const registerExtras = document.querySelector('[data-owner-register-extras]');
+      const authExtras = document.querySelector('[data-owner-auth-extras]');
+      const authDividerText = document.querySelector('[data-owner-auth-divider-text]');
       const errorText = document.querySelector('[data-owner-auth-error]');
-      const googleRegisterButton = document.querySelector('[data-google-register-btn]');
+      const googleAuthButton = document.querySelector('[data-google-auth-btn]');
       const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
@@ -151,11 +152,14 @@
       const hasSavedLogin =
         Boolean(String(localStorage.getItem('owner-login-email') || '').trim()) &&
         Boolean(String(localStorage.getItem('owner-login-password') || ''));
+      const hasGoogleLogin =
+        String(localStorage.getItem('owner-login-method') || '').trim() === 'google' &&
+        Boolean(String(localStorage.getItem('owner-login-email') || '').trim());
       let authMode = 'register';
 
       if (modeParam === 'login' || modeParam === 'register') {
         authMode = modeParam;
-      } else if (hasCreatedAccount || hasSavedLogin) {
+      } else if (hasCreatedAccount || hasSavedLogin || hasGoogleLogin) {
         authMode = 'login';
       }
 
@@ -190,8 +194,12 @@
             emailInput.value = savedEmail;
           }
         }
-        if (registerExtras) {
-          registerExtras.hidden = isLogin;
+        if (authExtras) {
+          authExtras.hidden = false;
+        }
+
+        if (authDividerText) {
+          authDividerText.textContent = isLogin ? 'Or log in with' : 'Or register with';
         }
 
         if (!isLogin && passwordInput) {
@@ -257,7 +265,7 @@
       }
 
       function initializeGoogleAuth() {
-        if (!googleRegisterButton) {
+        if (!googleAuthButton) {
           return;
         }
 
@@ -306,31 +314,43 @@
               })
               .then(function (result) {
                 if (!result.ok || !result.data || !result.data.user) {
-                  throw new Error((result.data && result.data.error) || 'Google registration failed.');
+                  throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
                 }
 
                 const user = result.data.user;
                 hideError();
                 storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
+                localStorage.setItem('owner-login-method', 'google');
+                localStorage.setItem('owner-login-email', user.email || '');
+                localStorage.setItem('owner-login-first-name', user.firstName || '');
+                localStorage.setItem('owner-login-last-name', user.lastName || '');
+                localStorage.removeItem('owner-login-password');
+                localStorage.setItem('owner-account-created', 'true');
+
+                if (authMode === 'login') {
+                  window.location.href = 'owner-details.html';
+                  return;
+                }
+
                 window.location.href = 'owner-account-setup.html';
               })
               .catch(function (error) {
-                showError(error.message || 'Google registration failed.');
+                showError(error.message || 'Google sign-in failed.');
               });
           }
         });
 
         function renderGoogleButton() {
-          if (!registerExtras || registerExtras.hidden) {
+          if (!authExtras || authExtras.hidden) {
             return;
           }
 
-          const buttonWidth = Math.max(300, Math.floor(googleRegisterButton.getBoundingClientRect().width || googleRegisterButton.clientWidth || 300));
-          googleRegisterButton.innerHTML = '';
-          window.google.accounts.id.renderButton(googleRegisterButton, {
+          const buttonWidth = Math.max(300, Math.floor(googleAuthButton.getBoundingClientRect().width || googleAuthButton.clientWidth || 300));
+          googleAuthButton.innerHTML = '';
+          window.google.accounts.id.renderButton(googleAuthButton, {
             theme: 'outline',
             size: 'large',
-            text: 'signup_with',
+            text: authMode === 'login' ? 'signin_with' : 'signup_with',
             shape: 'rectangular',
             width: buttonWidth
           });
@@ -358,7 +378,13 @@
           const password = passwordInput ? String(passwordInput.value || '') : '';
           const savedEmail = String(localStorage.getItem('owner-login-email') || '').trim().toLowerCase();
           const savedPassword = String(localStorage.getItem('owner-login-password') || '');
+          const savedMethod = String(localStorage.getItem('owner-login-method') || '').trim().toLowerCase();
           const inputEmail = contact.toLowerCase();
+
+          if (savedMethod === 'google' && savedEmail === inputEmail) {
+            showError('This account uses Google login. Please use the Google button below.');
+            return;
+          }
 
           if (!password) {
             showError('Please enter your password.');
@@ -420,6 +446,7 @@
             const contactValue = (result.data && result.data.contact) ? String(result.data.contact) : contact;
             hideError();
             storeOwnerSession('', '', contactValue);
+            localStorage.setItem('owner-login-method', 'email');
             window.location.href = getVerificationPage();
           })
           .catch(function (error) {

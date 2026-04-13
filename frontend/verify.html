@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Email</title>
     <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
-    <link rel="stylesheet" href="../style.css?v=20260410-1">
+    <link rel="stylesheet" href="style.css?v=20260410-2">
   </head>
   <body>
     <header class="header owner-auth-header">
@@ -144,7 +144,7 @@
               }
 
               localStorage.setItem('owner-authenticated', 'true');
-              window.location.href = '../owner-account-setup.html';
+              window.location.href = 'owner-account-setup.html';
             })
             .catch(function (error) {
               showError(error.message || 'OTP verification failed.');

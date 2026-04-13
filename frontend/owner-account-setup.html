@@ -19,7 +19,7 @@
       <div class="owner-auth-panel">
         <div class="owner-auth-panel-head">
           <h1 class="owner-auth-title">Create an account</h1>
-          <p class="owner-auth-subtitle">Enter your details to continue.</p>
+          <p class="owner-auth-subtitle" data-account-setup-subtitle>Enter your details to continue.</p>
         </div>
 
         <form class="owner-auth-form" data-account-setup-form novalidate>
@@ -33,7 +33,7 @@
             <input type="text" class="owner-auth-input" placeholder="Last name" autocomplete="family-name" data-last-name>
           </label>
 
-          <label class="owner-auth-field">
+          <label class="owner-auth-field" data-password-field>
             <span class="owner-auth-field-label">Password</span>
             <span class="owner-auth-password-wrap">
               <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Password" autocomplete="new-password" data-password>
@@ -52,7 +52,7 @@
             </span>
           </label>
 
-          <label class="owner-auth-field">
+          <label class="owner-auth-field" data-confirm-password-field>
             <span class="owner-auth-field-label">Confirm password</span>
             <span class="owner-auth-password-wrap">
               <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Confirm password" autocomplete="new-password" data-confirm-password>
@@ -88,8 +88,13 @@
       const confirmPasswordInput = document.querySelector('[data-confirm-password]');
       const passwordToggle = document.querySelector('[data-password-toggle]');
       const confirmPasswordToggle = document.querySelector('[data-confirm-password-toggle]');
+      const passwordField = document.querySelector('[data-password-field]');
+      const confirmPasswordField = document.querySelector('[data-confirm-password-field]');
+      const subtitleNode = document.querySelector('[data-account-setup-subtitle]');
       const errorNode = document.querySelector('[data-account-setup-error]');
       const email = String(sessionStorage.getItem('owner-email') || '').trim();
+      const authMethod = String(localStorage.getItem('owner-login-method') || '').trim().toLowerCase();
+      const isGoogleAccount = authMethod === 'google';
 
       if (!form || !firstNameInput || !lastNameInput || !passwordInput || !confirmPasswordInput || !errorNode) {
         return;
@@ -97,6 +102,20 @@
 
       firstNameInput.value = String(sessionStorage.getItem('owner-first-name') || '');
       lastNameInput.value = String(sessionStorage.getItem('owner-last-name') || '');
+
+      if (isGoogleAccount) {
+        if (passwordField) {
+          passwordField.hidden = true;
+        }
+
+        if (confirmPasswordField) {
+          confirmPasswordField.hidden = true;
+        }
+
+        if (subtitleNode) {
+          subtitleNode.textContent = 'Complete your basic details to continue.';
+        }
+      }
 
       function hideError() {
         errorNode.hidden = true;
@@ -153,34 +172,44 @@
           return;
         }
 
-        if (!password) {
-          showError('Please enter password.');
-          passwordInput.focus();
-          return;
-        }
+        if (!isGoogleAccount) {
+          if (!password) {
+            showError('Please enter password.');
+            passwordInput.focus();
+            return;
+          }
 
-        if (password.length < 6) {
-          showError('Password must be at least 6 characters.');
-          passwordInput.focus();
-          return;
-        }
+          if (password.length < 6) {
+            showError('Password must be at least 6 characters.');
+            passwordInput.focus();
+            return;
+          }
 
-        if (password !== confirmPassword) {
-          showError('Passwords do not match.');
-          confirmPasswordInput.focus();
-          return;
+          if (password !== confirmPassword) {
+            showError('Passwords do not match.');
+            confirmPasswordInput.focus();
+            return;
+          }
         }
 
         sessionStorage.setItem('owner-first-name', firstName);
         sessionStorage.setItem('owner-last-name', lastName);
         sessionStorage.setItem('owner-name', [firstName, lastName].join(' ').trim());
-        sessionStorage.setItem('owner-password', password);
         localStorage.setItem('owner-account-created', 'true');
         localStorage.setItem('owner-login-email', email);
         localStorage.setItem('owner-login-first-name', firstName);
         localStorage.setItem('owner-login-last-name', lastName);
-        localStorage.setItem('owner-login-password', password);
         localStorage.setItem('owner-authenticated', 'true');
+
+        if (isGoogleAccount) {
+          sessionStorage.removeItem('owner-password');
+          localStorage.removeItem('owner-login-password');
+          localStorage.setItem('owner-login-method', 'google');
+        } else {
+          sessionStorage.setItem('owner-password', password);
+          localStorage.setItem('owner-login-password', password);
+          localStorage.setItem('owner-login-method', 'email');
+        }
 
         hideError();
         window.location.href = 'owner-details.html';
