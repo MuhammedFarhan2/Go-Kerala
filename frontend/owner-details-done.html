@@ -41,19 +41,5 @@
   </main>
 
   <script src="script.js?v=20260413-1"></script>
-  <script>
-    (function () {
-      const reviewDoneAllowed = sessionStorage.getItem('owner-review-done-allowed') === 'yes';
-      const finalSubmissionDoneAllowed = sessionStorage.getItem('owner-final-submission-done-allowed') === 'yes';
-
-      if (!reviewDoneAllowed && !finalSubmissionDoneAllowed) {
-        window.location.replace('owner-next.html');
-        return;
-      }
-
-      sessionStorage.removeItem('owner-review-done-allowed');
-      sessionStorage.removeItem('owner-final-submission-done-allowed');
-    })();
-  </script>
 </body>
 </html>

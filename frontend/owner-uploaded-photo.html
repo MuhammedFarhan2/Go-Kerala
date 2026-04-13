@@ -78,7 +78,7 @@
     (function () {
       const pageParams = new URLSearchParams(window.location.search);
       const reviewItem = String(pageParams.get('review') || '').trim();
-      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
+      const returnPage = reviewItem ? 'owner-details-done.html' : 'owner-next.html';
       const statusNode = document.querySelector('[data-owner-uploaded-status]');
       const imageList = document.querySelector('[data-owner-uploaded-list]');
       const photoOneNode = document.querySelector('[data-owner-uploaded-photo-one]');
