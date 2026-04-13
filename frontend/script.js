@@ -166,6 +166,62 @@
       });
     }
   };
+
+  window.ownerMediaTools = {
+    readOptimizedImage: function (file, options) {
+      return new Promise(function (resolve, reject) {
+        if (!file) {
+          reject(new Error('Please choose an image.'));
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onerror = function () {
+          reject(new Error('Unable to read image file.'));
+        };
+
+        reader.onload = function () {
+          const image = new Image();
+
+          image.onerror = function () {
+            reject(new Error('Unable to process image file.'));
+          };
+
+          image.onload = function () {
+            const settings = Object.assign({
+              maxWidth: 1600,
+              maxHeight: 1600,
+              quality: 0.82,
+              mimeType: 'image/jpeg'
+            }, options || {});
+            const scale = Math.min(
+              1,
+              settings.maxWidth / image.width,
+              settings.maxHeight / image.height
+            );
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+
+            if (!context) {
+              reject(new Error('Unable to process image file.'));
+              return;
+            }
+
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL(settings.mimeType, settings.quality));
+          };
+
+          image.src = String(reader.result || '');
+        };
+
+        reader.readAsDataURL(file);
+      });
+    }
+  };
 })();
 
 (function () {

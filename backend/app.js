@@ -610,7 +610,7 @@ function cleanupProfilePhotoSessions() {
 function readJsonBody(request) {
   return new Promise(function (resolve, reject) {
     let body = '';
-    const MAX_JSON_BODY_SIZE = 12 * 1024 * 1024;
+    const MAX_JSON_BODY_SIZE = 20 * 1024 * 1024;
 
     request.on('data', function (chunk) {
       body += chunk;
