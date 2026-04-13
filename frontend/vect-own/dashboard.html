@@ -778,10 +778,11 @@
               if (stillSelected) {
                 renderDetail(stillSelected);
               } else {
-                renderDetail(allSubmissions[0] || null);
+                selectedSubmissionId = '';
+                renderDetail(null);
               }
             } else {
-              renderDetail(allSubmissions[0] || null);
+              renderDetail(null);
             }
           });
       }
@@ -886,7 +887,7 @@
           return response.json();
         })
         .then(function () {
-            return refreshSubmissions(true);
+            return refreshSubmissions(false);
         })
         .catch(function () {
           // Redirect already handled above if needed.
