@@ -159,7 +159,7 @@
 
       if (modeParam === 'login' || modeParam === 'register') {
         authMode = modeParam;
-      } else if (hasCreatedAccount || hasSavedLogin || hasGoogleLogin) {
+      } else if (hasCreatedAccount && (hasSavedLogin || hasGoogleLogin)) {
         authMode = 'login';
       }
 
@@ -325,9 +325,11 @@
                 localStorage.setItem('owner-login-first-name', user.firstName || '');
                 localStorage.setItem('owner-login-last-name', user.lastName || '');
                 localStorage.removeItem('owner-login-password');
-                localStorage.setItem('owner-account-created', 'true');
 
                 if (authMode === 'login') {
+                  if (localStorage.getItem('owner-account-created') !== 'true') {
+                    throw new Error('No account found. Please create an account first.');
+                  }
                   window.location.href = 'owner-details.html';
                   return;
                 }
@@ -375,6 +377,11 @@
         }
 
         if (isLogin) {
+          if (localStorage.getItem('owner-account-created') !== 'true') {
+            showError('No account found. Please create an account first.');
+            return;
+          }
+
           const password = passwordInput ? String(passwordInput.value || '') : '';
           const savedEmail = String(localStorage.getItem('owner-login-email') || '').trim().toLowerCase();
           const savedPassword = String(localStorage.getItem('owner-login-password') || '');
