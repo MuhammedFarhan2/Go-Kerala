@@ -1952,12 +1952,12 @@ html {
 
 .owner-aadhaar-delete-btn,
 .owner-aadhaar-next-btn {
-  width: min(420px, calc(50% - 8px));
+  width: min(560px, calc(100% - 24px));
   min-width: 0;
 }
 
 .owner-aadhaar-next-btn {
-  margin-left: 16px;
+  margin-left: 0;
   height: 60px;
   font-size: 1.12rem;
   font-weight: 700;
