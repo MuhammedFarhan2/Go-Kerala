@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Evaluation</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260413-1">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+  </header>
+
+  <main class="owner-main owner-blank-main owner-evaluation-main">
+    <section class="owner-evaluation-card" aria-label="Document evaluation in progress">
+      <div class="owner-evaluation-icon-wrap" aria-hidden="true">
+        <span class="owner-evaluation-icon">
+          <svg viewBox="0 0 24 24" fill="none" role="img" aria-label="Clock icon">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"></circle>
+            <path d="M12 7.7v4.7l3.2 1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </span>
+      </div>
+
+      <p class="owner-evaluation-message">
+        We are currently evaluating your document. This process may take approximately 2-3 business days. We appreciate your patience and understanding during this time.
+      </p>
+
+      <p class="owner-evaluation-whatsapp-text">
+        To receive updates on the result, please provide your WhatsApp number
+      </p>
+
+      <form class="owner-evaluation-whatsapp-form" action="#" method="post">
+        <label class="owner-evaluation-whatsapp-label" for="owner-whatsapp-number">WhatsApp number</label>
+        <div class="owner-evaluation-whatsapp-field">
+          <span class="owner-evaluation-country-code" aria-hidden="true">
+            <span class="owner-evaluation-code-text">+91</span>
+            <span class="owner-evaluation-flag" title="India">
+              <span class="owner-evaluation-flag-symbol"></span>
+            </span>
+          </span>
+          <input
+            id="owner-whatsapp-number"
+            type="tel"
+            inputmode="numeric"
+            autocomplete="tel-national"
+            class="owner-evaluation-whatsapp-input"
+            placeholder="Enter WhatsApp number"
+            maxlength="10"
+          >
+        </div>
+        <button type="submit" class="owner-evaluation-whatsapp-submit">Submit WhatsApp Number</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="script.js?v=20260413-1"></script>
+  <script>
+    (function () {
+      const form = document.querySelector('.owner-evaluation-whatsapp-form');
+      const input = document.getElementById('owner-whatsapp-number');
+      const submitButton = document.querySelector('.owner-evaluation-whatsapp-submit');
+      const blockedKeys = [
+        /password/i,
+        /authenticated/i,
+        /api-base-url/i,
+        /account-created/i,
+        /login-/i
+      ];
+
+      if (!form || !input || !submitButton) {
+        return;
+      }
+
+      input.value = sessionStorage.getItem('owner-whatsapp-number') || '';
+
+      function shouldKeepKey(key) {
+        if (!/^owner-/i.test(key)) {
+          return false;
+        }
+
+        return !blockedKeys.some(function (pattern) {
+          return pattern.test(key);
+        });
+      }
+
+      function collectStorage(source) {
+        const data = {};
+
+        for (let index = 0; index < source.length; index += 1) {
+          const key = source.key(index);
+
+          if (!key || !shouldKeepKey(key)) {
+            continue;
+          }
+
+          data[key] = source.getItem(key);
+        }
+
+        return data;
+      }
+
+      async function submitSubmission() {
+        const whatsappNumber = String(input.value || '').trim();
+
+        if (!whatsappNumber) {
+          input.focus();
+          throw new Error('Please enter your WhatsApp number.');
+        }
+
+        sessionStorage.setItem('owner-whatsapp-number', whatsappNumber);
+
+        const payload = {
+          whatsappNumber: whatsappNumber,
+          sourcePage: 'owner-details-wait.html',
+          fields: Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage), {
+            'owner-whatsapp-number': whatsappNumber
+          })
+        };
+
+        const response = await fetch('/api/submissions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          let errorMessage = 'Unable to save submission.';
+
+          try {
+            const errorData = await response.json();
+            if (errorData && errorData.error) {
+              errorMessage = String(errorData.error);
+            }
+          } catch (error) {
+            // Keep the default message.
+          }
+
+          throw new Error(errorMessage);
+        }
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+
+        submitSubmission()
+          .then(function () {
+            window.location.href = 'owner-details-done.html';
+          })
+          .catch(function (error) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Submit WhatsApp Number';
+            window.alert(error.message || 'Unable to save submission.');
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

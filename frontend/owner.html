@@ -79,26 +79,48 @@
 
         <form class="owner-auth-form" data-owner-auth-form novalidate>
           <label class="owner-auth-field">
-            <span class="owner-auth-field-label">Email or Phone Number</span>
-            <input type="text" class="owner-auth-input" placeholder="Email or Phone Number" autocomplete="username" data-owner-email>
+            <span class="owner-auth-field-label">Email</span>
+            <input type="text" class="owner-auth-input" placeholder="Email" autocomplete="username" data-owner-email>
           </label>
 
-          <p class="owner-auth-error" data-owner-auth-error hidden>Please fill your email or phone number.</p>
+          <label class="owner-auth-field" data-owner-password-field style="display:none;">
+            <span class="owner-auth-field-label">Password</span>
+            <span class="owner-auth-password-wrap">
+              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Password" autocomplete="current-password" data-owner-password>
+              <button type="button" class="owner-auth-password-toggle" data-owner-password-toggle aria-label="Show password">
+                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+                </svg>
+                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  <path d="M10.6 6.2A11 11 0 0 1 12 6c6.4 0 10 6 10 6a17.8 17.8 0 0 1-4.3 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M6.6 6.6C4 8.2 2 12 2 12s3.6 6 10 6c1.8 0 3.3-.5 4.6-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+                </svg>
+              </button>
+            </span>
+          </label>
+
+          <p class="owner-auth-error" data-owner-auth-error hidden>Please fill your email.</p>
 
           <button type="submit" class="owner-auth-submit">Next</button>
         </form>
 
-        <div class="owner-auth-divider">
-          <span></span>
-          <p>Or register with</p>
-          <span></span>
-        </div>
+        <div data-owner-register-extras>
+          <div class="owner-auth-divider">
+            <span></span>
+            <p>Or register with</p>
+            <span></span>
+          </div>
 
-        <div class="owner-auth-socials" aria-label="Register with social account">
-          <div class="owner-auth-google-wrap">
-            <div class="owner-auth-google-button" data-google-register-btn></div>
+          <div class="owner-auth-socials" aria-label="Register with social account">
+            <div class="owner-auth-google-wrap">
+              <div class="owner-auth-google-button" data-google-register-btn></div>
+            </div>
           </div>
         </div>
+
       </div>
     </section>
   </main>
@@ -110,6 +132,10 @@
     (function () {
       const form = document.querySelector('[data-owner-auth-form]');
       const emailInput = document.querySelector('[data-owner-email]');
+      const passwordField = document.querySelector('[data-owner-password-field]');
+      const passwordInput = document.querySelector('[data-owner-password]');
+      const passwordToggle = document.querySelector('[data-owner-password-toggle]');
+      const registerExtras = document.querySelector('[data-owner-register-extras]');
       const errorText = document.querySelector('[data-owner-auth-error]');
       const googleRegisterButton = document.querySelector('[data-google-register-btn]');
       const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
@@ -118,9 +144,20 @@
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const titleText = document.querySelector('[data-owner-auth-title]');
       const subtitleText = document.querySelector('[data-owner-auth-subtitle]');
-      const switchLink = document.querySelector('[data-owner-auth-switch-link]');
+      const submitButton = form ? form.querySelector('.owner-auth-submit') : null;
       const pageParams = new URLSearchParams(window.location.search);
-      const authMode = pageParams.get('mode') === 'login' ? 'login' : 'register';
+      const modeParam = pageParams.get('mode');
+      const hasCreatedAccount = localStorage.getItem('owner-account-created') === 'true';
+      const hasSavedLogin =
+        Boolean(String(localStorage.getItem('owner-login-email') || '').trim()) &&
+        Boolean(String(localStorage.getItem('owner-login-password') || ''));
+      let authMode = 'register';
+
+      if (modeParam === 'login' || modeParam === 'register') {
+        authMode = modeParam;
+      } else if (hasCreatedAccount || hasSavedLogin) {
+        authMode = 'login';
+      }
 
       if (!form || !emailInput || !errorText) {
         return;
@@ -135,8 +172,35 @@
 
         if (subtitleText) {
           subtitleText.innerHTML = isLogin
-            ? 'Need an account? <a href="owner.html" class="owner-auth-inline-link" data-owner-auth-switch-link>Create account</a>'
+            ? 'Need an account? <a href="owner.html?mode=register" class="owner-auth-inline-link" data-owner-auth-switch-link>Create account</a>'
             : 'Already have an account? <a href="owner.html?mode=login" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a>';
+        }
+
+        if (submitButton) {
+          submitButton.textContent = isLogin ? 'Log in' : 'Next';
+        }
+
+        if (passwordField) {
+          passwordField.style.display = isLogin ? '' : 'none';
+        }
+
+        if (isLogin) {
+          const savedEmail = String(localStorage.getItem('owner-login-email') || '').trim();
+          if (savedEmail && !emailInput.value.trim()) {
+            emailInput.value = savedEmail;
+          }
+        }
+        if (registerExtras) {
+          registerExtras.hidden = isLogin;
+        }
+
+        if (!isLogin && passwordInput) {
+          passwordInput.value = '';
+          passwordInput.type = 'password';
+          if (passwordToggle) {
+            passwordToggle.classList.remove('is-visible');
+            passwordToggle.setAttribute('aria-label', 'Show password');
+          }
         }
 
       }
@@ -171,7 +235,11 @@
         return apiBaseUrl + pathName;
       }
 
-      [emailInput].forEach(function (input) {
+      [emailInput, passwordInput].forEach(function (input) {
+        if (!input) {
+          return;
+        }
+
         input.addEventListener('input', function () {
           if (emailInput.value.trim()) {
             hideError();
@@ -179,60 +247,14 @@
         });
       });
 
-      form.addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        const contact = emailInput.value.trim();
-
-        if (!contact) {
-          showError('Please fill your email or phone number.');
-          if (!contact) {
-            emailInput.focus();
-          }
-          return;
-        }
-
-        fetch(getApiUrl('/api/auth/request-otp'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contact: contact
-          })
-        })
-          .then(function (apiResponse) {
-            return apiResponse.text().then(function (text) {
-              let data = {};
-
-              try {
-                data = text ? JSON.parse(text) : {};
-              } catch (error) {
-                data = {
-                  error: text || 'Unexpected server response.'
-                };
-              }
-
-              return {
-                ok: apiResponse.ok,
-                data: data
-              };
-            });
-          })
-          .then(function (result) {
-            if (!result.ok) {
-              throw new Error((result.data && result.data.error) || 'Unable to send OTP.');
-            }
-
-            const contactValue = (result.data && result.data.contact) ? String(result.data.contact) : contact;
-            hideError();
-            storeOwnerSession('', '', contactValue);
-            window.location.href = getVerificationPage();
-          })
-          .catch(function (error) {
-            showError(error.message || 'Unable to send OTP.');
-          });
-      });
+      if (passwordToggle && passwordInput) {
+        passwordToggle.addEventListener('click', function () {
+          const shouldShow = passwordInput.type === 'password';
+          passwordInput.type = shouldShow ? 'text' : 'password';
+          passwordToggle.classList.toggle('is-visible', shouldShow);
+          passwordToggle.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+        });
+      }
 
       function initializeGoogleAuth() {
         if (!googleRegisterButton) {
@@ -240,12 +262,10 @@
         }
 
         if (!googleClientId || googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
-          showError('Add your Google Client ID in owner.html and backend env to enable Google registration.');
           return;
         }
 
         if (!window.google || !window.google.accounts || !window.google.accounts.id) {
-          showError('Google sign-in could not load.');
           return;
         }
 
@@ -292,7 +312,7 @@
                 const user = result.data.user;
                 hideError();
                 storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
-                window.location.href = 'owner-details.html';
+                window.location.href = 'owner-account-setup.html';
               })
               .catch(function (error) {
                 showError(error.message || 'Google registration failed.');
@@ -301,6 +321,10 @@
         });
 
         function renderGoogleButton() {
+          if (!registerExtras || registerExtras.hidden) {
+            return;
+          }
+
           const buttonWidth = Math.max(300, Math.floor(googleRegisterButton.getBoundingClientRect().width || googleRegisterButton.clientWidth || 300));
           googleRegisterButton.innerHTML = '';
           window.google.accounts.id.renderButton(googleRegisterButton, {
@@ -315,6 +339,93 @@
         renderGoogleButton();
         window.addEventListener('resize', renderGoogleButton);
       }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const contact = emailInput.value.trim();
+        const isLogin = authMode === 'login';
+
+        if (!contact) {
+          showError('Please fill your email.');
+          if (!contact) {
+            emailInput.focus();
+          }
+          return;
+        }
+
+        if (isLogin) {
+          const password = passwordInput ? String(passwordInput.value || '') : '';
+          const savedEmail = String(localStorage.getItem('owner-login-email') || '').trim().toLowerCase();
+          const savedPassword = String(localStorage.getItem('owner-login-password') || '');
+          const inputEmail = contact.toLowerCase();
+
+          if (!password) {
+            showError('Please enter your password.');
+            if (passwordInput) {
+              passwordInput.focus();
+            }
+            return;
+          }
+
+          if (!savedEmail || !savedPassword) {
+            showError('No account found. Please create an account first.');
+            return;
+          }
+
+          if (savedEmail !== inputEmail || savedPassword !== password) {
+            showError('Invalid email or password.');
+            return;
+          }
+
+          sessionStorage.setItem('owner-email', contact);
+          localStorage.setItem('owner-authenticated', 'true');
+          hideError();
+          window.location.href = 'owner-details.html';
+          return;
+        }
+
+        fetch(getApiUrl('/api/auth/request-otp'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contact: contact
+          })
+        })
+          .then(function (apiResponse) {
+            return apiResponse.text().then(function (text) {
+              let data = {};
+
+              try {
+                data = text ? JSON.parse(text) : {};
+              } catch (error) {
+                data = {
+                  error: text || 'Unexpected server response.'
+                };
+              }
+
+              return {
+                ok: apiResponse.ok,
+                data: data
+              };
+            });
+          })
+          .then(function (result) {
+            if (!result.ok) {
+              throw new Error((result.data && result.data.error) || 'Unable to send OTP.');
+            }
+
+            const contactValue = (result.data && result.data.contact) ? String(result.data.contact) : contact;
+            hideError();
+            storeOwnerSession('', '', contactValue);
+            window.location.href = getVerificationPage();
+          })
+          .catch(function (error) {
+            showError(error.message || 'Unable to send OTP.');
+          });
+      });
 
       syncAuthMode();
 
@@ -337,6 +448,7 @@
       window.addEventListener('load', function () {
         initializeGoogleAuth();
       });
+
     })();
   </script>
 </body>

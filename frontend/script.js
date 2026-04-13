@@ -100,6 +100,7 @@
     'owner-categories.html',
     'owner-coverage.html',
     'owner-next.html',
+    'owner-details-wait.html',
     'owner-heavy-driving-licence.html',
     'owner-heavy-driving-licence-upload.html',
     'owner-aadhaar-card.html',
@@ -115,10 +116,27 @@
 })();
 
 (function () {
+  const form = document.querySelector('.owner-evaluation-whatsapp-form');
+
+  if (!form) {
+    return;
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    window.location.href = 'owner-details-done.html';
+  });
+})();
+
+(function () {
   const accountBtn = document.getElementById('account-btn');
   const accountPanel = document.getElementById('account-panel');
   const backdrop = document.getElementById('account-backdrop');
   const header = document.querySelector('.header');
+
+  if (!accountBtn || !accountPanel || !backdrop || !header) {
+    return;
+  }
 
   function openPanel() {
     header.classList.add('panel-open');

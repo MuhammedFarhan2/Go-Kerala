@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account</title>
+  <link rel="stylesheet" href="style.css?v=20260410-3">
+</head>
+<body>
+  <header class="header owner-auth-header">
+    <div class="owner-auth-brand-lockup">
+      <h1 class="logo owner-auth-logo">VECT</h1>
+      <p class="owner-auth-logo-sub">MOVERS</p>
+    </div>
+  </header>
+
+  <main class="owner-main owner-auth-main">
+    <section class="owner-auth-shell" aria-label="Create account details">
+      <div class="owner-auth-panel">
+        <div class="owner-auth-panel-head">
+          <h1 class="owner-auth-title">Create an account</h1>
+          <p class="owner-auth-subtitle">Enter your details to continue.</p>
+        </div>
+
+        <form class="owner-auth-form" data-account-setup-form novalidate>
+          <label class="owner-auth-field">
+            <span class="owner-auth-field-label">First name</span>
+            <input type="text" class="owner-auth-input" placeholder="First name" autocomplete="given-name" data-first-name>
+          </label>
+
+          <label class="owner-auth-field">
+            <span class="owner-auth-field-label">Last name</span>
+            <input type="text" class="owner-auth-input" placeholder="Last name" autocomplete="family-name" data-last-name>
+          </label>
+
+          <label class="owner-auth-field">
+            <span class="owner-auth-field-label">Password</span>
+            <span class="owner-auth-password-wrap">
+              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Password" autocomplete="new-password" data-password>
+              <button type="button" class="owner-auth-password-toggle" data-password-toggle aria-label="Show password">
+                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+                </svg>
+                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  <path d="M10.6 6.2A11 11 0 0 1 12 6c6.4 0 10 6 10 6a17.8 17.8 0 0 1-4.3 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M6.6 6.6C4 8.2 2 12 2 12s3.6 6 10 6c1.8 0 3.3-.5 4.6-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+                </svg>
+              </button>
+            </span>
+          </label>
+
+          <label class="owner-auth-field">
+            <span class="owner-auth-field-label">Confirm password</span>
+            <span class="owner-auth-password-wrap">
+              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Confirm password" autocomplete="new-password" data-confirm-password>
+              <button type="button" class="owner-auth-password-toggle" data-confirm-password-toggle aria-label="Show confirm password">
+                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+                </svg>
+                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  <path d="M10.6 6.2A11 11 0 0 1 12 6c6.4 0 10 6 10 6a17.8 17.8 0 0 1-4.3 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M6.6 6.6C4 8.2 2 12 2 12s3.6 6 10 6c1.8 0 3.3-.5 4.6-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+                </svg>
+              </button>
+            </span>
+          </label>
+
+          <p class="owner-auth-error" data-account-setup-error hidden></p>
+
+          <button type="submit" class="owner-auth-submit">Create an Account</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const form = document.querySelector('[data-account-setup-form]');
+      const firstNameInput = document.querySelector('[data-first-name]');
+      const lastNameInput = document.querySelector('[data-last-name]');
+      const passwordInput = document.querySelector('[data-password]');
+      const confirmPasswordInput = document.querySelector('[data-confirm-password]');
+      const passwordToggle = document.querySelector('[data-password-toggle]');
+      const confirmPasswordToggle = document.querySelector('[data-confirm-password-toggle]');
+      const errorNode = document.querySelector('[data-account-setup-error]');
+      const email = String(sessionStorage.getItem('owner-email') || '').trim();
+
+      if (!form || !firstNameInput || !lastNameInput || !passwordInput || !confirmPasswordInput || !errorNode) {
+        return;
+      }
+
+      firstNameInput.value = String(sessionStorage.getItem('owner-first-name') || '');
+      lastNameInput.value = String(sessionStorage.getItem('owner-last-name') || '');
+
+      function hideError() {
+        errorNode.hidden = true;
+        errorNode.textContent = '';
+      }
+
+      function showError(message) {
+        errorNode.textContent = message;
+        errorNode.hidden = false;
+      }
+
+      [firstNameInput, lastNameInput, passwordInput, confirmPasswordInput].forEach(function (input) {
+        input.addEventListener('input', hideError);
+      });
+
+      function setupPasswordToggle(button, input, showLabel, hideLabel) {
+        if (!button || !input) {
+          return;
+        }
+
+        button.addEventListener('click', function () {
+          const shouldShow = input.type === 'password';
+          input.type = shouldShow ? 'text' : 'password';
+          button.classList.toggle('is-visible', shouldShow);
+          button.setAttribute('aria-label', shouldShow ? hideLabel : showLabel);
+        });
+      }
+
+      setupPasswordToggle(passwordToggle, passwordInput, 'Show password', 'Hide password');
+      setupPasswordToggle(confirmPasswordToggle, confirmPasswordInput, 'Show confirm password', 'Hide confirm password');
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const firstName = String(firstNameInput.value || '').trim();
+        const lastName = String(lastNameInput.value || '').trim();
+        const password = String(passwordInput.value || '');
+        const confirmPassword = String(confirmPasswordInput.value || '');
+
+        if (!email) {
+          showError('Session expired. Please verify your email again.');
+          return;
+        }
+
+        if (!firstName) {
+          showError('Please enter first name.');
+          firstNameInput.focus();
+          return;
+        }
+
+        if (!lastName) {
+          showError('Please enter last name.');
+          lastNameInput.focus();
+          return;
+        }
+
+        if (!password) {
+          showError('Please enter password.');
+          passwordInput.focus();
+          return;
+        }
+
+        if (password.length < 6) {
+          showError('Password must be at least 6 characters.');
+          passwordInput.focus();
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          showError('Passwords do not match.');
+          confirmPasswordInput.focus();
+          return;
+        }
+
+        sessionStorage.setItem('owner-first-name', firstName);
+        sessionStorage.setItem('owner-last-name', lastName);
+        sessionStorage.setItem('owner-name', [firstName, lastName].join(' ').trim());
+        sessionStorage.setItem('owner-password', password);
+        localStorage.setItem('owner-account-created', 'true');
+        localStorage.setItem('owner-login-email', email);
+        localStorage.setItem('owner-login-first-name', firstName);
+        localStorage.setItem('owner-login-last-name', lastName);
+        localStorage.setItem('owner-login-password', password);
+        localStorage.setItem('owner-authenticated', 'true');
+
+        hideError();
+        window.location.href = 'owner-details.html';
+      });
+    })();
+  </script>
+</body>
+</html>

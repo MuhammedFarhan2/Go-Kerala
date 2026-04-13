@@ -147,6 +147,16 @@
       applyCompletedStep(profilePhotoButton, 'owner-profile-photo-status-v2');
       applyCompletedStep(aadhaarButton, 'owner-aadhaar-status-v2');
 
+      const allStepsCompleted =
+        sessionStorage.getItem('owner-heavy-licence-status-v2') === 'completed' &&
+        sessionStorage.getItem('owner-profile-photo-status-v2') === 'completed' &&
+        sessionStorage.getItem('owner-aadhaar-status-v2') === 'completed';
+
+      if (allStepsCompleted) {
+        window.location.replace('owner-details-wait.html');
+        return;
+      }
+
       nextStepButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           if (button.classList.contains('is-completed')) {

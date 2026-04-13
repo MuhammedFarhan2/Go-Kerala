@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="420" viewBox="0 0 420 420" role="img" aria-label="Analog clock">
+  <rect width="420" height="420" fill="#ffffff"/>
+  <circle cx="210" cy="210" r="170" fill="#f8f8f8" stroke="#111111" stroke-width="10"/>
+  <circle cx="210" cy="210" r="7" fill="#111111"/>
+  <line x1="210" y1="210" x2="210" y2="102" stroke="#111111" stroke-width="9" stroke-linecap="round"/>
+  <line x1="210" y1="210" x2="288" y2="210" stroke="#111111" stroke-width="7" stroke-linecap="round"/>
+  <line x1="210" y1="210" x2="150" y2="142" stroke="#d32222" stroke-width="3" stroke-linecap="round"/>
+  <line x1="210" y1="57" x2="210" y2="76" stroke="#111111" stroke-width="6" stroke-linecap="round"/>
+  <line x1="210" y1="344" x2="210" y2="363" stroke="#111111" stroke-width="6" stroke-linecap="round"/>
+  <line x1="57" y1="210" x2="76" y2="210" stroke="#111111" stroke-width="6" stroke-linecap="round"/>
+  <line x1="344" y1="210" x2="363" y2="210" stroke="#111111" stroke-width="6" stroke-linecap="round"/>
+  <line x1="101.8" y1="101.8" x2="115.2" y2="115.2" stroke="#111111" stroke-width="5" stroke-linecap="round"/>
+  <line x1="304.8" y1="304.8" x2="318.2" y2="318.2" stroke="#111111" stroke-width="5" stroke-linecap="round"/>
+  <line x1="101.8" y1="318.2" x2="115.2" y2="304.8" stroke="#111111" stroke-width="5" stroke-linecap="round"/>
+  <line x1="304.8" y1="115.2" x2="318.2" y2="101.8" stroke="#111111" stroke-width="5" stroke-linecap="round"/>
+</svg>
