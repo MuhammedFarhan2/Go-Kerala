@@ -93,19 +93,23 @@
           </div>
 
           <div class="vect-own-detail-meta-grid">
-            <div>
+            <div class="vect-own-detail-meta-card">
+              <button type="button" class="vect-own-inline-accept">Accept</button>
               <span class="vect-own-detail-label">Phone</span>
               <strong class="vect-own-detail-value" data-vect-own-phone>-</strong>
             </div>
-            <div>
+            <div class="vect-own-detail-meta-card">
+              <button type="button" class="vect-own-inline-accept">Accept</button>
               <span class="vect-own-detail-label">Submitted</span>
               <strong class="vect-own-detail-value" data-vect-own-created>-</strong>
             </div>
-            <div>
+            <div class="vect-own-detail-meta-card">
+              <button type="button" class="vect-own-inline-accept">Accept</button>
               <span class="vect-own-detail-label">Email</span>
               <strong class="vect-own-detail-value" data-vect-own-email>-</strong>
             </div>
-            <div>
+            <div class="vect-own-detail-meta-card">
+              <button type="button" class="vect-own-inline-accept">Accept</button>
               <span class="vect-own-detail-label">Submission Id</span>
               <strong class="vect-own-detail-value vect-own-detail-id" data-vect-own-id>-</strong>
             </div>
@@ -210,7 +214,7 @@
           return '-';
         }
 
-        return String(value);
+        return String(value).replace(/-/g, ' ');
       }
 
       function normalizeImageText(value) {
@@ -279,6 +283,8 @@
 
       function getHiddenFieldKeys() {
         return getDocumentFieldKeys().concat([
+          'owner-name',
+          'owner-last-name',
           'owner-heavy-licence-photo-name-1',
           'owner-heavy-licence-photo-name-2',
           'owner-aadhaar-photo-name',
@@ -618,6 +624,7 @@
           const value = entry[1];
           return [
             '<div class="vect-own-field-row">',
+            '<button type="button" class="vect-own-inline-accept">Accept</button>',
             '<dt class="vect-own-field-key">' + escapeHtml(getFieldLabel(key)) + '</dt>',
             '<dd class="vect-own-field-value">' + renderFieldValue(key, value) + '</dd>',
             '</div>'
