@@ -11,9 +11,18 @@ const APPLE_CLIENT_ID = String(process.env.APPLE_CLIENT_ID || '').trim();
 const GMAIL_USER = String(process.env.GMAIL_USER || '').trim();
 const GMAIL_APP_PASSWORD = String(process.env.GMAIL_APP_PASSWORD || '').trim();
 const OTP_FROM_EMAIL = String(process.env.OTP_FROM_EMAIL || GMAIL_USER || '').trim();
+const TWILIO_ACCOUNT_SID = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
+const TWILIO_AUTH_TOKEN = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
+const TWILIO_FROM_NUMBER = String(process.env.TWILIO_FROM_NUMBER || '').trim();
 const PROJECT_ROOT = path.join(__dirname, '..');
 const FRONTEND_DIR = path.join(PROJECT_ROOT, 'frontend');
 const UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
+const DATA_DIR = path.join(__dirname, 'data');
+const VECT_OWN_DB_PATH = path.join(DATA_DIR, 'vect-own-submissions.json');
+const VECT_OWN_SESSION_COOKIE = 'vect_own_session';
+const VECT_OWN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const VECT_OWN_PASSWORD = String(process.env.VECT_OWN_PASSWORD || 'vectown1234').trim();
+const VECT_OWN_SESSION_HEADER = 'x-vect-own-session';
 
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -29,15 +38,19 @@ const MIME_TYPES = {
 };
 
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(DATA_DIR, { recursive: true });
 
 let googleOAuthClient = null;
 let appleKeysCache = null;
 let mailTransporter = null;
 const profilePhotoSessions = new Map();
 const otpSessions = new Map();
+const vectOwnSessions = new Map();
+let vectOwnSubmissions = null;
 const PROFILE_PHOTO_SESSION_TTL_MS = 30 * 60 * 1000;
 const APPLE_KEYS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const OTP_TTL_MS = 5 * 60 * 1000;
+const VECT_OWN_STATUSES = new Set(['pending', 'accepted', 'rejected']);
 
 function getGoogleOAuthClient() {
   if (!GOOGLE_CLIENT_ID) {
@@ -85,8 +98,55 @@ function isEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
 }
 
+function normalizePhoneNumber(value) {
+  const trimmed = String(value || '').trim();
+
+  if (!trimmed) {
+    return '';
+  }
+
+  const hasPlusPrefix = trimmed.startsWith('+');
+  const digitsOnly = trimmed.replace(/\D/g, '');
+
+  if (!digitsOnly) {
+    return '';
+  }
+
+  return (hasPlusPrefix ? '+' : '') + digitsOnly;
+}
+
+function isPhoneNumber(value) {
+  const normalized = normalizePhoneNumber(value);
+  return /^\+?[1-9]\d{9,14}$/.test(normalized);
+}
+
+function parseContact(rawValue) {
+  const raw = String(rawValue || '').trim();
+
+  if (!raw) {
+    return { type: 'unknown', normalized: '' };
+  }
+
+  if (isEmail(raw)) {
+    return {
+      type: 'email',
+      normalized: raw.toLowerCase()
+    };
+  }
+
+  if (isPhoneNumber(raw)) {
+    return {
+      type: 'phone',
+      normalized: normalizePhoneNumber(raw)
+    };
+  }
+
+  return { type: 'unknown', normalized: raw };
+}
+
 function normalizeContact(value) {
-  return String(value || '').trim().toLowerCase();
+  const parsed = parseContact(value);
+  return parsed.normalized;
 }
 
 function cleanupOtpSessions() {
@@ -115,6 +175,52 @@ async function sendOtpEmail(contact, otpCode) {
     subject: 'VECT MOVERS verification code',
     text: 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.'
   });
+}
+
+async function sendOtpSms(contact, otpCode) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
+    throw new Error('SMS OTP is not configured on the server.');
+  }
+
+  const authHeader = Buffer.from(TWILIO_ACCOUNT_SID + ':' + TWILIO_AUTH_TOKEN).toString('base64');
+  const body = new URLSearchParams({
+    To: contact,
+    From: TWILIO_FROM_NUMBER,
+    Body: 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.'
+  });
+  const twilioResponse = await fetch(
+    'https://api.twilio.com/2010-04-01/Accounts/' + encodeURIComponent(TWILIO_ACCOUNT_SID) + '/Messages.json',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: 'Basic ' + authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    }
+  );
+
+  if (!twilioResponse.ok) {
+    let errorMessage = 'Unable to send SMS OTP.';
+
+    try {
+      const responseData = await twilioResponse.json();
+      if (responseData && responseData.message) {
+        errorMessage = String(responseData.message);
+      }
+    } catch (error) {
+      try {
+        const responseText = await twilioResponse.text();
+        if (responseText) {
+          errorMessage = responseText;
+        }
+      } catch (nestedError) {
+        // Keep default error message.
+      }
+    }
+
+    throw new Error(errorMessage);
+  }
 }
 
 function decodeBase64Url(input) {
@@ -230,21 +336,21 @@ async function verifyAppleIdentityToken(identityToken) {
   return payload;
 }
 
-function sendJson(response, statusCode, payload) {
-  response.writeHead(statusCode, {
+function sendJson(response, statusCode, payload, extraHeaders) {
+  response.writeHead(statusCode, Object.assign({
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,PATCH,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session',
     'Content-Type': 'application/json; charset=utf-8'
-  });
+  }, extraHeaders || {}));
   response.end(JSON.stringify(payload));
 }
 
 function sendText(response, statusCode, message) {
   response.writeHead(statusCode, {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,PATCH,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session',
     'Content-Type': 'text/plain; charset=utf-8'
   });
   response.end(message);
@@ -263,6 +369,232 @@ function sendFile(response, filePath) {
     });
     response.end(data);
   });
+}
+
+function readJsonFile(filePath, fallbackValue) {
+  try {
+    const fileContents = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(fileContents);
+  } catch (error) {
+    return fallbackValue;
+  }
+}
+
+function writeJsonFile(filePath, value) {
+  const tempPath = filePath + '.tmp';
+  fs.writeFileSync(tempPath, JSON.stringify(value, null, 2));
+  fs.renameSync(tempPath, filePath);
+}
+
+function loadVectOwnSubmissions() {
+  if (vectOwnSubmissions) {
+    return vectOwnSubmissions;
+  }
+
+  const saved = readJsonFile(VECT_OWN_DB_PATH, []);
+  vectOwnSubmissions = Array.isArray(saved) ? saved : [];
+  return vectOwnSubmissions;
+}
+
+function persistVectOwnSubmissions() {
+  writeJsonFile(VECT_OWN_DB_PATH, loadVectOwnSubmissions());
+}
+
+function cleanupVectOwnSessions() {
+  const now = Date.now();
+
+  vectOwnSessions.forEach(function (session, token) {
+    if (!session || !session.expiresAt || now > session.expiresAt) {
+      vectOwnSessions.delete(token);
+    }
+  });
+}
+
+function parseCookies(request) {
+  const cookieHeader = String(request.headers.cookie || '');
+  const cookies = {};
+
+  cookieHeader.split(';').forEach(function (pair) {
+    const index = pair.indexOf('=');
+
+    if (index === -1) {
+      return;
+    }
+
+    const key = pair.slice(0, index).trim();
+    const value = pair.slice(index + 1).trim();
+
+    if (key) {
+      cookies[key] = decodeURIComponent(value);
+    }
+  });
+
+  return cookies;
+}
+
+function buildCookieHeader(name, value, options) {
+  const parts = [name + '=' + encodeURIComponent(value)];
+  const config = options || {};
+
+  parts.push('Path=' + (config.path || '/'));
+  parts.push('SameSite=' + (config.sameSite || 'Lax'));
+
+  if (config.httpOnly !== false) {
+    parts.push('HttpOnly');
+  }
+
+  if (config.maxAge !== undefined && config.maxAge !== null) {
+    parts.push('Max-Age=' + Math.floor(config.maxAge / 1000));
+  }
+
+  if (config.secure) {
+    parts.push('Secure');
+  }
+
+  return parts.join('; ');
+}
+
+function getVectOwnSession(request) {
+  cleanupVectOwnSessions();
+
+  const cookies = parseCookies(request);
+  const headerToken = String(request.headers[VECT_OWN_SESSION_HEADER] || '').trim();
+  const cookieToken = String(cookies[VECT_OWN_SESSION_COOKIE] || '').trim();
+  const token = headerToken || cookieToken;
+
+  if (!token) {
+    return null;
+  }
+
+  const session = vectOwnSessions.get(token);
+
+  if (!session || Date.now() > session.expiresAt) {
+    vectOwnSessions.delete(token);
+    return null;
+  }
+
+  return Object.assign({
+    token: token
+  }, session);
+}
+
+function requireVectOwnSession(request, response) {
+  const session = getVectOwnSession(request);
+
+  if (!session) {
+    sendJson(response, 401, { success: false, error: 'Owner login required.' });
+    return null;
+  }
+
+  return session;
+}
+
+function cleanSubmissionValue(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(cleanSubmissionValue);
+  }
+
+  if (typeof value === 'object') {
+    const cleaned = {};
+
+    Object.keys(value).forEach(function (key) {
+      cleaned[key] = cleanSubmissionValue(value[key]);
+    });
+
+    return cleaned;
+  }
+
+  return String(value);
+}
+
+function normalizeSubmissionFields(fields) {
+  const safeFields = {};
+  const inputFields = fields && typeof fields === 'object' ? fields : {};
+  const excludedPatterns = [
+    /password/i,
+    /authenticated/i,
+    /api-base-url/i,
+    /owner-login-/i,
+    /owner-account-created/i
+  ];
+
+  Object.keys(inputFields).forEach(function (key) {
+    if (excludedPatterns.some(function (pattern) {
+      return pattern.test(key);
+    })) {
+      return;
+    }
+
+    safeFields[key] = cleanSubmissionValue(inputFields[key]);
+  });
+
+  return safeFields;
+}
+
+function summarizeSubmissionFields(fields, whatsappNumber) {
+  const safeFields = fields && typeof fields === 'object' ? fields : {};
+  const categories = safeFields['owner-categories'];
+  const districts = safeFields['owner-districts'];
+  const parsedCategories = Array.isArray(categories) ? categories : tryParseJsonArray(categories);
+  const parsedDistricts = Array.isArray(districts) ? districts : tryParseJsonArray(districts);
+
+  return {
+    companyName: String(safeFields['owner-company-name'] || safeFields['owner-name'] || safeFields['owner-company'] || '').trim(),
+    ownerName: String(safeFields['owner-name'] || [safeFields['owner-first-name'], safeFields['owner-last-name']].filter(Boolean).join(' ')).trim(),
+    email: String(safeFields['owner-email'] || '').trim(),
+    phone: String(whatsappNumber || safeFields['owner-whatsapp-number'] || '').trim(),
+    whatsappNumber: String(whatsappNumber || safeFields['owner-whatsapp-number'] || '').trim(),
+    categories: parsedCategories,
+    districts: parsedDistricts,
+    documents: {
+      heavyLicence: Boolean(safeFields['owner-heavy-licence-photo-name-1'] || safeFields['owner-heavy-licence-photo-name-2']),
+      aadhaar: Boolean(safeFields['owner-aadhaar-photo-name']),
+      profilePhoto: Boolean(safeFields['owner-profile-photo'])
+    }
+  };
+}
+
+function tryParseJsonArray(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  const rawValue = String(value || '').trim();
+
+  if (!rawValue) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function serializeSubmissionForList(submission) {
+  return {
+    id: submission.id,
+    createdAt: submission.createdAt,
+    updatedAt: submission.updatedAt,
+    status: submission.status,
+    reviewedAt: submission.reviewedAt || '',
+    reviewedBy: submission.reviewedBy || '',
+    reviewNote: submission.reviewNote || '',
+    summary: summarizeSubmissionFields(submission.fields || {}, submission.whatsappNumber)
+  };
+}
+
+function getSubmissionById(submissionId) {
+  const submissions = loadVectOwnSubmissions();
+  return submissions.find(function (submission) {
+    return submission && submission.id === submissionId;
+  }) || null;
 }
 
 function cleanupProfilePhotoSessions() {
@@ -302,9 +634,19 @@ function readJsonBody(request) {
 
 function getSafePath(urlPathname) {
   const normalizedPath = decodeURIComponent(urlPathname === '/' ? '/index.html' : urlPathname);
-  const fullPath = path.normalize(path.join(FRONTEND_DIR, normalizedPath));
+  let fullPath = path.normalize(path.join(FRONTEND_DIR, normalizedPath));
 
   if (!fullPath.startsWith(FRONTEND_DIR)) {
+    return null;
+  }
+
+  try {
+    const fileStat = fs.existsSync(fullPath) ? fs.statSync(fullPath) : null;
+
+    if (fileStat && fileStat.isDirectory()) {
+      fullPath = path.join(fullPath, 'index.html');
+    }
+  } catch (error) {
     return null;
   }
 
@@ -680,6 +1022,228 @@ async function handleCompleteProfilePhotoSession(request, response) {
   });
 }
 
+async function handleVectOwnLogin(request, response) {
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const password = String(payload.password || '').trim();
+
+  if (!password) {
+    sendJson(response, 400, { success: false, error: 'Password is required.' });
+    return;
+  }
+
+  if (!VECT_OWN_PASSWORD || password !== VECT_OWN_PASSWORD) {
+    sendJson(response, 401, { success: false, error: 'Incorrect password.' });
+    return;
+  }
+
+  const token = crypto.randomBytes(24).toString('hex');
+  const now = Date.now();
+  const session = {
+    role: 'owner',
+    createdAt: now,
+    expiresAt: now + VECT_OWN_SESSION_TTL_MS
+  };
+
+  vectOwnSessions.set(token, session);
+
+  sendJson(
+    response,
+    200,
+    {
+      success: true,
+      authenticated: true,
+      token: token,
+      role: session.role,
+      expiresAt: session.expiresAt
+    },
+    {
+      'Set-Cookie': buildCookieHeader(VECT_OWN_SESSION_COOKIE, token, {
+        path: '/vect-own',
+        maxAge: VECT_OWN_SESSION_TTL_MS,
+        sameSite: 'Lax',
+        httpOnly: true
+      })
+    }
+  );
+}
+
+function handleVectOwnLogout(request, response) {
+  const cookies = parseCookies(request);
+  const token = String(cookies[VECT_OWN_SESSION_COOKIE] || '').trim();
+
+  if (token) {
+    vectOwnSessions.delete(token);
+  }
+
+  sendJson(
+    response,
+    200,
+    { success: true },
+    {
+      'Set-Cookie': buildCookieHeader(VECT_OWN_SESSION_COOKIE, '', {
+        path: '/vect-own',
+        maxAge: 0,
+        sameSite: 'Lax',
+        httpOnly: true
+      })
+    }
+  );
+}
+
+function handleVectOwnMe(request, response) {
+  const session = requireVectOwnSession(request, response);
+
+  if (!session) {
+    return;
+  }
+
+  sendJson(response, 200, {
+    success: true,
+    authenticated: true,
+    role: session.role,
+    expiresAt: session.expiresAt
+  });
+}
+
+async function handlePublicSubmissionCreate(request, response) {
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const fields = normalizeSubmissionFields(payload.fields || payload.storage || payload);
+  const whatsappNumber = normalizePhoneNumber(payload.whatsappNumber || fields['owner-whatsapp-number'] || '');
+
+  if (!whatsappNumber) {
+    sendJson(response, 400, { success: false, error: 'WhatsApp number is required.' });
+    return;
+  }
+
+  const now = Date.now();
+  const submission = {
+    id: crypto.randomUUID(),
+    createdAt: now,
+    updatedAt: now,
+    status: 'pending',
+    reviewNote: '',
+    reviewedBy: '',
+    reviewedAt: '',
+    whatsappNumber: whatsappNumber,
+    fields: Object.assign({}, fields, {
+      'owner-whatsapp-number': whatsappNumber
+    })
+  };
+
+  const submissions = loadVectOwnSubmissions();
+  submissions.unshift(submission);
+  persistVectOwnSubmissions();
+
+  sendJson(response, 200, {
+    success: true,
+    submission: serializeSubmissionForList(submission)
+  });
+}
+
+function handleVectOwnSubmissionList(requestUrl, request, response) {
+  const session = requireVectOwnSession(request, response);
+
+  if (!session) {
+    return;
+  }
+
+  const statusFilter = String(requestUrl.searchParams.get('status') || '').trim().toLowerCase();
+  const submissions = loadVectOwnSubmissions();
+  const filteredSubmissions = statusFilter && VECT_OWN_STATUSES.has(statusFilter)
+    ? submissions.filter(function (submission) {
+        return submission.status === statusFilter;
+      })
+    : submissions;
+
+  sendJson(response, 200, {
+    success: true,
+    submissions: filteredSubmissions.map(serializeSubmissionForList)
+  });
+}
+
+function handleVectOwnSubmissionDetail(requestUrl, request, response) {
+  const session = requireVectOwnSession(request, response);
+
+  if (!session) {
+    return;
+  }
+
+  const submissionId = String(requestUrl.pathname.split('/').pop() || '').trim();
+  const submission = getSubmissionById(submissionId);
+
+  if (!submission) {
+    sendJson(response, 404, { success: false, error: 'Submission not found.' });
+    return;
+  }
+
+  sendJson(response, 200, {
+    success: true,
+    submission: submission
+  });
+}
+
+async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
+  const session = requireVectOwnSession(request, response);
+
+  if (!session) {
+    return;
+  }
+
+  const submissionId = String(requestUrl.pathname.split('/').pop() || '').trim();
+  const submission = getSubmissionById(submissionId);
+
+  if (!submission) {
+    sendJson(response, 404, { success: false, error: 'Submission not found.' });
+    return;
+  }
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const nextStatus = String(payload.status || '').trim().toLowerCase();
+  const reviewNote = String(payload.reviewNote || '').trim();
+
+  if (!VECT_OWN_STATUSES.has(nextStatus)) {
+    sendJson(response, 400, { success: false, error: 'Invalid status.' });
+    return;
+  }
+
+  submission.status = nextStatus;
+  submission.reviewNote = reviewNote;
+  submission.reviewedBy = session.role || 'owner';
+  submission.reviewedAt = new Date().toISOString();
+  submission.updatedAt = Date.now();
+
+  persistVectOwnSubmissions();
+
+  sendJson(response, 200, {
+    success: true,
+    submission: serializeSubmissionForList(submission)
+  });
+}
+
 const server = http.createServer(function (request, response) {
   const requestUrl = new URL(request.url, 'http://' + request.headers.host);
 
@@ -687,7 +1251,7 @@ const server = http.createServer(function (request, response) {
     response.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session'
     });
     response.end();
     return;
@@ -725,6 +1289,41 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/profile-photo-session/complete') {
     handleCompleteProfilePhotoSession(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/vect-own/login') {
+    handleVectOwnLogin(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/vect-own/logout') {
+    handleVectOwnLogout(request, response);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/api/vect-own/me') {
+    handleVectOwnMe(request, response);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/api/vect-own/submissions') {
+    handleVectOwnSubmissionList(requestUrl, request, response);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname.startsWith('/api/vect-own/submissions/')) {
+    handleVectOwnSubmissionDetail(requestUrl, request, response);
+    return;
+  }
+
+  if (request.method === 'PATCH' && requestUrl.pathname.startsWith('/api/vect-own/submissions/')) {
+    handleVectOwnSubmissionUpdate(requestUrl, request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/submissions') {
+    handlePublicSubmissionCreate(request, response);
     return;
   }
 
