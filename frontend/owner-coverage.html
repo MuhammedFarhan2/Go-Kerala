@@ -69,12 +69,16 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
       const companyNode = document.querySelector('[data-owner-coverage-company]');
       const districtButtons = Array.from(document.querySelectorAll('.owner-district-chip'));
       const actions = document.querySelector('[data-owner-district-actions]');
       const nextButton = document.querySelector('[data-owner-district-next-btn]');
       const districtCountNode = document.querySelector('[data-owner-district-count]');
       const districtLabelNode = document.querySelector('[data-owner-district-label]');
+      const isDistrictReview = reviewItem === 'owner-districts';
 
       if (companyNode) {
         companyNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
@@ -134,7 +138,7 @@
             return;
           }
 
-          window.location.href = 'owner-next.html';
+          window.location.href = isDistrictReview ? returnPage : 'owner-next.html';
         });
       }
 

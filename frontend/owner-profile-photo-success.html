@@ -41,6 +41,7 @@
       const okButton = document.querySelector('[data-owner-profile-success-btn]');
       const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
       const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
+      const returnPage = String(sessionStorage.getItem('owner-profile-photo-return-page') || 'owner-next.html').trim() || 'owner-next.html';
 
       if (!okButton) {
         return;
@@ -50,7 +51,7 @@
       sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
 
       okButton.addEventListener('click', function () {
-        window.location.href = 'owner-next.html';
+        window.location.href = returnPage;
       });
     })();
   </script>

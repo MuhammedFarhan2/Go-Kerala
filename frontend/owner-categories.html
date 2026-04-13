@@ -97,10 +97,14 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-coverage.html';
       const companyNameNode = document.querySelector('[data-owner-company-name]');
       const categoryButtons = Array.from(document.querySelectorAll('.owner-product-box'));
       const actions = document.querySelector('[data-owner-categories-actions]');
       const nextButton = document.querySelector('[data-owner-categories-next-btn]');
+      const isCategoryReview = reviewItem === 'owner-categories';
 
       if (!companyNameNode) {
         return;
@@ -155,7 +159,7 @@
             return;
           }
 
-          window.location.href = 'owner-coverage.html';
+          window.location.href = isCategoryReview ? returnPage : 'owner-coverage.html';
         });
       }
     })();

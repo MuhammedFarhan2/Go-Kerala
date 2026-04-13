@@ -81,6 +81,9 @@
 
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details.html';
       const form = document.querySelector('[data-account-setup-form]');
       const firstNameInput = document.querySelector('[data-first-name]');
       const lastNameInput = document.querySelector('[data-last-name]');
@@ -95,6 +98,7 @@
       const email = String(sessionStorage.getItem('owner-email') || '').trim();
       const authMethod = String(localStorage.getItem('owner-login-method') || '').trim().toLowerCase();
       const isGoogleAccount = authMethod === 'google';
+      const isReviewFlow = reviewItem === 'owner-first-name' || reviewItem === 'owner-address' || reviewItem === 'owner-city' || reviewItem === 'owner-state' || reviewItem === 'owner-pincode';
 
       if (!form || !firstNameInput || !lastNameInput || !passwordInput || !confirmPasswordInput || !errorNode) {
         return;
@@ -211,7 +215,7 @@
         }
 
         hideError();
-        window.location.href = 'owner-details.html';
+        window.location.href = isReviewFlow ? returnPage : 'owner-details.html';
       });
     })();
   </script>

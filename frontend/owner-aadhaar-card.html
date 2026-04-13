@@ -82,6 +82,9 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
       const triggerButton = document.querySelector('[data-owner-aadhaar-upload-trigger]');
       const uploadMenu = document.querySelector('[data-owner-aadhaar-upload-menu]');
       const uploadInput = document.querySelector('[data-owner-aadhaar-upload-input]');
@@ -95,6 +98,7 @@
       const STORAGE_URL_KEY = 'owner-aadhaar-photo-url';
       const SUBMITTED_KEY = 'owner-aadhaar-submitted-v2';
       const STATUS_KEY = 'owner-aadhaar-status-v2';
+      const isAadhaarReview = reviewItem === 'owner-aadhaar-photo-url';
       if (!triggerButton || !uploadMenu || !uploadInput || !phoneInput || !selectionNode || !statusNode || !deleteButton || !nextButton) {
         return;
       }
@@ -248,7 +252,7 @@
       nextButton.addEventListener('click', function () {
         sessionStorage.setItem(STATUS_KEY, 'completed');
         sessionStorage.setItem(SUBMITTED_KEY, 'yes');
-        window.location.href = 'owner-next.html';
+        window.location.href = isAadhaarReview ? returnPage : 'owner-next.html';
       });
 
       document.addEventListener('click', function (event) {

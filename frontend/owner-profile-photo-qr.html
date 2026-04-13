@@ -48,11 +48,15 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (async function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
       const qrImage = document.querySelector('[data-owner-profile-qr-image]');
       const fallbackLink = document.querySelector('[data-owner-profile-qr-link]');
       const statusNode = document.querySelector('[data-owner-profile-qr-status]');
       const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
       const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
+      const isProfileReview = reviewItem === 'owner-profile-photo';
 
       if (!qrImage || !fallbackLink || !statusNode) {
         return;
@@ -89,7 +93,7 @@
         return String(payload.status || '');
       }
 
-      let token = String(new URLSearchParams(window.location.search).get('profileSession') || '').trim();
+      let token = String(pageParams.get('profileSession') || '').trim();
       let liveSyncEnabled = true;
 
       if (!token) {
@@ -101,10 +105,18 @@
         }
       }
 
-      const profilePath = token
-        ? 'owner-profile-photo.html?profileSession=' + encodeURIComponent(token)
-        : 'owner-profile-photo.html';
-      const targetUrl = new URL(profilePath, window.location.href).toString();
+      const profileUrl = new URL('owner-profile-photo.html', window.location.href);
+
+      if (token) {
+        profileUrl.searchParams.set('profileSession', token);
+      }
+
+      if (isProfileReview) {
+        profileUrl.searchParams.set('review', reviewItem);
+        profileUrl.searchParams.set('return', returnPage);
+      }
+
+      const targetUrl = profileUrl.toString();
       const qrProviders = [
         'https://quickchart.io/qr?size=220&text=' + encodeURIComponent(targetUrl),
         'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(targetUrl)
@@ -149,6 +161,9 @@
           window.clearInterval(pollTimer);
           sessionStorage.setItem(PROFILE_STATUS_KEY, 'completed');
           sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
+          if (isProfileReview) {
+            sessionStorage.setItem('owner-profile-photo-return-page', returnPage);
+          }
           window.location.href = 'owner-profile-photo-success.html';
         } catch (error) {
           return;
