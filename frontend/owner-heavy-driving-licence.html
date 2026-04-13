@@ -74,6 +74,9 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-uploaded-photo.html';
       const triggerButton = document.querySelector('[data-owner-heavy-upload-trigger]');
       const uploadMenu = document.querySelector('[data-owner-heavy-upload-menu]');
       const takePhotoInput = document.querySelector('[data-owner-heavy-take-photo-input]');
@@ -81,6 +84,7 @@
       const actionButtons = Array.from(document.querySelectorAll('[data-owner-heavy-action]'));
       const statusNode = document.querySelector('[data-owner-heavy-status]');
       const PHOTO_URL_ONE_KEY = 'owner-heavy-licence-photo-url-1';
+      const isFrontReviewOnly = reviewItem === 'owner-heavy-licence-photo-url-1';
 
       if (!triggerButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput || !statusNode) {
         return;
@@ -155,6 +159,13 @@
           statusNode.hidden = false;
           statusNode.textContent = 'Selected photos: 1';
           triggerButton.textContent = 'Photo selected';
+          if (isFrontReviewOnly) {
+            sessionStorage.setItem('owner-heavy-licence-status-v2', 'completed');
+            sessionStorage.setItem('owner-heavy-licence-submitted-v2', 'yes');
+            window.location.href = returnPage;
+            return;
+          }
+
           window.location.href = 'owner-uploaded-photo.html';
         } catch (error) {
           triggerButton.disabled = false;

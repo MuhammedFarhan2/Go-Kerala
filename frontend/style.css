@@ -5049,6 +5049,11 @@ h1 {
   color: #991b1b;
 }
 
+.vect-own-status-chip.is-updated {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
 .vect-own-detail-meta-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

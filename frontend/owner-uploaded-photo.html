@@ -76,6 +76,9 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
       const statusNode = document.querySelector('[data-owner-uploaded-status]');
       const imageList = document.querySelector('[data-owner-uploaded-list]');
       const photoOneNode = document.querySelector('[data-owner-uploaded-photo-one]');
@@ -95,6 +98,7 @@
       const STORAGE_URL_TWO_KEY = 'owner-heavy-licence-photo-url-2';
       const SUBMITTED_KEY = 'owner-heavy-licence-submitted-v2';
       const STATUS_KEY = 'owner-heavy-licence-status-v2';
+      const isBackReviewOnly = reviewItem === 'owner-heavy-licence-photo-url-2';
       let selectedCount = Math.max(1, Math.min(2, Number(sessionStorage.getItem(STORAGE_COUNT_KEY) || '1')));
 
       if (!statusNode || !nextButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
@@ -251,7 +255,7 @@
         if (selectedCount >= 2) {
           sessionStorage.setItem(STATUS_KEY, 'completed');
           sessionStorage.setItem(SUBMITTED_KEY, 'yes');
-          window.location.href = 'owner-next.html';
+          window.location.href = isBackReviewOnly ? returnPage : 'owner-next.html';
           return;
         }
 
