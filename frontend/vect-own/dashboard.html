@@ -174,12 +174,15 @@
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const SESSION_KEY = 'vect-own-session-token';
+      const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
       const ACCEPT_WHATSAPP_MESSAGE = 'Congratulation you have selected as a member of VECT Movers. For continue fffffff';
       let allSubmissions = [];
       let selectedSubmissionId = '';
       let activeFilter = 'all';
       let searchTerm = '';
       let noteSectionOpen = false;
+      let cachedSelectedSubmission = null;
+      let draftReviewNotes = {};
 
       if (!listNode || !detailNode || !emptyNode) {
         return;
@@ -489,6 +492,75 @@
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
+      function saveDashboardState() {
+        const payload = {
+          activeFilter: activeFilter,
+          searchTerm: searchTerm,
+          selectedSubmissionId: selectedSubmissionId,
+          noteSectionOpen: noteSectionOpen,
+          allSubmissions: allSubmissions,
+          cachedSelectedSubmission: cachedSelectedSubmission,
+          draftReviewNotes: draftReviewNotes
+        };
+
+        try {
+          localStorage.setItem(DASHBOARD_STATE_KEY, JSON.stringify(payload));
+        } catch (error) {
+          // Ignore storage write errors.
+        }
+      }
+
+      function loadDashboardState() {
+        try {
+          const raw = localStorage.getItem(DASHBOARD_STATE_KEY);
+
+          if (!raw) {
+            return null;
+          }
+
+          return JSON.parse(raw);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function restoreDashboardState() {
+        const savedState = loadDashboardState();
+
+        if (!savedState || typeof savedState !== 'object') {
+          return;
+        }
+
+        activeFilter = String(savedState.activeFilter || 'all');
+        searchTerm = String(savedState.searchTerm || '').trim().toLowerCase();
+        selectedSubmissionId = String(savedState.selectedSubmissionId || '').trim();
+        noteSectionOpen = Boolean(savedState.noteSectionOpen);
+        cachedSelectedSubmission = savedState.cachedSelectedSubmission && typeof savedState.cachedSelectedSubmission === 'object'
+          ? savedState.cachedSelectedSubmission
+          : null;
+        draftReviewNotes = savedState.draftReviewNotes && typeof savedState.draftReviewNotes === 'object'
+          ? savedState.draftReviewNotes
+          : {};
+        allSubmissions = Array.isArray(savedState.allSubmissions) ? savedState.allSubmissions : [];
+
+        if (searchInput) {
+          searchInput.value = searchTerm;
+        }
+
+        tabs.forEach(function (tab) {
+          tab.classList.toggle('is-active', tab.getAttribute('data-vect-own-tab') === activeFilter);
+        });
+
+        updateMetrics();
+        renderList();
+
+        if (cachedSelectedSubmission && cachedSelectedSubmission.id === selectedSubmissionId) {
+          renderDetail(cachedSelectedSubmission);
+        } else {
+          renderDetail(null);
+        }
+      }
+
       function getSelectedSubmission() {
         return allSubmissions.find(function (submission) {
           return submission.id === selectedSubmissionId;
@@ -526,6 +598,7 @@
           tab.classList.toggle('is-active', tab.getAttribute('data-vect-own-tab') === tabName);
         });
 
+        saveDashboardState();
         renderList();
       }
 
@@ -587,6 +660,7 @@
           if (!stillVisible) {
             selectedSubmissionId = '';
             noteSectionOpen = false;
+            cachedSelectedSubmission = null;
             renderDetail(null);
           }
         }
@@ -688,6 +762,7 @@
         if (!submission) {
           selectedSubmissionId = '';
           noteSectionOpen = false;
+          cachedSelectedSubmission = null;
           emptyNode.hidden = false;
           detailNode.hidden = true;
           if (noteSection) {
@@ -696,11 +771,13 @@
           if (noteToggleButton) {
             noteToggleButton.hidden = true;
           }
+          saveDashboardState();
           return;
         }
 
         const summary = submission.summary || {};
         selectedSubmissionId = submission.id;
+        cachedSelectedSubmission = submission;
         emptyNode.hidden = true;
         detailNode.hidden = false;
 
@@ -739,7 +816,7 @@
         }
 
         if (noteInput) {
-          noteInput.value = submission.reviewNote || '';
+          noteInput.value = draftReviewNotes[submission.id] || submission.reviewNote || '';
         }
 
         if (noteSection) {
@@ -754,6 +831,7 @@
         renderDocuments(submission.fields || {});
         renderFields(submission.fields || {});
         renderList();
+        saveDashboardState();
       }
 
       function openSubmission(submissionId) {
@@ -767,6 +845,7 @@
 
         noteSectionOpen = false;
         selectedSubmissionId = submissionId;
+        saveDashboardState();
         renderList();
 
         getApi('/api/vect-own/submissions/' + encodeURIComponent(submissionId))
@@ -816,7 +895,11 @@
               });
 
               if (stillSelected) {
-                renderDetail(stillSelected);
+                if (cachedSelectedSubmission && cachedSelectedSubmission.id === selectedSubmissionId) {
+                  renderDetail(cachedSelectedSubmission);
+                } else {
+                  renderDetail(stillSelected);
+                }
               } else {
                 selectedSubmissionId = '';
                 renderDetail(null);
@@ -824,6 +907,8 @@
             } else {
               renderDetail(null);
             }
+
+            saveDashboardState();
           });
       }
 
@@ -835,8 +920,20 @@
 
       searchInput.addEventListener('input', function () {
         searchTerm = String(searchInput.value || '').trim().toLowerCase();
+        saveDashboardState();
         renderList();
       });
+
+      if (noteInput) {
+        noteInput.addEventListener('input', function () {
+          if (!selectedSubmissionId) {
+            return;
+          }
+
+          draftReviewNotes[selectedSubmissionId] = String(noteInput.value || '');
+          saveDashboardState();
+        });
+      }
 
       logoutButton.addEventListener('click', function () {
         getApi('/api/vect-own/logout', {
@@ -870,6 +967,7 @@
           }
 
           noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
+          saveDashboardState();
         });
       }
 
@@ -883,6 +981,8 @@
           }
 
           const noteValue = noteInput ? String(noteInput.value || '').trim() : '';
+          draftReviewNotes[selectedSubmissionId] = noteValue;
+          saveDashboardState();
 
           getApi('/api/vect-own/submissions/' + encodeURIComponent(selectedSubmissionId), {
             method: 'PATCH',
@@ -922,6 +1022,8 @@
             });
         });
       });
+
+      restoreDashboardState();
 
       fetch(getApiUrl('/api/vect-own/me'), {
         headers: getSessionHeaders()
