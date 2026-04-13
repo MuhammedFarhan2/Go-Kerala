@@ -80,15 +80,10 @@
       const uploadPhotoInput = document.querySelector('[data-owner-heavy-upload-photo-input]');
       const actionButtons = Array.from(document.querySelectorAll('[data-owner-heavy-action]'));
       const statusNode = document.querySelector('[data-owner-heavy-status]');
-      const apiBaseUrl = String(sessionStorage.getItem('owner-api-base-url') || '').trim().replace(/\/$/, '');
       const PHOTO_URL_ONE_KEY = 'owner-heavy-licence-photo-url-1';
 
       if (!triggerButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput || !statusNode) {
         return;
-      }
-
-      function getApiUrl(pathName) {
-        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
       function readFileAsDataUrl(file) {
@@ -105,30 +100,6 @@
 
           reader.readAsDataURL(file);
         });
-      }
-
-      async function uploadImageFile(file) {
-        const dataUrl = await readFileAsDataUrl(file);
-        const response = await fetch(getApiUrl('/api/upload-heavy-licence'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            fileName: file.name,
-            mimeType: file.type,
-            data: dataUrl.split(',')[1] || ''
-          })
-        });
-        const payload = await response.json().catch(function () {
-          return {};
-        });
-
-        if (!response.ok || !payload.success || !payload.fileUrl) {
-          throw new Error(payload.error || 'Unable to upload image.');
-        }
-
-        return payload;
       }
 
       function closeMenu() {
@@ -162,10 +133,10 @@
         triggerButton.textContent = 'Uploading...';
 
         try {
-          const uploaded = await uploadImageFile(file);
+          const imageDataUrl = await readFileAsDataUrl(file);
           sessionStorage.setItem('owner-heavy-licence-photo-count', '1');
-          sessionStorage.setItem('owner-heavy-licence-photo-name-1', uploaded.fileName || file.name);
-          sessionStorage.setItem(PHOTO_URL_ONE_KEY, uploaded.fileUrl);
+          sessionStorage.setItem('owner-heavy-licence-photo-name-1', file.name);
+          sessionStorage.setItem(PHOTO_URL_ONE_KEY, imageDataUrl);
           sessionStorage.removeItem('owner-heavy-licence-photo-name-2');
           sessionStorage.removeItem('owner-heavy-licence-photo-url-2');
           statusNode.hidden = false;

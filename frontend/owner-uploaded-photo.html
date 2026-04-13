@@ -95,7 +95,6 @@
       const STORAGE_URL_TWO_KEY = 'owner-heavy-licence-photo-url-2';
       const SUBMITTED_KEY = 'owner-heavy-licence-submitted-v2';
       const STATUS_KEY = 'owner-heavy-licence-status-v2';
-      const apiBaseUrl = String(sessionStorage.getItem('owner-api-base-url') || '').trim().replace(/\/$/, '');
       let selectedCount = Math.max(1, Math.min(2, Number(sessionStorage.getItem(STORAGE_COUNT_KEY) || '1')));
 
       if (!statusNode || !nextButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
@@ -121,10 +120,6 @@
         return '';
       }
 
-      function getApiUrl(pathName) {
-        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
-      }
-
       function readFileAsDataUrl(file) {
         return new Promise(function (resolve, reject) {
           const reader = new FileReader();
@@ -139,30 +134,6 @@
 
           reader.readAsDataURL(file);
         });
-      }
-
-      async function uploadImageFile(file) {
-        const dataUrl = await readFileAsDataUrl(file);
-        const response = await fetch(getApiUrl('/api/upload-heavy-licence'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            fileName: file.name,
-            mimeType: file.type,
-            data: dataUrl.split(',')[1] || ''
-          })
-        });
-        const payload = await response.json().catch(function () {
-          return {};
-        });
-
-        if (!response.ok || !payload.success || !payload.fileUrl) {
-          throw new Error(payload.error || 'Unable to upload image.');
-        }
-
-        return payload;
       }
 
       function renderSelectedCount() {
@@ -231,11 +202,11 @@
         nextButton.textContent = 'Uploading...';
 
         try {
-          const uploaded = await uploadImageFile(file);
+          const imageDataUrl = await readFileAsDataUrl(file);
           selectedCount = 2;
           sessionStorage.setItem(STORAGE_COUNT_KEY, '2');
-          sessionStorage.setItem(STORAGE_NAME_TWO_KEY, uploaded.fileName || file.name);
-          sessionStorage.setItem(STORAGE_URL_TWO_KEY, uploaded.fileUrl);
+          sessionStorage.setItem(STORAGE_NAME_TWO_KEY, file.name);
+          sessionStorage.setItem(STORAGE_URL_TWO_KEY, imageDataUrl);
           renderSelectedCount();
         } catch (error) {
           nextButton.textContent = 'Add Photo';

@@ -95,14 +95,8 @@
       const STORAGE_URL_KEY = 'owner-aadhaar-photo-url';
       const SUBMITTED_KEY = 'owner-aadhaar-submitted-v2';
       const STATUS_KEY = 'owner-aadhaar-status-v2';
-      const apiBaseUrl = String(sessionStorage.getItem('owner-api-base-url') || '').trim().replace(/\/$/, '');
-
       if (!triggerButton || !uploadMenu || !uploadInput || !phoneInput || !selectionNode || !statusNode || !deleteButton || !nextButton) {
         return;
-      }
-
-      function getApiUrl(pathName) {
-        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
       function readFileAsDataUrl(file) {
@@ -119,30 +113,6 @@
 
           reader.readAsDataURL(file);
         });
-      }
-
-      async function uploadImageFile(file) {
-        const dataUrl = await readFileAsDataUrl(file);
-        const response = await fetch(getApiUrl('/api/upload-heavy-licence'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            fileName: file.name,
-            mimeType: file.type,
-            data: dataUrl.split(',')[1] || ''
-          })
-        });
-        const payload = await response.json().catch(function () {
-          return {};
-        });
-
-        if (!response.ok || !payload.success || !payload.fileUrl) {
-          throw new Error(payload.error || 'Unable to upload image.');
-        }
-
-        return payload;
       }
 
       function closeMenu() {
@@ -179,10 +149,10 @@
         triggerButton.textContent = 'Uploading...';
 
         try {
-          const uploaded = await uploadImageFile(file);
-          sessionStorage.setItem(STORAGE_KEY, uploaded.fileName || file.name);
-          sessionStorage.setItem(STORAGE_URL_KEY, uploaded.fileUrl);
-          statusNode.textContent = 'Image 1: ' + (uploaded.fileName || file.name);
+          const imageDataUrl = await readFileAsDataUrl(file);
+          sessionStorage.setItem(STORAGE_KEY, file.name);
+          sessionStorage.setItem(STORAGE_URL_KEY, imageDataUrl);
+          statusNode.textContent = 'Image 1: ' + file.name;
           selectionNode.hidden = false;
           triggerButton.hidden = true;
           nextButton.hidden = false;

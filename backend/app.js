@@ -610,11 +610,12 @@ function cleanupProfilePhotoSessions() {
 function readJsonBody(request) {
   return new Promise(function (resolve, reject) {
     let body = '';
+    const MAX_JSON_BODY_SIZE = 12 * 1024 * 1024;
 
     request.on('data', function (chunk) {
       body += chunk;
 
-      if (body.length > 1024 * 1024) {
+      if (body.length > MAX_JSON_BODY_SIZE) {
         reject(new Error('Payload too large.'));
         request.destroy();
       }
