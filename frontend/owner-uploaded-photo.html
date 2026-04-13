@@ -91,8 +91,11 @@
       const STORAGE_COUNT_KEY = 'owner-heavy-licence-photo-count';
       const STORAGE_NAME_ONE_KEY = 'owner-heavy-licence-photo-name-1';
       const STORAGE_NAME_TWO_KEY = 'owner-heavy-licence-photo-name-2';
+      const STORAGE_URL_ONE_KEY = 'owner-heavy-licence-photo-url-1';
+      const STORAGE_URL_TWO_KEY = 'owner-heavy-licence-photo-url-2';
       const SUBMITTED_KEY = 'owner-heavy-licence-submitted-v2';
       const STATUS_KEY = 'owner-heavy-licence-status-v2';
+      const apiBaseUrl = String(sessionStorage.getItem('owner-api-base-url') || '').trim().replace(/\/$/, '');
       let selectedCount = Math.max(1, Math.min(2, Number(sessionStorage.getItem(STORAGE_COUNT_KEY) || '1')));
 
       if (!statusNode || !nextButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput) {
@@ -116,6 +119,50 @@
         }
 
         return '';
+      }
+
+      function getApiUrl(pathName) {
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise(function (resolve, reject) {
+          const reader = new FileReader();
+
+          reader.onload = function () {
+            resolve(String(reader.result || ''));
+          };
+
+          reader.onerror = function () {
+            reject(new Error('Unable to read image file.'));
+          };
+
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function uploadImageFile(file) {
+        const dataUrl = await readFileAsDataUrl(file);
+        const response = await fetch(getApiUrl('/api/upload-heavy-licence'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            mimeType: file.type,
+            data: dataUrl.split(',')[1] || ''
+          })
+        });
+        const payload = await response.json().catch(function () {
+          return {};
+        });
+
+        if (!response.ok || !payload.success || !payload.fileUrl) {
+          throw new Error(payload.error || 'Unable to upload image.');
+        }
+
+        return payload;
       }
 
       function renderSelectedCount() {
@@ -151,6 +198,8 @@
         sessionStorage.removeItem(STORAGE_COUNT_KEY);
         sessionStorage.removeItem(STORAGE_NAME_ONE_KEY);
         sessionStorage.removeItem(STORAGE_NAME_TWO_KEY);
+        sessionStorage.removeItem(STORAGE_URL_ONE_KEY);
+        sessionStorage.removeItem(STORAGE_URL_TWO_KEY);
         sessionStorage.removeItem('owner-heavy-licence-status');
         sessionStorage.removeItem('owner-heavy-licence-submitted');
         sessionStorage.removeItem(STATUS_KEY);
@@ -162,6 +211,7 @@
         selectedCount = 1;
         sessionStorage.setItem(STORAGE_COUNT_KEY, '1');
         sessionStorage.removeItem(STORAGE_NAME_TWO_KEY);
+        sessionStorage.removeItem(STORAGE_URL_TWO_KEY);
         sessionStorage.removeItem('owner-heavy-licence-status');
         sessionStorage.removeItem('owner-heavy-licence-submitted');
         sessionStorage.removeItem(STATUS_KEY);
@@ -169,7 +219,7 @@
         renderSelectedCount();
       }
 
-      function saveSecondPhoto(file) {
+      async function saveSecondPhoto(file) {
         const validationMessage = validateFile(file);
 
         if (validationMessage) {
@@ -177,10 +227,22 @@
           return;
         }
 
-        selectedCount = 2;
-        sessionStorage.setItem(STORAGE_COUNT_KEY, '2');
-        sessionStorage.setItem(STORAGE_NAME_TWO_KEY, file.name);
-        renderSelectedCount();
+        nextButton.disabled = true;
+        nextButton.textContent = 'Uploading...';
+
+        try {
+          const uploaded = await uploadImageFile(file);
+          selectedCount = 2;
+          sessionStorage.setItem(STORAGE_COUNT_KEY, '2');
+          sessionStorage.setItem(STORAGE_NAME_TWO_KEY, uploaded.fileName || file.name);
+          sessionStorage.setItem(STORAGE_URL_TWO_KEY, uploaded.fileUrl);
+          renderSelectedCount();
+        } catch (error) {
+          nextButton.textContent = 'Add Photo';
+          window.alert(error.message || 'Unable to upload image.');
+        } finally {
+          nextButton.disabled = false;
+        }
       }
 
       function closeMenu() {

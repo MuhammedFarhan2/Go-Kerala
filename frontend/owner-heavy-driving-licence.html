@@ -80,9 +80,55 @@
       const uploadPhotoInput = document.querySelector('[data-owner-heavy-upload-photo-input]');
       const actionButtons = Array.from(document.querySelectorAll('[data-owner-heavy-action]'));
       const statusNode = document.querySelector('[data-owner-heavy-status]');
+      const apiBaseUrl = String(sessionStorage.getItem('owner-api-base-url') || '').trim().replace(/\/$/, '');
+      const PHOTO_URL_ONE_KEY = 'owner-heavy-licence-photo-url-1';
 
       if (!triggerButton || !uploadMenu || !takePhotoInput || !uploadPhotoInput || !statusNode) {
         return;
+      }
+
+      function getApiUrl(pathName) {
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise(function (resolve, reject) {
+          const reader = new FileReader();
+
+          reader.onload = function () {
+            resolve(String(reader.result || ''));
+          };
+
+          reader.onerror = function () {
+            reject(new Error('Unable to read image file.'));
+          };
+
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function uploadImageFile(file) {
+        const dataUrl = await readFileAsDataUrl(file);
+        const response = await fetch(getApiUrl('/api/upload-heavy-licence'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            mimeType: file.type,
+            data: dataUrl.split(',')[1] || ''
+          })
+        });
+        const payload = await response.json().catch(function () {
+          return {};
+        });
+
+        if (!response.ok || !payload.success || !payload.fileUrl) {
+          throw new Error(payload.error || 'Unable to upload image.');
+        }
+
+        return payload;
       }
 
       function closeMenu() {
@@ -94,7 +140,7 @@
         }, 220);
       }
 
-      function saveAndOpen(file) {
+      async function saveAndOpen(file) {
         if (!file) {
           return;
         }
@@ -112,13 +158,25 @@
           return;
         }
 
-        sessionStorage.setItem('owner-heavy-licence-photo-count', '1');
-        sessionStorage.setItem('owner-heavy-licence-photo-name-1', file.name);
-        sessionStorage.removeItem('owner-heavy-licence-photo-name-2');
-        statusNode.hidden = false;
-        statusNode.textContent = 'Selected photos: 1';
-        triggerButton.textContent = 'Photo selected';
-        window.location.href = 'owner-uploaded-photo.html';
+        triggerButton.disabled = true;
+        triggerButton.textContent = 'Uploading...';
+
+        try {
+          const uploaded = await uploadImageFile(file);
+          sessionStorage.setItem('owner-heavy-licence-photo-count', '1');
+          sessionStorage.setItem('owner-heavy-licence-photo-name-1', uploaded.fileName || file.name);
+          sessionStorage.setItem(PHOTO_URL_ONE_KEY, uploaded.fileUrl);
+          sessionStorage.removeItem('owner-heavy-licence-photo-name-2');
+          sessionStorage.removeItem('owner-heavy-licence-photo-url-2');
+          statusNode.hidden = false;
+          statusNode.textContent = 'Selected photos: 1';
+          triggerButton.textContent = 'Photo selected';
+          window.location.href = 'owner-uploaded-photo.html';
+        } catch (error) {
+          triggerButton.disabled = false;
+          triggerButton.textContent = 'Add Photo';
+          window.alert(error.message || 'Unable to upload image.');
+        }
       }
 
       triggerButton.addEventListener('click', function () {
