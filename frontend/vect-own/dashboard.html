@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vect Own Dashboard</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+  <link rel="stylesheet" href="../style.css?v=20260413-2">
+</head>
+<body class="vect-own-body">
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header vect-own-header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+    <div class="vect-own-header-actions">
+      <span class="vect-own-header-chip" data-vect-own-count>0 submissions</span>
+      <button type="button" class="vect-own-logout-btn" data-vect-own-logout>Sign out</button>
+    </div>
+  </header>
+
+  <main class="vect-own-main">
+    <section class="vect-own-overview" aria-label="Submission overview">
+      <article class="vect-own-metric-card">
+        <p class="vect-own-metric-label">Pending</p>
+        <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
+      </article>
+      <article class="vect-own-metric-card">
+        <p class="vect-own-metric-label">Accepted</p>
+        <strong class="vect-own-metric-value" data-vect-own-metric="accepted">0</strong>
+      </article>
+      <article class="vect-own-metric-card">
+        <p class="vect-own-metric-label">Rejected</p>
+        <strong class="vect-own-metric-value" data-vect-own-metric="rejected">0</strong>
+      </article>
+    </section>
+
+    <section class="vect-own-toolbar" aria-label="Owner controls">
+      <label class="vect-own-search-wrap">
+        <span class="vect-own-search-label">Search</span>
+        <input type="search" class="vect-own-search-input" placeholder="Name, company, phone, or id" data-vect-own-search>
+      </label>
+
+      <div class="vect-own-tabs" role="tablist" aria-label="Submission filters">
+        <button type="button" class="vect-own-tab is-active" data-vect-own-tab="all">All</button>
+        <button type="button" class="vect-own-tab" data-vect-own-tab="pending">Pending</button>
+        <button type="button" class="vect-own-tab" data-vect-own-tab="accepted">Accepted</button>
+        <button type="button" class="vect-own-tab" data-vect-own-tab="rejected">Rejected</button>
+      </div>
+    </section>
+
+    <section class="vect-own-board">
+      <div class="vect-own-list-panel">
+        <div class="vect-own-section-head">
+          <h2 class="vect-own-section-title">Submissions</h2>
+          <p class="vect-own-section-subtitle" data-vect-own-list-subtitle>Newest first</p>
+        </div>
+
+        <div class="vect-own-list" data-vect-own-list aria-live="polite"></div>
+      </div>
+
+      <aside class="vect-own-detail-panel" aria-label="Submission detail">
+        <div class="vect-own-section-head">
+          <h2 class="vect-own-section-title">Review</h2>
+          <p class="vect-own-section-subtitle" data-vect-own-detail-subtitle>Select a submission</p>
+        </div>
+
+        <div class="vect-own-detail-empty" data-vect-own-empty>
+          Choose a submission to view all entered details.
+        </div>
+
+        <article class="vect-own-detail-card" hidden data-vect-own-detail>
+          <div class="vect-own-detail-top">
+            <div>
+              <p class="vect-own-detail-company" data-vect-own-company>-</p>
+              <p class="vect-own-detail-meta" data-vect-own-owner>-</p>
+            </div>
+            <span class="vect-own-status-chip" data-vect-own-status>Pending</span>
+          </div>
+
+          <div class="vect-own-detail-meta-grid">
+            <div>
+              <span class="vect-own-detail-label">Phone</span>
+              <strong class="vect-own-detail-value" data-vect-own-phone>-</strong>
+            </div>
+            <div>
+              <span class="vect-own-detail-label">Submitted</span>
+              <strong class="vect-own-detail-value" data-vect-own-created>-</strong>
+            </div>
+            <div>
+              <span class="vect-own-detail-label">Email</span>
+              <strong class="vect-own-detail-value" data-vect-own-email>-</strong>
+            </div>
+            <div>
+              <span class="vect-own-detail-label">Submission Id</span>
+              <strong class="vect-own-detail-value vect-own-detail-id" data-vect-own-id>-</strong>
+            </div>
+          </div>
+
+          <div class="vect-own-detail-section">
+            <h3 class="vect-own-detail-section-title">Captured details</h3>
+            <dl class="vect-own-field-list" data-vect-own-fields></dl>
+          </div>
+
+          <div class="vect-own-detail-section">
+            <h3 class="vect-own-detail-section-title">Owner note</h3>
+            <textarea class="vect-own-note-input" rows="4" placeholder="Optional review note" data-vect-own-note></textarea>
+          </div>
+
+          <div class="vect-own-detail-actions">
+            <button type="button" class="vect-own-action is-reject" data-vect-own-action="rejected">Reject</button>
+            <button type="button" class="vect-own-action is-accept" data-vect-own-action="accepted">Accept</button>
+          </div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const listNode = document.querySelector('[data-vect-own-list]');
+      const emptyNode = document.querySelector('[data-vect-own-empty]');
+      const detailNode = document.querySelector('[data-vect-own-detail]');
+      const detailSubtitle = document.querySelector('[data-vect-own-detail-subtitle]');
+      const listSubtitle = document.querySelector('[data-vect-own-list-subtitle]');
+      const countNode = document.querySelector('[data-vect-own-count]');
+      const searchInput = document.querySelector('[data-vect-own-search]');
+      const logoutButton = document.querySelector('[data-vect-own-logout]');
+      const noteInput = document.querySelector('[data-vect-own-note]');
+      const statusChip = document.querySelector('[data-vect-own-status]');
+      const companyNode = document.querySelector('[data-vect-own-company]');
+      const ownerNode = document.querySelector('[data-vect-own-owner]');
+      const phoneNode = document.querySelector('[data-vect-own-phone]');
+      const createdNode = document.querySelector('[data-vect-own-created]');
+      const emailNode = document.querySelector('[data-vect-own-email]');
+      const idNode = document.querySelector('[data-vect-own-id]');
+      const fieldsNode = document.querySelector('[data-vect-own-fields]');
+      const tabs = Array.from(document.querySelectorAll('[data-vect-own-tab]'));
+      const metricNodes = Array.from(document.querySelectorAll('[data-vect-own-metric]'));
+      const actionButtons = Array.from(document.querySelectorAll('[data-vect-own-action]'));
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
+      const SESSION_KEY = 'vect-own-session-token';
+      let allSubmissions = [];
+      let selectedSubmissionId = '';
+      let activeFilter = 'all';
+      let searchTerm = '';
+
+      if (!listNode || !detailNode || !emptyNode) {
+        return;
+      }
+
+      function formatDate(value) {
+        if (!value) {
+          return '-';
+        }
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+          return String(value);
+        }
+
+        return date.toLocaleString([], {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        });
+      }
+
+      function valueToText(value) {
+        if (Array.isArray(value)) {
+          return value.length ? value.join(', ') : '-';
+        }
+
+        if (value && typeof value === 'object') {
+          return JSON.stringify(value);
+        }
+
+        if (value === null || value === undefined || value === '') {
+          return '-';
+        }
+
+        return String(value);
+      }
+
+      function getApiUrl(pathName) {
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+      }
+
+      function getSessionHeaders() {
+        const token = String(localStorage.getItem(SESSION_KEY) || '').trim();
+        return token ? { 'X-Vect-Own-Session': token } : {};
+      }
+
+      function getApi(pathName, options) {
+        const config = Object.assign({}, options || {});
+        config.headers = Object.assign({}, getSessionHeaders(), config.headers || {});
+        return fetch(getApiUrl(pathName), config);
+      }
+
+      function setActiveTab(tabName) {
+        activeFilter = tabName;
+
+        tabs.forEach(function (tab) {
+          tab.classList.toggle('is-active', tab.getAttribute('data-vect-own-tab') === tabName);
+        });
+
+        renderList();
+      }
+
+      function updateMetrics() {
+        const counts = allSubmissions.reduce(function (accumulator, submission) {
+          accumulator.total += 1;
+          accumulator[submission.status] = (accumulator[submission.status] || 0) + 1;
+          return accumulator;
+        }, {
+          total: 0,
+          pending: 0,
+          accepted: 0,
+          rejected: 0
+        });
+
+        countNode.textContent = counts.total + ' submissions';
+        metricNodes.forEach(function (node) {
+          const metric = node.getAttribute('data-vect-own-metric');
+          node.textContent = String(counts[metric] || 0);
+        });
+      }
+
+      function matchesSearch(submission) {
+        if (!searchTerm) {
+          return true;
+        }
+
+        const summary = submission.summary || {};
+        const haystack = [
+          submission.id,
+          summary.companyName,
+          summary.ownerName,
+          summary.phone,
+          summary.email,
+          summary.whatsappNumber,
+          Array.isArray(summary.categories) ? summary.categories.join(' ') : summary.categories,
+          Array.isArray(summary.districts) ? summary.districts.join(' ') : summary.districts
+        ].join(' ').toLowerCase();
+
+        return haystack.includes(searchTerm);
+      }
+
+      function getFilteredSubmissions() {
+        return allSubmissions.filter(function (submission) {
+          const matchesStatus = activeFilter === 'all' || submission.status === activeFilter;
+          return matchesStatus && matchesSearch(submission);
+        });
+      }
+
+      function renderList() {
+        const filtered = getFilteredSubmissions();
+        listNode.innerHTML = '';
+
+        if (listSubtitle) {
+          listSubtitle.textContent = filtered.length + ' visible';
+        }
+
+        if (!filtered.length) {
+          listNode.innerHTML = '<div class="vect-own-empty-state">No submissions match this view.</div>';
+          return;
+        }
+
+        filtered.forEach(function (submission) {
+          const card = document.createElement('button');
+          const summary = submission.summary || {};
+          card.type = 'button';
+          card.className = 'vect-own-list-item' + (submission.id === selectedSubmissionId ? ' is-active' : '');
+          card.innerHTML = [
+            '<div class="vect-own-list-item-top">',
+            '<strong class="vect-own-list-item-title">' + escapeHtml(summary.companyName || 'Unnamed submission') + '</strong>',
+            '<span class="vect-own-status-chip is-' + escapeHtml(submission.status) + '">' + escapeHtml(submission.status) + '</span>',
+            '</div>',
+            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.ownerName || 'Owner name not captured') + '</p>',
+            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.whatsappNumber || summary.phone || '-') + '</p>',
+            '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>'
+          ].join('');
+
+          card.addEventListener('click', function () {
+            openSubmission(submission.id);
+          });
+
+          listNode.appendChild(card);
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+          switch (char) {
+            case '&':
+              return '&amp;';
+            case '<':
+              return '&lt;';
+            case '>':
+              return '&gt;';
+            case '"':
+              return '&quot;';
+            case '\'':
+              return '&#39;';
+            default:
+              return char;
+          }
+        });
+      }
+
+      function renderFields(fields) {
+        const entries = Object.entries(fields || {});
+
+        if (!entries.length) {
+          fieldsNode.innerHTML = '<div class="vect-own-empty-state">No saved field data found.</div>';
+          return;
+        }
+
+        fieldsNode.innerHTML = entries.map(function (entry) {
+          const key = entry[0];
+          const value = entry[1];
+          return [
+            '<div class="vect-own-field-row">',
+            '<dt class="vect-own-field-key">' + escapeHtml(key) + '</dt>',
+            '<dd class="vect-own-field-value">' + escapeHtml(valueToText(value)) + '</dd>',
+            '</div>'
+          ].join('');
+        }).join('');
+      }
+
+      function renderDetail(submission) {
+        if (!submission) {
+          emptyNode.hidden = false;
+          detailNode.hidden = true;
+          return;
+        }
+
+        const summary = submission.summary || {};
+        selectedSubmissionId = submission.id;
+        emptyNode.hidden = true;
+        detailNode.hidden = false;
+
+        if (detailSubtitle) {
+          detailSubtitle.textContent = submission.status.toUpperCase();
+        }
+
+        if (companyNode) {
+          companyNode.textContent = summary.companyName || 'Unnamed submission';
+        }
+
+        if (ownerNode) {
+          ownerNode.textContent = summary.ownerName || 'Owner name not captured';
+        }
+
+        if (phoneNode) {
+          phoneNode.textContent = summary.whatsappNumber || summary.phone || '-';
+        }
+
+        if (createdNode) {
+          createdNode.textContent = formatDate(submission.createdAt);
+        }
+
+        if (emailNode) {
+          emailNode.textContent = summary.email || '-';
+        }
+
+        if (idNode) {
+          idNode.textContent = submission.id;
+        }
+
+        if (statusChip) {
+          statusChip.textContent = submission.status;
+          statusChip.className = 'vect-own-status-chip is-' + submission.status;
+        }
+
+        if (noteInput) {
+          noteInput.value = submission.reviewNote || '';
+        }
+
+        renderFields(submission.fields || {});
+        renderList();
+      }
+
+      function openSubmission(submissionId) {
+        const selected = allSubmissions.find(function (submission) {
+          return submission.id === submissionId;
+        });
+
+        if (!selected) {
+          return;
+        }
+
+        selectedSubmissionId = submissionId;
+        renderList();
+
+        getApi('/api/vect-own/submissions/' + encodeURIComponent(submissionId))
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error('Unable to load submission details.');
+            }
+
+            return response.json();
+          })
+          .then(function (payload) {
+            renderDetail(payload.submission);
+          })
+          .catch(function () {
+            renderDetail(selected);
+          });
+      }
+
+      function refreshSubmissions(selectFirst) {
+        return getApi('/api/vect-own/submissions')
+          .then(function (response) {
+            if (response.status === 401) {
+              window.location.replace('index.html');
+              return null;
+            }
+
+            if (!response.ok) {
+              throw new Error('Unable to load submissions.');
+            }
+
+            return response.json();
+          })
+          .then(function (payload) {
+            if (!payload) {
+              return;
+            }
+
+            allSubmissions = Array.isArray(payload.submissions) ? payload.submissions : [];
+            updateMetrics();
+            renderList();
+
+            if (selectFirst && allSubmissions.length) {
+              openSubmission(allSubmissions[0].id);
+            } else if (selectedSubmissionId) {
+              const stillSelected = allSubmissions.find(function (submission) {
+                return submission.id === selectedSubmissionId;
+              });
+
+              if (stillSelected) {
+                renderDetail(stillSelected);
+              } else {
+                renderDetail(allSubmissions[0] || null);
+              }
+            } else {
+              renderDetail(allSubmissions[0] || null);
+            }
+          });
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          setActiveTab(tab.getAttribute('data-vect-own-tab') || 'all');
+        });
+      });
+
+      searchInput.addEventListener('input', function () {
+        searchTerm = String(searchInput.value || '').trim().toLowerCase();
+        renderList();
+      });
+
+      logoutButton.addEventListener('click', function () {
+        getApi('/api/vect-own/logout', {
+          method: 'POST'
+        })
+          .finally(function () {
+            localStorage.removeItem(SESSION_KEY);
+            window.location.replace('index.html');
+          });
+      });
+
+      actionButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const nextStatus = button.getAttribute('data-vect-own-action');
+
+          if (!selectedSubmissionId || !nextStatus) {
+            return;
+          }
+
+          const noteValue = noteInput ? String(noteInput.value || '').trim() : '';
+
+          getApi('/api/vect-own/submissions/' + encodeURIComponent(selectedSubmissionId), {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              status: nextStatus,
+              reviewNote: noteValue
+            })
+          })
+            .then(function (response) {
+              if (!response.ok) {
+                return response.json().then(function (payload) {
+                  throw new Error((payload && payload.error) || 'Unable to update submission.');
+                });
+              }
+
+              return response.json();
+            })
+            .then(function () {
+              return refreshSubmissions(false);
+            })
+            .then(function () {
+              openSubmission(selectedSubmissionId);
+            })
+            .catch(function (error) {
+              window.alert(error.message || 'Unable to update submission.');
+            });
+        });
+      });
+
+      fetch(getApiUrl('/api/vect-own/me'), {
+        headers: getSessionHeaders()
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            localStorage.removeItem(SESSION_KEY);
+            window.location.replace('index.html');
+            throw new Error('Not authenticated');
+          }
+
+          return response.json();
+        })
+        .then(function () {
+          return refreshSubmissions(true);
+        })
+        .catch(function () {
+          // Redirect already handled above if needed.
+        });
+    })();
+  </script>
+  <script src="../script.js?v=20260413-2"></script>
+</body>
+</html>

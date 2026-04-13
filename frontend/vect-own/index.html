@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vect Own Login</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+  <link rel="stylesheet" href="../style.css?v=20260413-2">
+</head>
+<body class="vect-own-body">
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header vect-own-header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+    <span class="vect-own-header-chip">Private</span>
+  </header>
+
+  <main class="vect-own-login-main">
+    <section class="vect-own-login-card" aria-label="Vect Own login">
+      <p class="vect-own-eyebrow">Selected members only</p>
+      <h1 class="vect-own-title">Vect Own</h1>
+      <p class="vect-own-copy">Enter the owner password to open the review dashboard.</p>
+
+      <form class="vect-own-login-form" data-vect-own-login-form novalidate>
+        <label class="vect-own-field">
+          <span class="vect-own-field-label">Password</span>
+          <input
+            type="password"
+            class="vect-own-input"
+            placeholder="Enter password"
+            autocomplete="current-password"
+            data-vect-own-password
+          >
+        </label>
+
+        <p class="vect-own-error" data-vect-own-error hidden></p>
+
+        <button type="submit" class="vect-own-button">Enter Portal</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const form = document.querySelector('[data-vect-own-login-form]');
+      const passwordInput = document.querySelector('[data-vect-own-password]');
+      const errorNode = document.querySelector('[data-vect-own-error]');
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
+      const SESSION_KEY = 'vect-own-session-token';
+
+      if (!form || !passwordInput || !errorNode) {
+        return;
+      }
+
+      function getApiUrl(pathName) {
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+      }
+
+      function showError(message) {
+        errorNode.textContent = message;
+        errorNode.hidden = false;
+      }
+
+      function hideError() {
+        errorNode.hidden = true;
+        errorNode.textContent = '';
+      }
+
+      function getSessionHeaders() {
+        const token = String(localStorage.getItem(SESSION_KEY) || '').trim();
+        return token ? { 'X-Vect-Own-Session': token } : {};
+      }
+
+      fetch(getApiUrl('/api/vect-own/me'), {
+        headers: getSessionHeaders()
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error('Not authenticated');
+          }
+
+          return response.json();
+        })
+        .then(function () {
+          window.location.replace('dashboard.html');
+        })
+        .catch(function () {
+          // Stay on the login page.
+        });
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        hideError();
+
+        const password = String(passwordInput.value || '').trim();
+
+        if (!password) {
+          showError('Please enter the password.');
+          passwordInput.focus();
+          return;
+        }
+
+        const submitButton = form.querySelector('.vect-own-button');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Checking...';
+
+        fetch(getApiUrl('/api/vect-own/login'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            password: password
+          })
+        })
+          .then(function (response) {
+            return response.text().then(function (text) {
+              let data = {};
+
+              try {
+                data = text ? JSON.parse(text) : {};
+              } catch (error) {
+                data = { error: text || 'Unexpected server response.' };
+              }
+
+              return {
+                ok: response.ok,
+                data: data
+              };
+            });
+          })
+          .then(function (result) {
+            if (!result.ok) {
+              throw new Error((result.data && result.data.error) || 'Login failed.');
+            }
+
+            if (result.data && result.data.token) {
+              localStorage.setItem(SESSION_KEY, String(result.data.token));
+            }
+
+            window.location.href = 'dashboard.html';
+          })
+          .catch(function (error) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Enter Portal';
+            if (error && error.message === 'Failed to fetch') {
+              showError('Server not reachable. Check the backend URL in this page and make sure your backend is running.');
+              return;
+            }
+
+            showError(error.message || 'Login failed.');
+          });
+      });
+    })();
+  </script>
+  <script src="../script.js?v=20260413-2"></script>
+</body>
+</html>
