@@ -703,11 +703,11 @@
         }
 
         if (noteSection) {
-          noteSection.hidden = !noteSectionOpen;
+          noteSection.hidden = submission.status !== 'pending' || !noteSectionOpen;
         }
 
         if (noteToggleButton) {
-          noteToggleButton.hidden = false;
+          noteToggleButton.hidden = submission.status !== 'pending';
           noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
         }
 
@@ -778,10 +778,11 @@
               if (stillSelected) {
                 renderDetail(stillSelected);
               } else {
-                renderDetail(allSubmissions[0] || null);
+                selectedSubmissionId = '';
+                renderDetail(null);
               }
             } else {
-              renderDetail(allSubmissions[0] || null);
+              renderDetail(null);
             }
           });
       }
@@ -809,6 +810,19 @@
 
       if (noteToggleButton) {
         noteToggleButton.addEventListener('click', function () {
+          const currentSubmission = allSubmissions.find(function (submission) {
+            return submission.id === selectedSubmissionId;
+          });
+
+          if (!currentSubmission || currentSubmission.status !== 'pending') {
+            noteSectionOpen = false;
+            if (noteSection) {
+              noteSection.hidden = true;
+            }
+            noteToggleButton.hidden = true;
+            return;
+          }
+
           noteSectionOpen = !noteSectionOpen;
 
           if (noteSection) {
@@ -873,13 +887,21 @@
           return response.json();
         })
         .then(function () {
-            return refreshSubmissions(true);
+            return refreshSubmissions(false);
         })
         .catch(function () {
           // Redirect already handled above if needed.
         });
 
       document.addEventListener('click', function (event) {
+        const acceptToggle = event.target.closest('.vect-own-inline-accept');
+
+        if (acceptToggle) {
+          const isDeselected = acceptToggle.classList.toggle('is-deselected');
+          acceptToggle.textContent = isDeselected ? 'Deselect' : 'Accept';
+          return;
+        }
+
         const trigger = event.target.closest('[data-vect-own-image-url]');
 
         if (!trigger) {
