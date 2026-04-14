@@ -272,7 +272,7 @@
 
           console.log('API Response:', result);
 
-          if (!result.ok) {
+          if (!result.ok || !result.data.success) {
             let errorMessage = 'Unable to save submission.';
 
             if (result.data && result.data.error) {
