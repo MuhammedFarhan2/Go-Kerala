@@ -7,6 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="style.css?v=20260409-2">
 </head>
 <body>
@@ -109,10 +110,16 @@
       const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
       const PROFILE_IMAGE_KEY = 'owner-profile-photo';
       const isProfileReview = reviewItem === 'owner-profile-photo';
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       let activeStream = null;
 
       if (!actionButton || !cameraInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !ovalNode) {
         return;
+      }
+
+      function getApiUrl(pathName) {
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
       const isMobileDevice = window.matchMedia('(max-width: 680px)').matches || window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -175,7 +182,7 @@
         }
 
         try {
-          await fetch('/api/profile-photo-session/complete', {
+          await fetch(getApiUrl('/api/profile-photo-session/complete'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

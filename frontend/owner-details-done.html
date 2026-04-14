@@ -47,7 +47,7 @@
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
       const apiBaseFromSession = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
-      const apiBaseUrl = (apiBaseFromSession || apiBaseFromMeta).replace(/\/$/, '');
+      const apiBaseUrl = (apiBaseFromMeta || apiBaseFromSession).replace(/\/$/, '');
       const isReviewDone = sessionStorage.getItem('owner-review-done-allowed') === 'yes';
       const submissionId = String(sessionStorage.getItem('owner-review-submission-id') || '').trim();
       const blockedKeys = [

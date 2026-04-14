@@ -79,14 +79,13 @@
       const submitButton = document.querySelector('.owner-evaluation-whatsapp-submit');
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const pageParams = new URLSearchParams(window.location.search);
-      const apiBaseFromSession = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
       const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
+      const apiBaseFromSession = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
       const currentOrigin = /^https?:/i.test(window.location.origin || '') ? String(window.location.origin || '').trim() : '';
-      const apiBaseUrl = (apiBaseFromSession || apiBaseFromMeta || currentOrigin).replace(/\/$/, '');
+      const apiBaseUrl = (apiBaseFromMeta || apiBaseFromSession || currentOrigin).replace(/\/$/, '');
       const reviewItem = String(pageParams.get('review') || '').trim();
       const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details-done.html';
       const isWhatsappReview = reviewItem === 'owner-whatsapp-number';
-      const backendHealthUrl = getApiUrl('/api/health');
       const blockedKeys = [
         /password/i,
         /authenticated/i,
@@ -160,6 +159,8 @@
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
+      const backendHealthUrl = getApiUrl('/api/health');
+
       function setSubmitState(isLoading, message) {
         submitButton.disabled = isLoading;
         submitButton.textContent = message || (isLoading ? 'Connecting...' : 'Submit WhatsApp Number');
@@ -207,13 +208,6 @@
         }
 
         throw lastError || new Error('Network request failed.');
-      }
-
-      async function warmBackend() {
-        await fetchJsonWithRetry(backendHealthUrl, {
-          method: 'GET',
-          cache: 'no-store'
-        }, [3000, 6000, 10000, 15000, 20000, 25000]);
       }
 
       async function submitSubmission() {
@@ -288,11 +282,7 @@
         event.preventDefault();
         setSubmitState(true, 'Submitting...');
 
-        Promise.resolve(warmBackend())
-          .then(function () {
-            setSubmitState(true, 'Submitting...');
-            return submitSubmission();
-          })
+        Promise.resolve(submitSubmission())
           .then(function () {
             if (isWhatsappReview) {
               if (returnPage === 'owner-details-done.html') {
@@ -311,14 +301,7 @@
           });
       });
 
-      setSubmitState(true, 'Waking server...');
-      Promise.resolve(warmBackend())
-        .then(function () {
-          setSubmitState(false);
-        })
-        .catch(function () {
-          setSubmitState(false);
-        });
+      setSubmitState(false);
 
       input.addEventListener('input', function () {
         const sanitized = String(input.value || '').replace(/\D/g, '').slice(0, 10);
