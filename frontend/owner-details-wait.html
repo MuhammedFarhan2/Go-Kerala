@@ -87,6 +87,12 @@
       // Debug: Log the API URL being used
       console.log('API Base URL:', apiBaseUrl);
       console.log('Meta tag content:', apiBaseFromMeta);
+      
+      // Test connection immediately
+      fetch(apiBaseUrl + '/api/health')
+        .then(response => response.json())
+        .then(data => console.log('Backend health check:', data))
+        .catch(error => console.error('Backend health check failed:', error));
       const reviewItem = String(pageParams.get('review') || '').trim();
       const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details-done.html';
       const isWhatsappReview = reviewItem === 'owner-whatsapp-number';
