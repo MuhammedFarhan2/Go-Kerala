@@ -595,6 +595,14 @@ async function getSubmissionByIdAsync(submissionId) {
 
 async function createSubmissionRecord(submission) {
   if (!hasSupabaseConfig()) {
+    // Fallback to local file storage when Supabase is not configured
+    const submissions = loadVectOwnSubmissions();
+    submissions.unshift(submission);
+    persistVectOwnSubmissions();
+    return submission;
+  }
+
+  if (!hasSupabaseConfig()) {
     const submissions = loadVectOwnSubmissions();
     submissions.unshift(submission);
     persistVectOwnSubmissions();
