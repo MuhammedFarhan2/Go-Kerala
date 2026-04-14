@@ -54,7 +54,11 @@ const MIME_TYPES = {
 };
 
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-fs.mkdirSync(DATA_DIR, { recursive: true });
+try {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+} catch (error) {
+  console.error('Data directory creation error:', error);
+}
 
 let googleOAuthClient = null;
 let appleKeysCache = null;
@@ -596,17 +600,29 @@ async function getSubmissionByIdAsync(submissionId) {
 async function createSubmissionRecord(submission) {
   if (!hasSupabaseConfig()) {
     // Fallback to local file storage when Supabase is not configured
-    const submissions = loadVectOwnSubmissions();
-    submissions.unshift(submission);
-    persistVectOwnSubmissions();
-    return submission;
+    try {
+      const submissions = loadVectOwnSubmissions();
+      submissions.unshift(submission);
+      persistVectOwnSubmissions();
+      return submission;
+    } catch (error) {
+      console.error('File storage error:', error);
+      sendJson(response, 500, { success: false, error: 'Unable to save submission to local storage.' });
+      return;
+    }
   }
 
   if (!hasSupabaseConfig()) {
-    const submissions = loadVectOwnSubmissions();
-    submissions.unshift(submission);
-    persistVectOwnSubmissions();
-    return submission;
+    try {
+      const submissions = loadVectOwnSubmissions();
+      submissions.unshift(submission);
+      persistVectOwnSubmissions();
+      return submission;
+    } catch (error) {
+      console.error('File storage error:', error);
+      sendJson(response, 500, { success: false, error: 'Unable to save submission to local storage.' });
+      return;
+    }
   }
 
   const rows = await supabaseRequest('/rest/v1/submissions', {
