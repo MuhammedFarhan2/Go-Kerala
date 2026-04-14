@@ -8,7 +8,7 @@
     document.documentElement.classList.add('show-page-loader');
   </script>
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
-  <link rel="stylesheet" href="../style.css?v=20260413-2">
+  <link rel="stylesheet" href="../style.css?v=20260414-1">
 </head>
 <body class="vect-own-body">
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -824,8 +824,12 @@
           const card = document.createElement('button');
           const summary = submission.summary || {};
           const statusPresentation = getStatusPresentation(submission.status);
+          let longPressTimer = null;
+          let longPressTriggered = false;
+
           card.type = 'button';
           card.className = 'vect-own-list-item' + (submission.id === selectedSubmissionId ? ' is-active' : '');
+          card.setAttribute('aria-label', 'Open submission ' + (summary.companyName || 'Unnamed submission'));
           card.innerHTML = [
             '<div class="vect-own-list-item-top">',
             '<strong class="vect-own-list-item-title">' + escapeHtml(summary.companyName || 'Unnamed submission') + '</strong>',
@@ -836,7 +840,78 @@
             '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>'
           ].join('');
 
+          function clearLongPressTimer() {
+            if (longPressTimer) {
+              window.clearTimeout(longPressTimer);
+              longPressTimer = null;
+            }
+          }
+
+          function deleteSubmission() {
+            if (!window.confirm('Do you want to delete this submission?')) {
+              return;
+            }
+
+            getApi('/api/vect-own/submissions/' + encodeURIComponent(submission.id), {
+              method: 'DELETE'
+            })
+              .then(function (response) {
+                if (!response.ok) {
+                  return response.json().then(function (payload) {
+                    throw new Error((payload && payload.error) || 'Unable to delete submission.');
+                  }).catch(function () {
+                    throw new Error('Unable to delete submission.');
+                  });
+                }
+
+                allSubmissions = allSubmissions.filter(function (item) {
+                  return item.id !== submission.id;
+                });
+
+                delete draftReviewNotes[submission.id];
+                if (selectedSubmissionId === submission.id) {
+                  selectedSubmissionId = '';
+                  cachedSelectedSubmission = null;
+                  renderDetail(null);
+                }
+
+                updateMetrics();
+                renderList();
+              })
+              .catch(function (error) {
+                window.alert(error.message || 'Unable to delete submission.');
+              });
+          }
+
+          card.addEventListener('pointerdown', function (event) {
+            if (event.button && event.button !== 0) {
+              return;
+            }
+
+            clearLongPressTimer();
+            longPressTriggered = false;
+            longPressTimer = window.setTimeout(function () {
+              longPressTriggered = true;
+              clearLongPressTimer();
+              deleteSubmission();
+            }, 650);
+          });
+
+          card.addEventListener('pointerup', clearLongPressTimer);
+          card.addEventListener('pointercancel', clearLongPressTimer);
+          card.addEventListener('pointerleave', clearLongPressTimer);
+          card.addEventListener('contextmenu', function (event) {
+            event.preventDefault();
+            clearLongPressTimer();
+            deleteSubmission();
+          });
+
           card.addEventListener('click', function () {
+            if (longPressTriggered) {
+              longPressTriggered = false;
+              return;
+            }
+
             openSubmission(submission.id);
           });
 
@@ -1243,7 +1318,7 @@
       });
     })();
   </script>
-  <script src="../script.js?v=20260413-2"></script>
+  <script src="../script.js?v=20260414-1"></script>
 </body>
 </html>
       function isActionableStatus(status) {

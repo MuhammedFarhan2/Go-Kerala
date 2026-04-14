@@ -5336,7 +5336,7 @@ h1 {
   }
 
   .vect-own-overview {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .vect-own-detail-meta-grid {
@@ -5361,6 +5361,23 @@ h1 {
 
   .vect-own-main {
     padding: 18px 12px 22px;
+  }
+
+  .vect-own-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+    gap: 8px;
+  }
+
+  .vect-own-tab {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 0.82rem;
+  }
+
+  .vect-own-metric-value {
+    font-size: 1.7rem;
   }
 
   .vect-own-section-head {
