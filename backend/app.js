@@ -55,7 +55,7 @@ let vectOwnSubmissions = null;
 const PROFILE_PHOTO_SESSION_TTL_MS = 30 * 60 * 1000;
 const APPLE_KEYS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const OTP_TTL_MS = 5 * 60 * 1000;
-const VECT_OWN_STATUSES = new Set(['pending', 'accepted', 'rejected']);
+const VECT_OWN_STATUSES = new Set(['pending', 'accepted', 'rejected', 'updated']);
 
 function getGoogleOAuthClient() {
   if (!GOOGLE_CLIENT_ID) {
@@ -1272,7 +1272,7 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
     'owner-whatsapp-number': nextWhatsappNumber
   });
   submission.whatsappNumber = nextWhatsappNumber;
-  submission.status = 'pending';
+  submission.status = 'updated';
   submission.reviewNote = '';
   submission.reviewedBy = '';
   submission.reviewedAt = '';
