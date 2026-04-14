@@ -63,7 +63,6 @@
             autocomplete="tel-national"
             class="owner-evaluation-whatsapp-input"
             placeholder="Enter WhatsApp number"
-            maxlength="10"
           >
         </div>
         <button type="submit" class="owner-evaluation-whatsapp-submit">Submit WhatsApp Number</button>
@@ -102,6 +101,31 @@
 
       input.value = sessionStorage.getItem('owner-whatsapp-number') || '';
 
+      function normalizeWhatsappNumber(value) {
+        const trimmed = String(value || '').trim();
+
+        if (!trimmed) {
+          return '';
+        }
+
+        const hasPlusPrefix = trimmed.startsWith('+');
+        const digitsOnly = trimmed.replace(/\D/g, '');
+
+        if (!digitsOnly) {
+          return '';
+        }
+
+        if (!hasPlusPrefix && digitsOnly.length === 10) {
+          return '+91' + digitsOnly;
+        }
+
+        return (hasPlusPrefix ? '+' : '') + digitsOnly;
+      }
+
+      function isValidWhatsappNumber(value) {
+        return /^\+?[1-9]\d{9,14}$/.test(normalizeWhatsappNumber(value));
+      }
+
       function shouldKeepKey(key) {
         if (!/^owner-/i.test(key)) {
           return false;
@@ -137,14 +161,21 @@
       }
 
       async function submitSubmission() {
-        const whatsappNumber = String(input.value || '').trim();
+        const rawWhatsappNumber = String(input.value || '').trim();
 
-        if (!whatsappNumber) {
+        if (!rawWhatsappNumber) {
           input.focus();
           throw new Error('Please enter your WhatsApp number.');
         }
 
+        if (!isValidWhatsappNumber(rawWhatsappNumber)) {
+          input.focus();
+          throw new Error('Please enter a valid WhatsApp number.');
+        }
+
+        const whatsappNumber = normalizeWhatsappNumber(rawWhatsappNumber);
         sessionStorage.setItem('owner-whatsapp-number', whatsappNumber);
+        input.value = whatsappNumber.replace(/^\+91/, '');
 
         const mediaFields = {};
 
@@ -217,6 +248,13 @@
             submitButton.textContent = 'Submit WhatsApp Number';
             window.alert(error.message || 'Unable to save submission.');
           });
+      });
+
+      input.addEventListener('input', function () {
+        const sanitized = String(input.value || '').replace(/[^\d+\s()-]/g, '');
+        if (sanitized !== input.value) {
+          input.value = sanitized;
+        }
       });
     })();
   </script>
