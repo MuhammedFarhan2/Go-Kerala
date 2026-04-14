@@ -84,7 +84,7 @@
         }
 
         async function fetchJsonWithRetry(url, options, retryDelays) {
-          const delays = Array.isArray(retryDelays) && retryDelays.length ? retryDelays : [2000, 4000, 8000, 12000, 16000];
+          const delays = Array.isArray(retryDelays) && retryDelays.length ? retryDelays : [3000, 6000, 10000, 15000, 20000, 25000];
           let lastError = null;
 
           for (let attempt = 0; attempt <= delays.length; attempt += 1) {

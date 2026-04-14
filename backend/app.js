@@ -441,6 +441,14 @@ function sendText(response, statusCode, message) {
   response.end(message);
 }
 
+function handleHealthCheck(response) {
+  sendJson(response, 200, {
+    success: true,
+    status: 'ok',
+    timestamp: new Date().toISOString()
+  });
+}
+
 function sendFile(response, filePath) {
   fs.readFile(filePath, function (error, data) {
     if (error) {
@@ -1775,6 +1783,11 @@ const server = http.createServer(function (request, response) {
       'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session'
     });
     response.end();
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/api/health') {
+    handleHealthCheck(response);
     return;
   }
 
