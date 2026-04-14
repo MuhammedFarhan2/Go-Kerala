@@ -634,6 +634,35 @@ async function updateSubmissionRecord(submission) {
   return Array.isArray(rows) && rows.length ? normalizeSupabaseSubmissionRow(rows[0]) : submission;
 }
 
+async function deleteSubmissionRecord(submissionId) {
+  const safeId = String(submissionId || '').trim();
+
+  if (!safeId) {
+    return false;
+  }
+
+  if (!hasSupabaseConfig()) {
+    const submissions = loadVectOwnSubmissions();
+    const nextSubmissions = submissions.filter(function (item) {
+      return !item || item.id !== safeId;
+    });
+
+    if (nextSubmissions.length !== submissions.length) {
+      vectOwnSubmissions = nextSubmissions;
+      persistVectOwnSubmissions();
+      return true;
+    }
+
+    return false;
+  }
+
+  await supabaseRequest('/rest/v1/submissions?id=eq.' + encodeURIComponent(safeId), {
+    method: 'DELETE'
+  });
+
+  return true;
+}
+
 function loadVectOwnSubmissions() {
   if (vectOwnSubmissions) {
     return vectOwnSubmissions;
@@ -1621,6 +1650,37 @@ async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
   });
 }
 
+async function handleVectOwnSubmissionDelete(requestUrl, request, response) {
+  const session = requireVectOwnSession(request, response);
+
+  if (!session) {
+    return;
+  }
+
+  const submissionId = String(requestUrl.pathname.split('/').pop() || '').trim();
+
+  if (!submissionId) {
+    sendJson(response, 400, { success: false, error: 'Submission id is required.' });
+    return;
+  }
+
+  try {
+    const deleted = await deleteSubmissionRecord(submissionId);
+
+    if (!deleted) {
+      sendJson(response, 404, { success: false, error: 'Submission not found.' });
+      return;
+    }
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to delete submission.' });
+    return;
+  }
+
+  sendJson(response, 200, {
+    success: true
+  });
+}
+
 const server = http.createServer(function (request, response) {
   const requestUrl = new URL(request.url, 'http://' + request.headers.host);
 
@@ -1696,6 +1756,11 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'PATCH' && requestUrl.pathname.startsWith('/api/vect-own/submissions/')) {
     handleVectOwnSubmissionUpdate(requestUrl, request, response);
+    return;
+  }
+
+  if (request.method === 'DELETE' && requestUrl.pathname.startsWith('/api/vect-own/submissions/')) {
+    handleVectOwnSubmissionDelete(requestUrl, request, response);
     return;
   }
 
