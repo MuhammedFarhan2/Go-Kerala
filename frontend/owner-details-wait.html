@@ -86,7 +86,6 @@
       const reviewItem = String(pageParams.get('review') || '').trim();
       const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details-done.html';
       const isWhatsappReview = reviewItem === 'owner-whatsapp-number';
-      const backendHealthUrl = getApiUrl('/api/health');
       const blockedKeys = [
         /password/i,
         /authenticated/i,
@@ -159,6 +158,8 @@
       function getApiUrl(pathName) {
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
+
+      const backendHealthUrl = getApiUrl('/api/health');
 
       function setSubmitState(isLoading, message) {
         submitButton.disabled = isLoading;
