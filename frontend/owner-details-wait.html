@@ -82,7 +82,11 @@
       const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
       const apiBaseFromSession = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
       const currentOrigin = /^https?:/i.test(window.location.origin || '') ? String(window.location.origin || '').trim() : '';
-      const apiBaseUrl = (apiBaseFromMeta || apiBaseFromSession || currentOrigin).replace(/\/$/, '');
+      const apiBaseUrl = apiBaseFromMeta || 'https://go-kerala-backend.onrender.com';
+      
+      // Debug: Log the API URL being used
+      console.log('API Base URL:', apiBaseUrl);
+      console.log('Meta tag content:', apiBaseFromMeta);
       const reviewItem = String(pageParams.get('review') || '').trim();
       const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details-done.html';
       const isWhatsappReview = reviewItem === 'owner-whatsapp-number';
