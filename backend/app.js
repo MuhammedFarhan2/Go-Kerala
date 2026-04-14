@@ -593,7 +593,11 @@ function normalizeSubmissionFields(fields) {
     /authenticated/i,
     /api-base-url/i,
     /owner-login-/i,
-    /owner-account-created/i
+    /owner-account-created/i,
+    /owner-review-/i,
+    /owner-final-submission-done-allowed/i,
+    /owner-last-page/i,
+    /owner-form-backup/i
   ];
 
   Object.keys(inputFields).forEach(function (key) {
@@ -1231,6 +1235,58 @@ async function handlePublicSubmissionCreate(request, response) {
   });
 }
 
+async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) {
+  const pathParts = requestUrl.pathname.split('/').filter(Boolean);
+  const submissionId = String(pathParts[2] || '').trim();
+  const submission = getSubmissionById(submissionId);
+
+  if (!submission) {
+    sendJson(response, 404, { success: false, error: 'Submission not found.' });
+    return;
+  }
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const fields = normalizeSubmissionFields(payload.fields || payload.storage || payload);
+  const mergedFields = Object.assign({}, submission.fields || {}, fields);
+  const nextWhatsappNumber = normalizePhoneNumber(
+    payload.whatsappNumber ||
+    mergedFields['owner-whatsapp-number'] ||
+    submission.whatsappNumber ||
+    ''
+  );
+
+  if (!nextWhatsappNumber) {
+    sendJson(response, 400, { success: false, error: 'WhatsApp number is required.' });
+    return;
+  }
+
+  submission.fields = Object.assign({}, mergedFields, {
+    'owner-whatsapp-number': nextWhatsappNumber
+  });
+  submission.whatsappNumber = nextWhatsappNumber;
+  submission.status = 'pending';
+  submission.reviewNote = '';
+  submission.reviewedBy = '';
+  submission.reviewedAt = '';
+  submission.updatedAt = Date.now();
+  submission.ownerUpdatedAt = new Date().toISOString();
+
+  persistVectOwnSubmissions();
+
+  sendJson(response, 200, {
+    success: true,
+    submission: serializeSubmissionForList(submission)
+  });
+}
+
 function handleVectOwnSubmissionList(requestUrl, request, response) {
   const session = requireVectOwnSession(request, response);
 
@@ -1414,6 +1470,11 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/submissions') {
     handlePublicSubmissionCreate(request, response);
+    return;
+  }
+
+  if (request.method === 'PATCH' && /^\/api\/submissions\/[^/]+\/owner-update$/.test(requestUrl.pathname)) {
+    handlePublicSubmissionOwnerUpdate(requestUrl, request, response);
     return;
   }
 
