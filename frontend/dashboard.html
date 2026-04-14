@@ -181,7 +181,6 @@
       const SESSION_KEY = 'vect-own-session-token';
       const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
       const ACCEPT_WHATSAPP_MESSAGE = 'Congratulation you have selected as a member of VECT Movers. For continue fffffff';
-      const REJECT_INTRO_MESSAGE = 'Sorry, your valuation have rejected because';
       let allSubmissions = [];
       let selectedSubmissionId = '';
       let activeFilter = 'all';
@@ -189,7 +188,6 @@
       let noteSectionOpen = false;
       let cachedSelectedSubmission = null;
       let draftReviewNotes = {};
-      let reviewSelections = {};
 
       if (!listNode || !detailNode || !emptyNode) {
         return;
@@ -449,7 +447,6 @@
         const safeFields = fields || {};
         const documents = [
           {
-            key: 'owner-heavy-licence-photo-url-1',
             label: 'Licence Front',
             value: resolveStoredUploadUrl(
               safeFields['owner-heavy-licence-photo-url-1'],
@@ -457,7 +454,6 @@
             )
           },
           {
-            key: 'owner-heavy-licence-photo-url-2',
             label: 'Licence Back',
             value: resolveStoredUploadUrl(
               safeFields['owner-heavy-licence-photo-url-2'],
@@ -465,7 +461,6 @@
             )
           },
           {
-            key: 'owner-aadhaar-photo-url',
             label: 'Aadhaar',
             value: resolveStoredUploadUrl(
               safeFields['owner-aadhaar-photo-url'],
@@ -473,7 +468,6 @@
             )
           },
           {
-            key: 'owner-profile-photo',
             label: 'Profile Photo',
             value: safeFields['owner-profile-photo']
           }
@@ -488,10 +482,9 @@
 
         documentsNode.innerHTML = documents.map(function (item) {
           const imageUrl = getImageUrl(item.value);
-          const itemState = getItemReviewState(selectedSubmissionId, item.key);
           return [
             '<article class="vect-own-document-card">',
-            '<button type="button" class="vect-own-inline-accept vect-own-document-accept' + (itemState === 'deselected' ? ' is-deselected' : '') + '" data-vect-own-item-key="' + escapeHtml(item.key) + '" data-vect-own-item-label="' + escapeHtml(item.label) + '">' + getReviewToggleLabel(itemState) + '</button>',
+            '<button type="button" class="vect-own-inline-accept vect-own-document-accept">Deselect</button>',
             '<p class="vect-own-document-label">' + escapeHtml(item.label) + '</p>',
             '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(item.label) + '" class="vect-own-image-preview">',
             '<button type="button" class="vect-own-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(item.label) + '">View full image</button>',
@@ -512,8 +505,7 @@
           noteSectionOpen: noteSectionOpen,
           allSubmissions: allSubmissions,
           cachedSelectedSubmission: cachedSelectedSubmission,
-          draftReviewNotes: draftReviewNotes,
-          reviewSelections: reviewSelections
+          draftReviewNotes: draftReviewNotes
         };
 
         try {
@@ -554,9 +546,6 @@
         draftReviewNotes = savedState.draftReviewNotes && typeof savedState.draftReviewNotes === 'object'
           ? savedState.draftReviewNotes
           : {};
-        reviewSelections = savedState.reviewSelections && typeof savedState.reviewSelections === 'object'
-          ? savedState.reviewSelections
-          : {};
         allSubmissions = Array.isArray(savedState.allSubmissions) ? savedState.allSubmissions : [];
 
         if (searchInput) {
@@ -583,122 +572,6 @@
         }) || null;
       }
 
-      function getSubmissionReviewSelections(submissionId) {
-        if (!submissionId) {
-          return {};
-        }
-
-        if (!reviewSelections[submissionId] || typeof reviewSelections[submissionId] !== 'object') {
-          reviewSelections[submissionId] = {};
-        }
-
-        return reviewSelections[submissionId];
-      }
-
-      function getItemReviewState(submissionId, itemKey) {
-        const submissionSelections = getSubmissionReviewSelections(submissionId);
-        return submissionSelections[itemKey] === 'deselected' ? 'deselected' : 'accepted';
-      }
-
-      function getReviewToggleLabel(itemState) {
-        return itemState === 'deselected' ? 'Select' : 'Deselect';
-      }
-
-      function getStatusPresentation(status) {
-        const safeStatus = String(status || '').trim().toLowerCase();
-
-        if (safeStatus === 'updated') {
-          return {
-            label: 'Updated',
-            className: 'is-updated'
-          };
-        }
-
-        return {
-          label: safeStatus || 'pending',
-          className: 'is-' + (safeStatus || 'pending')
-        };
-      }
-
-      function getOwnerPagePath(itemKey) {
-        const routes = {
-          'owner-company-name': 'owner-details.html',
-          'owner-first-name': 'owner-account-setup.html',
-          'owner-email': 'owner.html',
-          'owner-whatsapp-number': 'owner-details-wait.html',
-          'owner-categories': 'owner-categories.html',
-          'owner-districts': 'owner-coverage.html',
-          'owner-address': 'owner-account-setup.html',
-          'owner-city': 'owner-account-setup.html',
-          'owner-state': 'owner-account-setup.html',
-          'owner-pincode': 'owner-account-setup.html',
-          'owner-profile-photo': 'owner-profile-photo.html',
-          'owner-aadhaar-photo-url': 'owner-aadhaar-card.html',
-          'owner-heavy-licence-photo-url-1': 'owner-heavy-driving-licence.html',
-          'owner-heavy-licence-photo-url-2': 'owner-uploaded-photo.html'
-        };
-
-        return routes[itemKey] || 'owner-next.html';
-      }
-
-      function getOwnerPageLink(itemKey, submission) {
-        const pagePath = getOwnerPagePath(itemKey);
-        const linkUrl = new URL('/' + pagePath.replace(/^\/+/, ''), window.location.origin);
-        const submissionId = submission && submission.id ? String(submission.id).trim() : '';
-
-        if (itemKey) {
-          linkUrl.searchParams.set('review', itemKey);
-          linkUrl.searchParams.set('return', 'owner-details-done.html');
-        }
-
-        if (submissionId) {
-          linkUrl.searchParams.set('submissionId', submissionId);
-        }
-
-        if (itemKey === 'owner-company-name') {
-          linkUrl.searchParams.set('return', 'owner-details-done.html');
-        }
-
-        return linkUrl.toString();
-      }
-
-      function getRejectMessageText(itemKey, itemLabel) {
-        const messages = {
-          'owner-company-name': 'The Company Name you have entered is invalid/incorrect. Please check it and clarify.',
-          'owner-profile-photo': 'Profile photo isnt complete or clear please send again.',
-          'owner-aadhaar-photo-url': 'Aadhaar photo isnt complete or clear please send again.',
-          'owner-heavy-licence-photo-url-1': 'Licence front photo isnt complete or clear please send again.',
-          'owner-heavy-licence-photo-url-2': 'Licence back photo isnt complete or clear please send again.',
-          'owner-categories': 'Categories selection is incomplete please update it.',
-          'owner-districts': 'District selection is incomplete please update it.'
-        };
-
-        return messages[itemKey] || (String(itemLabel || 'This detail') + ' is not correct please update it.');
-      }
-
-      function buildRejectWhatsappMessage(submission) {
-        const currentSubmission = submission || getSelectedSubmission();
-        const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
-        const deselectedKeys = Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'deselected';
-        });
-
-        if (!deselectedKeys.length) {
-          return REJECT_INTRO_MESSAGE;
-        }
-
-        const lines = [REJECT_INTRO_MESSAGE, ''];
-
-        deselectedKeys.forEach(function (itemKey) {
-          const itemLabel = String(submissionSelections[itemKey + '__label'] || getFieldLabel(itemKey)).trim();
-          lines.push(getRejectMessageText(itemKey, itemLabel));
-          lines.push(getOwnerPageLink(itemKey, currentSubmission));
-          lines.push('');
-        });
-
-        return lines.join('\n').trim();
-      }
-
       function getWhatsappLink(submission) {
         const summary = submission && submission.summary ? submission.summary : {};
         const fields = submission && submission.fields ? submission.fields : {};
@@ -710,19 +583,6 @@
         }
 
         return 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(ACCEPT_WHATSAPP_MESSAGE);
-      }
-
-      function getRejectWhatsappLink(submission) {
-        const summary = submission && submission.summary ? submission.summary : {};
-        const fields = submission && submission.fields ? submission.fields : {};
-        const rawNumber = String(summary.whatsappNumber || summary.phone || fields['owner-whatsapp-number'] || '').trim();
-        const digits = rawNumber.replace(/[^\d]/g, '');
-
-        if (!digits) {
-          return '';
-        }
-
-        return 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildRejectWhatsappMessage(submission));
       }
 
       function getSessionHeaders() {
@@ -745,6 +605,27 @@
 
         saveDashboardState();
         renderList();
+      }
+
+      function getStatusPresentation(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+
+        if (safeStatus === 'updated') {
+          return {
+            label: 'Updated',
+            className: 'is-updated'
+          };
+        }
+
+        return {
+          label: safeStatus || 'pending',
+          className: 'is-' + (safeStatus || 'pending')
+        };
+      }
+
+      function isActionableStatus(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+        return safeStatus === 'pending' || safeStatus === 'updated';
       }
 
       function updateMetrics() {
@@ -895,10 +776,9 @@
         fieldsNode.innerHTML = entries.map(function (entry) {
           const key = entry[0];
           const value = entry[1];
-          const itemState = getItemReviewState(selectedSubmissionId, key);
           return [
             '<div class="vect-own-field-row">',
-            '<button type="button" class="vect-own-inline-accept' + (itemState === 'deselected' ? ' is-deselected' : '') + '" data-vect-own-item-key="' + escapeHtml(key) + '" data-vect-own-item-label="' + escapeHtml(getFieldLabel(key)) + '">' + getReviewToggleLabel(itemState) + '</button>',
+            '<button type="button" class="vect-own-inline-accept">Deselect</button>',
             '<dt class="vect-own-field-key">' + escapeHtml(getFieldLabel(key)) + '</dt>',
             '<dd class="vect-own-field-value">' + renderFieldValue(key, value) + '</dd>',
             '</div>'
@@ -1164,12 +1044,6 @@
                 if (whatsappLink) {
                   window.open(whatsappLink, '_blank');
                 }
-              } else if (nextStatus === 'rejected' && currentSubmission) {
-                const rejectWhatsappLink = getRejectWhatsappLink(currentSubmission);
-
-                if (rejectWhatsappLink) {
-                  window.open(rejectWhatsappLink, '_blank');
-                }
               }
             })
             .catch(function (error) {
@@ -1203,18 +1077,8 @@
         const acceptToggle = event.target.closest('.vect-own-inline-accept');
 
         if (acceptToggle) {
-          const itemKey = String(acceptToggle.getAttribute('data-vect-own-item-key') || '').trim();
-          const itemLabel = String(acceptToggle.getAttribute('data-vect-own-item-label') || '').trim();
-          const submissionSelections = getSubmissionReviewSelections(selectedSubmissionId);
           const isDeselected = acceptToggle.classList.toggle('is-deselected');
-
-          if (itemKey) {
-            submissionSelections[itemKey] = isDeselected ? 'deselected' : 'accepted';
-            submissionSelections[itemKey + '__label'] = itemLabel;
-            saveDashboardState();
-          }
-
-          acceptToggle.textContent = getReviewToggleLabel(isDeselected ? 'deselected' : 'accepted');
+          acceptToggle.textContent = isDeselected ? 'Select' : 'Deselect';
           return;
         }
 
@@ -1246,7 +1110,3 @@
   <script src="../script.js?v=20260413-2"></script>
 </body>
 </html>
-      function isActionableStatus(status) {
-        const safeStatus = String(status || '').trim().toLowerCase();
-        return safeStatus === 'pending' || safeStatus === 'updated';
-      }
