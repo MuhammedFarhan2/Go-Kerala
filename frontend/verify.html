@@ -54,10 +54,14 @@
         const subtitleNode = document.querySelector('[data-verify-subtitle]');
         const resendBtn = document.querySelector('[data-resend-btn]');
         const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+        const pageParams = new URLSearchParams(window.location.search);
         const email = String(sessionStorage.getItem('owner-email') || '').trim();
         const apiBaseFromStorage = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
         const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
         const apiBaseUrl = (apiBaseFromStorage || apiBaseFromMeta).replace(/\/$/, '');
+        const reviewItem = String(pageParams.get('review') || sessionStorage.getItem('owner-review-item') || '').trim();
+        const returnPage = String(pageParams.get('return') || sessionStorage.getItem('owner-review-return-page') || '').trim() || 'owner-details-done.html';
+        const isEmailReview = reviewItem === 'owner-email';
 
         if (!verifyForm || !otpInput || !errorNode) {
           return;
@@ -91,7 +95,9 @@
         }
 
         if (subtitleNode) {
-          subtitleNode.textContent = 'Enter the OTP sent to ' + email + '.';
+          subtitleNode.textContent = isEmailReview
+            ? 'Enter the OTP sent to your updated email ' + email + '.'
+            : 'Enter the OTP sent to ' + email + '.';
         }
 
         otpInput.addEventListener('input', function () {
@@ -144,6 +150,16 @@
               }
 
               localStorage.setItem('owner-authenticated', 'true');
+              if (isEmailReview) {
+                sessionStorage.removeItem('owner-review-item');
+                sessionStorage.removeItem('owner-review-return-page');
+                if (returnPage === 'owner-details-done.html') {
+                  sessionStorage.setItem('owner-review-done-allowed', 'yes');
+                }
+                window.location.href = returnPage;
+                return;
+              }
+
               window.location.href = 'owner-account-setup.html';
             })
             .catch(function (error) {

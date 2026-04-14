@@ -636,13 +636,18 @@
         return routes[itemKey] || 'owner-next.html';
       }
 
-      function getOwnerPageLink(itemKey) {
+      function getOwnerPageLink(itemKey, submission) {
         const pagePath = getOwnerPagePath(itemKey);
         const linkUrl = new URL('/' + pagePath.replace(/^\/+/, ''), window.location.origin);
+        const submissionId = submission && submission.id ? String(submission.id).trim() : '';
 
         if (itemKey) {
           linkUrl.searchParams.set('review', itemKey);
           linkUrl.searchParams.set('return', 'owner-details-done.html');
+        }
+
+        if (submissionId) {
+          linkUrl.searchParams.set('submissionId', submissionId);
         }
 
         if (itemKey === 'owner-company-name') {
@@ -682,7 +687,7 @@
         deselectedKeys.forEach(function (itemKey) {
           const itemLabel = String(submissionSelections[itemKey + '__label'] || getFieldLabel(itemKey)).trim();
           lines.push(getRejectMessageText(itemKey, itemLabel));
-          lines.push(getOwnerPageLink(itemKey));
+          lines.push(getOwnerPageLink(itemKey, currentSubmission));
           lines.push('');
         });
 

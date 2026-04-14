@@ -148,6 +148,10 @@
       const submitButton = form ? form.querySelector('.owner-auth-submit') : null;
       const pageParams = new URLSearchParams(window.location.search);
       const modeParam = pageParams.get('mode');
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details-done.html';
+      const REVIEW_ITEM_STORAGE_KEY = 'owner-review-item';
+      const REVIEW_RETURN_STORAGE_KEY = 'owner-review-return-page';
       const hasCreatedAccount = localStorage.getItem('owner-account-created') === 'true';
       const hasSavedLogin =
         Boolean(String(localStorage.getItem('owner-login-email') || '').trim()) &&
@@ -155,9 +159,12 @@
       const hasGoogleLogin =
         String(localStorage.getItem('owner-login-method') || '').trim() === 'google' &&
         Boolean(String(localStorage.getItem('owner-login-email') || '').trim());
+      const isEmailReview = reviewItem === 'owner-email';
       let authMode = 'register';
 
-      if (modeParam === 'login' || modeParam === 'register') {
+      if (isEmailReview) {
+        authMode = 'register';
+      } else if (modeParam === 'login' || modeParam === 'register') {
         authMode = modeParam;
       } else if (hasCreatedAccount && (hasSavedLogin || hasGoogleLogin)) {
         authMode = 'login';
@@ -171,17 +178,19 @@
         const isLogin = authMode === 'login';
 
         if (titleText) {
-          titleText.textContent = isLogin ? 'Log in' : 'Create an account';
+          titleText.textContent = isEmailReview ? 'Update email' : (isLogin ? 'Log in' : 'Create an account');
         }
 
         if (subtitleText) {
-          subtitleText.innerHTML = isLogin
+          subtitleText.innerHTML = isEmailReview
+            ? 'Enter your updated email address to continue.'
+            : isLogin
             ? 'Need an account? <a href="owner.html?mode=register" class="owner-auth-inline-link" data-owner-auth-switch-link>Create account</a>'
             : 'Already have an account? <a href="owner.html?mode=login" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a>';
         }
 
         if (submitButton) {
-          submitButton.textContent = isLogin ? 'Log in' : 'Next';
+          submitButton.textContent = isEmailReview ? 'Verify email' : (isLogin ? 'Log in' : 'Next');
         }
 
         if (passwordField) {
@@ -195,7 +204,7 @@
           }
         }
         if (authExtras) {
-          authExtras.hidden = false;
+          authExtras.hidden = isEmailReview;
         }
 
         if (authDividerText) {
@@ -232,7 +241,14 @@
       }
 
       function getVerificationPage() {
-        return 'verify.html';
+        if (!isEmailReview) {
+          return 'verify.html';
+        }
+
+        const verifyUrl = new URL('verify.html', window.location.href);
+        verifyUrl.searchParams.set('review', reviewItem);
+        verifyUrl.searchParams.set('return', returnPage);
+        return verifyUrl.toString();
       }
 
       function getApiUrl(pathName) {
@@ -454,6 +470,13 @@
             hideError();
             storeOwnerSession('', '', contactValue);
             localStorage.setItem('owner-login-method', 'email');
+            if (isEmailReview) {
+              sessionStorage.setItem(REVIEW_ITEM_STORAGE_KEY, reviewItem);
+              sessionStorage.setItem(REVIEW_RETURN_STORAGE_KEY, returnPage);
+            } else {
+              sessionStorage.removeItem(REVIEW_ITEM_STORAGE_KEY);
+              sessionStorage.removeItem(REVIEW_RETURN_STORAGE_KEY);
+            }
             window.location.href = getVerificationPage();
           })
           .catch(function (error) {

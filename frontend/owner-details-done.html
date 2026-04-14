@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Done</title>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
@@ -41,5 +42,120 @@
   </main>
 
   <script src="script.js?v=20260413-1"></script>
+  <script>
+    (function () {
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
+      const apiBaseFromSession = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
+      const apiBaseUrl = (apiBaseFromSession || apiBaseFromMeta).replace(/\/$/, '');
+      const isReviewDone = sessionStorage.getItem('owner-review-done-allowed') === 'yes';
+      const submissionId = String(sessionStorage.getItem('owner-review-submission-id') || '').trim();
+      const blockedKeys = [
+        /password/i,
+        /authenticated/i,
+        /api-base-url/i,
+        /account-created/i,
+        /login-/i
+      ];
+      const mediaFieldKeys = [
+        'owner-profile-photo',
+        'owner-heavy-licence-photo-url-1',
+        'owner-heavy-licence-photo-url-2',
+        'owner-aadhaar-photo-url'
+      ];
+
+      function getApiUrl(pathName) {
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+      }
+
+      function shouldKeepKey(key) {
+        if (!/^owner-/i.test(key)) {
+          return false;
+        }
+
+        return !blockedKeys.some(function (pattern) {
+          return pattern.test(key);
+        });
+      }
+
+      function collectStorage(source) {
+        const data = {};
+
+        for (let index = 0; index < source.length; index += 1) {
+          const key = source.key(index);
+
+          if (!key || !shouldKeepKey(key)) {
+            continue;
+          }
+
+          data[key] = source.getItem(key);
+        }
+
+        return data;
+      }
+
+      async function collectPayloadFields() {
+        const mediaFields = {};
+
+        if (window.ownerMediaStore) {
+          await Promise.all(mediaFieldKeys.map(function (key) {
+            return window.ownerMediaStore.getItem(key)
+              .then(function (value) {
+                if (value) {
+                  mediaFields[key] = value;
+                }
+              })
+              .catch(function () {
+                return null;
+              });
+          }));
+        }
+
+        return Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage), mediaFields);
+      }
+
+      async function syncReviewedSubmission() {
+        if (!isReviewDone || !submissionId) {
+          return;
+        }
+
+        const fields = await collectPayloadFields();
+        const response = await fetch(getApiUrl('/api/submissions/' + encodeURIComponent(submissionId) + '/owner-update'), {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: fields,
+            whatsappNumber: fields['owner-whatsapp-number'] || ''
+          })
+        });
+
+        if (!response.ok) {
+          let errorMessage = 'Unable to sync your updated details.';
+
+          try {
+            const payload = await response.json();
+            if (payload && payload.error) {
+              errorMessage = String(payload.error);
+            }
+          } catch (error) {
+            // Keep default message.
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        sessionStorage.removeItem('owner-review-done-allowed');
+        sessionStorage.removeItem('owner-review-submission-id');
+      }
+
+      syncReviewedSubmission().catch(function (error) {
+        if (window.console && typeof window.console.error === 'function') {
+          window.console.error(error);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -77,7 +77,11 @@
       const form = document.querySelector('.owner-evaluation-whatsapp-form');
       const input = document.getElementById('owner-whatsapp-number');
       const submitButton = document.querySelector('.owner-evaluation-whatsapp-submit');
+      const pageParams = new URLSearchParams(window.location.search);
       const apiBaseUrl = String(sessionStorage.getItem('owner-api-base-url') || '').trim().replace(/\/$/, '');
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details-done.html';
+      const isWhatsappReview = reviewItem === 'owner-whatsapp-number';
       const blockedKeys = [
         /password/i,
         /authenticated/i,
@@ -197,6 +201,14 @@
 
         submitSubmission()
           .then(function () {
+            if (isWhatsappReview) {
+              if (returnPage === 'owner-details-done.html') {
+                sessionStorage.setItem('owner-review-done-allowed', 'yes');
+              }
+              window.location.href = returnPage;
+              return;
+            }
+
             sessionStorage.setItem('owner-final-submission-done-allowed', 'yes');
             window.location.href = 'owner-details-done.html';
           })

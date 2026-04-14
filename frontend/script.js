@@ -303,6 +303,22 @@
 })();
 
 (function () {
+  const currentPath = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  const isOwnerFlowPage = currentPath.indexOf('owner-') === 0 || currentPath === 'owner.html' || currentPath === 'verify.html';
+
+  if (!isOwnerFlowPage) {
+    return;
+  }
+
+  const pageParams = new URLSearchParams(window.location.search);
+  const submissionId = String(pageParams.get('submissionId') || '').trim();
+
+  if (submissionId) {
+    sessionStorage.setItem('owner-review-submission-id', submissionId);
+  }
+})();
+
+(function () {
   const accountBtn = document.getElementById('account-btn');
   const accountPanel = document.getElementById('account-panel');
   const backdrop = document.getElementById('account-backdrop');
