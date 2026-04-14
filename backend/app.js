@@ -31,6 +31,7 @@ const VECT_OWN_DB_PATH = path.join(DATA_DIR, 'vect-own-submissions.json');
 const VECT_OWN_SESSION_COOKIE = 'vect_own_session';
 const VECT_OWN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const VECT_OWN_PASSWORD = String(process.env.VECT_OWN_PASSWORD || 'vectown1234').trim();
+const VECT_OWN_GOOGLE_EMAIL = String(process.env.VECT_OWN_GOOGLE_EMAIL || 'vectmovers@gmail.com').trim().toLowerCase();
 const VECT_OWN_SESSION_HEADER = 'x-vect-own-session';
 const VECT_OWN_SELECTION_WHATSAPP_MESSAGE = String(
   process.env.VECT_OWN_SELECTION_WHATSAPP_MESSAGE ||
@@ -1357,6 +1358,89 @@ async function handleVectOwnLogin(request, response) {
   );
 }
 
+async function handleVectOwnGoogleLogin(request, response) {
+  if (!GOOGLE_CLIENT_ID) {
+    sendJson(response, 500, { success: false, error: 'Google sign-in is not configured on the server.' });
+    return;
+  }
+
+  const oauthClient = getGoogleOAuthClient();
+
+  if (!oauthClient) {
+    sendJson(response, 500, { success: false, error: 'Google auth library is missing. Run npm install in backend.' });
+    return;
+  }
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const credential = String(payload.credential || '').trim();
+
+  if (!credential) {
+    sendJson(response, 400, { success: false, error: 'Missing Google credential.' });
+    return;
+  }
+
+  try {
+    const ticket = await oauthClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID
+    });
+    const googlePayload = ticket.getPayload() || {};
+    const email = String(googlePayload.email || '').trim().toLowerCase();
+
+    if (!email) {
+      sendJson(response, 401, { success: false, error: 'Google account email is missing.' });
+      return;
+    }
+
+    if (VECT_OWN_GOOGLE_EMAIL && email !== VECT_OWN_GOOGLE_EMAIL) {
+      sendJson(response, 403, { success: false, error: 'Only vectmovers@gmail.com can access Vect Own.' });
+      return;
+    }
+
+    const token = crypto.randomBytes(24).toString('hex');
+    const now = Date.now();
+    const session = {
+      role: 'owner',
+      email: email,
+      createdAt: now,
+      expiresAt: now + VECT_OWN_SESSION_TTL_MS
+    };
+
+    vectOwnSessions.set(token, session);
+
+    sendJson(
+      response,
+      200,
+      {
+        success: true,
+        authenticated: true,
+        token: token,
+        role: session.role,
+        email: email,
+        expiresAt: session.expiresAt
+      },
+      {
+        'Set-Cookie': buildCookieHeader(VECT_OWN_SESSION_COOKIE, token, {
+          path: '/vect-own',
+          maxAge: VECT_OWN_SESSION_TTL_MS,
+          sameSite: 'Lax',
+          httpOnly: true
+        })
+      }
+    );
+  } catch (error) {
+    sendJson(response, 401, { success: false, error: 'Google account verification failed.' });
+  }
+}
+
 function handleVectOwnLogout(request, response) {
   const cookies = parseCookies(request);
   const token = String(cookies[VECT_OWN_SESSION_COOKIE] || '').trim();
@@ -1731,6 +1815,11 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/vect-own/login') {
     handleVectOwnLogin(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/vect-own/login-google') {
+    handleVectOwnGoogleLogin(request, response);
     return;
   }
 
