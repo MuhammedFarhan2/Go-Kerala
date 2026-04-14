@@ -268,11 +268,11 @@
         });
       }
 
-      async function fetchJsonWithRetry(url, options, retryCount) {
-        const attempts = Math.max(1, retryCount || 1);
+      async function fetchJsonWithRetry(url, options, retryDelays) {
+        const delays = Array.isArray(retryDelays) && retryDelays.length ? retryDelays : [2000, 4000, 8000, 12000, 16000];
         let lastError = null;
 
-        for (let attempt = 0; attempt < attempts; attempt += 1) {
+        for (let attempt = 0; attempt <= delays.length; attempt += 1) {
           try {
             const response = await fetch(url, options);
             const text = await response.text();
@@ -292,8 +292,8 @@
           } catch (error) {
             lastError = error;
 
-            if (attempt < attempts - 1) {
-              await wait(1200);
+            if (attempt < delays.length) {
+              await wait(delays[attempt]);
             }
           }
         }
@@ -351,7 +351,7 @@
               body: JSON.stringify({
                 credential: response.credential
               })
-            }, 2)
+            })
               .then(function (result) {
                 if (!result.ok || !result.data || !result.data.user) {
                   throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
@@ -466,7 +466,7 @@
           body: JSON.stringify({
             contact: contact
           })
-        }, 2)
+        })
           .then(function (result) {
             if (!result.ok) {
               throw new Error((result.data && result.data.error) || 'Unable to send OTP.');
