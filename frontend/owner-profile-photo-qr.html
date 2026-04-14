@@ -7,6 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="style.css?v=20260409-3">
 </head>
 <body>
@@ -57,13 +58,19 @@
       const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
       const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
       const isProfileReview = reviewItem === 'owner-profile-photo';
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
 
       if (!qrImage || !fallbackLink || !statusNode) {
         return;
       }
 
+      function getApiUrl(pathName) {
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+      }
+
       async function createSessionToken() {
-        const response = await fetch('/api/profile-photo-session', {
+        const response = await fetch(getApiUrl('/api/profile-photo-session'), {
           method: 'POST'
         });
         const responseText = await response.text();
@@ -83,7 +90,7 @@
       }
 
       async function getSessionStatus(token) {
-        const response = await fetch('/api/profile-photo-session?token=' + encodeURIComponent(token));
+        const response = await fetch(getApiUrl('/api/profile-photo-session?token=' + encodeURIComponent(token)));
         const payload = await response.json();
 
         if (!response.ok || !payload.success) {
