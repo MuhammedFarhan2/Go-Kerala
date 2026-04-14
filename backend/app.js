@@ -1384,6 +1384,11 @@ async function handlePublicSubmissionCreate(request, response) {
     return;
   }
 
+  if (!isPhoneNumber(whatsappNumber)) {
+    sendJson(response, 400, { success: false, error: 'Please provide a valid WhatsApp number.' });
+    return;
+  }
+
   const now = Date.now();
   const submission = {
     id: crypto.randomUUID(),
@@ -1451,6 +1456,11 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
 
   if (!nextWhatsappNumber) {
     sendJson(response, 400, { success: false, error: 'WhatsApp number is required.' });
+    return;
+  }
+
+  if (!isPhoneNumber(nextWhatsappNumber)) {
+    sendJson(response, 400, { success: false, error: 'Please provide a valid WhatsApp number.' });
     return;
   }
 
