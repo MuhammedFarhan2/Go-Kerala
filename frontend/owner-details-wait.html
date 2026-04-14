@@ -164,6 +164,45 @@
         return 'Unable to reach the server right now. Please check your connection and try again. If this keeps happening, the backend may be sleeping or unavailable at ' + backendHost + '.';
       }
 
+      function wait(ms) {
+        return new Promise(function (resolve) {
+          window.setTimeout(resolve, ms);
+        });
+      }
+
+      async function fetchJsonWithRetry(url, options, retryCount) {
+        const attempts = Math.max(1, retryCount || 1);
+        let lastError = null;
+
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+          try {
+            const response = await fetch(url, options);
+            const text = await response.text();
+            let data = {};
+
+            try {
+              data = text ? JSON.parse(text) : {};
+            } catch (error) {
+              data = text ? { error: text } : {};
+            }
+
+            return {
+              ok: response.ok,
+              status: response.status,
+              data: data
+            };
+          } catch (error) {
+            lastError = error;
+
+            if (attempt < attempts - 1) {
+              await wait(1200);
+            }
+          }
+        }
+
+        throw lastError || new Error('Network request failed.');
+      }
+
       async function submitSubmission() {
         const rawWhatsappNumber = String(input.value || '').trim();
 
@@ -205,33 +244,30 @@
           })
         };
 
-        let response;
-
         try {
-          response = await fetch(getApiUrl('/api/submissions'), {
+          const result = await fetchJsonWithRetry(getApiUrl('/api/submissions'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
-          });
-        } catch (error) {
-          throw new Error(getNetworkErrorMessage());
-        }
+          }, 2);
 
-        if (!response.ok) {
-          let errorMessage = 'Unable to save submission.';
+          if (!result.ok) {
+            let errorMessage = 'Unable to save submission.';
 
-          try {
-            const errorData = await response.json();
-            if (errorData && errorData.error) {
-              errorMessage = String(errorData.error);
+            if (result.data && result.data.error) {
+              errorMessage = String(result.data.error);
             }
-          } catch (error) {
-            // Keep the default message.
+
+            throw new Error(errorMessage);
+          }
+        } catch (error) {
+          if (error && error.message && /fetch failed|network request failed|failed to fetch/i.test(error.message)) {
+            throw new Error(getNetworkErrorMessage());
           }
 
-          throw new Error(errorMessage);
+          throw error;
         }
       }
 

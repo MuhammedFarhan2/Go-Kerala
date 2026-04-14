@@ -262,6 +262,45 @@
         return apiBaseUrl + pathName;
       }
 
+      function wait(ms) {
+        return new Promise(function (resolve) {
+          window.setTimeout(resolve, ms);
+        });
+      }
+
+      async function fetchJsonWithRetry(url, options, retryCount) {
+        const attempts = Math.max(1, retryCount || 1);
+        let lastError = null;
+
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+          try {
+            const response = await fetch(url, options);
+            const text = await response.text();
+            let data = {};
+
+            try {
+              data = text ? JSON.parse(text) : {};
+            } catch (error) {
+              data = text ? { error: text } : {};
+            }
+
+            return {
+              ok: response.ok,
+              status: response.status,
+              data: data
+            };
+          } catch (error) {
+            lastError = error;
+
+            if (attempt < attempts - 1) {
+              await wait(1200);
+            }
+          }
+        }
+
+        throw lastError || new Error('Network request failed.');
+      }
+
       [emailInput, passwordInput].forEach(function (input) {
         if (!input) {
           return;
@@ -304,7 +343,7 @@
               return;
             }
 
-            fetch(getApiUrl('/api/auth/google'), {
+            fetchJsonWithRetry(getApiUrl('/api/auth/google'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -312,25 +351,7 @@
               body: JSON.stringify({
                 credential: response.credential
               })
-            })
-              .then(function (apiResponse) {
-                return apiResponse.text().then(function (text) {
-                  let data = {};
-
-                  try {
-                    data = text ? JSON.parse(text) : {};
-                  } catch (error) {
-                    data = {
-                      error: text || 'Unexpected server response.'
-                    };
-                  }
-
-                  return {
-                    ok: apiResponse.ok,
-                    data: data
-                  };
-                });
-              })
+            }, 2)
               .then(function (result) {
                 if (!result.ok || !result.data || !result.data.user) {
                   throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
@@ -437,7 +458,7 @@
           return;
         }
 
-        fetch(getApiUrl('/api/auth/request-otp'), {
+        fetchJsonWithRetry(getApiUrl('/api/auth/request-otp'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -445,25 +466,7 @@
           body: JSON.stringify({
             contact: contact
           })
-        })
-          .then(function (apiResponse) {
-            return apiResponse.text().then(function (text) {
-              let data = {};
-
-              try {
-                data = text ? JSON.parse(text) : {};
-              } catch (error) {
-                data = {
-                  error: text || 'Unexpected server response.'
-                };
-              }
-
-              return {
-                ok: apiResponse.ok,
-                data: data
-              };
-            });
-          })
+        }, 2)
           .then(function (result) {
             if (!result.ok) {
               throw new Error((result.data && result.data.error) || 'Unable to send OTP.');
