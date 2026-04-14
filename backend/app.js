@@ -1512,56 +1512,70 @@ function handleVectOwnMe(request, response) {
 }
 
 async function handlePublicSubmissionCreate(request, response) {
-  let payload;
-
   try {
-    payload = await readJsonBody(request);
+    console.log('Received submission request');
+    
+    let payload;
+    try {
+      payload = await readJsonBody(request);
+    } catch (error) {
+      console.error('JSON parsing error:', error);
+      sendJson(response, 400, { error: error.message || 'Invalid request body.' });
+      return;
+    }
+
+    console.log('Parsed payload:', payload);
+
+    const fields = normalizeSubmissionFields(payload.fields || payload.storage || payload);
+    const whatsappNumber = normalizePhoneNumber(payload.whatsappNumber || fields['owner-whatsapp-number'] || '');
+
+    if (!whatsappNumber) {
+      console.error('No WhatsApp number provided');
+      sendJson(response, 400, { success: false, error: 'WhatsApp number is required.' });
+      return;
+    }
+
+    if (!isPhoneNumber(whatsappNumber)) {
+      console.error('Invalid WhatsApp number format:', whatsappNumber);
+      sendJson(response, 400, { success: false, error: 'Please provide a valid WhatsApp number.' });
+      return;
+    }
+
+    const now = Date.now();
+    const submission = {
+      id: crypto.randomUUID(),
+      createdAt: now,
+      updatedAt: now,
+      status: 'pending',
+      reviewNote: '',
+      reviewedBy: '',
+      reviewedAt: '',
+      whatsappNumber: whatsappNumber,
+      fields: Object.assign({}, fields, {
+        'owner-whatsapp-number': whatsappNumber
+      })
+    };
+
+    console.log('Created submission object:', submission);
+
+    let savedSubmission;
+    try {
+      savedSubmission = await createSubmissionRecord(submission);
+      console.log('Submission saved successfully:', savedSubmission);
+    } catch (error) {
+      console.error('Save submission error:', error);
+      sendJson(response, 500, { success: false, error: error.message || 'Unable to save submission.' });
+      return;
+    }
+
+    sendJson(response, 200, {
+      success: true,
+      submission: serializeSubmissionForList(savedSubmission)
+    });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
-    return;
+    console.error('Unexpected error in submission handler:', error);
+    sendJson(response, 500, { success: false, error: 'Internal server error.' });
   }
-
-  const fields = normalizeSubmissionFields(payload.fields || payload.storage || payload);
-  const whatsappNumber = normalizePhoneNumber(payload.whatsappNumber || fields['owner-whatsapp-number'] || '');
-
-  if (!whatsappNumber) {
-    sendJson(response, 400, { success: false, error: 'WhatsApp number is required.' });
-    return;
-  }
-
-  if (!isPhoneNumber(whatsappNumber)) {
-    sendJson(response, 400, { success: false, error: 'Please provide a valid WhatsApp number.' });
-    return;
-  }
-
-  const now = Date.now();
-  const submission = {
-    id: crypto.randomUUID(),
-    createdAt: now,
-    updatedAt: now,
-    status: 'pending',
-    reviewNote: '',
-    reviewedBy: '',
-    reviewedAt: '',
-    whatsappNumber: whatsappNumber,
-    fields: Object.assign({}, fields, {
-      'owner-whatsapp-number': whatsappNumber
-    })
-  };
-
-  let savedSubmission;
-
-  try {
-    savedSubmission = await createSubmissionRecord(submission);
-  } catch (error) {
-    sendJson(response, 500, { success: false, error: error.message || 'Unable to save submission.' });
-    return;
-  }
-
-  sendJson(response, 200, {
-    success: true,
-    submission: serializeSubmissionForList(savedSubmission)
-  });
 }
 
 async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) {
