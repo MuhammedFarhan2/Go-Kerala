@@ -136,7 +136,8 @@
       }
 
       function isValidWhatsappNumber(value) {
-        return /^\+91\d{10}$/.test(normalizeWhatsappNumber(value));
+        const normalized = normalizeWhatsappNumber(value);
+        return /^\+\d{10,15}$/.test(normalized);
       }
 
       function shouldKeepKey(key) {
