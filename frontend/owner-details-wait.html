@@ -251,6 +251,10 @@
           })
         };
 
+        // Debug: Log the API URL and payload
+        console.log('Submitting to:', getApiUrl('/api/submissions'));
+        console.log('Payload:', payload);
+
         try {
           const result = await fetchJsonWithRetry(getApiUrl('/api/submissions'), {
             method: 'POST',
@@ -259,6 +263,8 @@
             },
             body: JSON.stringify(payload)
           });
+
+          console.log('API Response:', result);
 
           if (!result.ok) {
             let errorMessage = 'Unable to save submission.';
@@ -270,6 +276,7 @@
             throw new Error(errorMessage);
           }
         } catch (error) {
+          console.error('Submission Error:', error);
           if (error && error.message && /fetch failed|network request failed|failed to fetch/i.test(error.message)) {
             throw new Error(getNetworkErrorMessage());
           }
