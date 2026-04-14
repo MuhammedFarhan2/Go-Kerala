@@ -58,7 +58,9 @@
         const email = String(sessionStorage.getItem('owner-email') || '').trim();
         const apiBaseFromStorage = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
         const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
-        const apiBaseUrl = (apiBaseFromStorage || apiBaseFromMeta).replace(/\/$/, '');
+        const currentOrigin = /^https?:/i.test(window.location.origin || '') ? String(window.location.origin || '').trim().replace(/\/$/, '') : '';
+        const isLocalHost = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(window.location.hostname || '');
+        const apiBaseUrl = (apiBaseFromStorage || (isLocalHost ? currentOrigin : apiBaseFromMeta)).replace(/\/$/, '');
         const reviewItem = String(pageParams.get('review') || sessionStorage.getItem('owner-review-item') || '').trim();
         const returnPage = String(pageParams.get('return') || sessionStorage.getItem('owner-review-return-page') || '').trim() || 'owner-details-done.html';
         const isEmailReview = reviewItem === 'owner-email';
