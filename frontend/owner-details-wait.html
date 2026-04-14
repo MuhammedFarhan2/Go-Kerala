@@ -168,7 +168,7 @@
 
       function getNetworkErrorMessage() {
         const backendHost = apiBaseUrl || 'the server';
-        return 'Unable to reach the server right now. Please check your connection and try again. If this keeps happening, the backend may be sleeping or unavailable at ' + backendHost + '.';
+        return 'Unable to reach ' + backendHost + ' right now. Please check your connection and try again. If this keeps happening, backend may be sleeping or unavailable.';
       }
 
       function wait(ms) {
