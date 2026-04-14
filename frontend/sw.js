@@ -1,5 +1,13 @@
-const APP_CACHE = "pmq-app-v1";
-const APP_FILES = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json"];
+const APP_CACHE = "pmq-app-v2";
+const APP_FILES = [
+  "./",
+  "./index.html",
+  "./style.css",
+  "./app.js",
+  "./manifest.json",
+  "./vect-own/index.html",
+  "./vect-own/dashboard.html"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(APP_CACHE).then((c) => c.addAll(APP_FILES)));
@@ -7,7 +15,11 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((key) => key === APP_CACHE ? Promise.resolve() : caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
 // Handle Web Share Target POST and redirect to app with query param.
