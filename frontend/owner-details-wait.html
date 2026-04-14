@@ -210,13 +210,6 @@
         throw lastError || new Error('Network request failed.');
       }
 
-      async function warmBackend() {
-        await fetchJsonWithRetry(backendHealthUrl, {
-          method: 'GET',
-          cache: 'no-store'
-        }, [3000, 6000, 10000, 15000, 20000, 25000]);
-      }
-
       async function submitSubmission() {
         const rawWhatsappNumber = String(input.value || '').trim();
 
@@ -289,11 +282,7 @@
         event.preventDefault();
         setSubmitState(true, 'Submitting...');
 
-        Promise.resolve(warmBackend())
-          .then(function () {
-            setSubmitState(true, 'Submitting...');
-            return submitSubmission();
-          })
+        Promise.resolve(submitSubmission())
           .then(function () {
             if (isWhatsappReview) {
               if (returnPage === 'owner-details-done.html') {
@@ -312,14 +301,7 @@
           });
       });
 
-      setSubmitState(true, 'Waking server...');
-      Promise.resolve(warmBackend())
-        .then(function () {
-          setSubmitState(false);
-        })
-        .catch(function () {
-          setSubmitState(false);
-        });
+      setSubmitState(false);
 
       input.addEventListener('input', function () {
         const sanitized = String(input.value || '').replace(/\D/g, '').slice(0, 10);
