@@ -18,7 +18,15 @@ const TWILIO_WHATSAPP_FROM_NUMBER = String(process.env.TWILIO_WHATSAPP_FROM_NUMB
 const PROJECT_ROOT = path.join(__dirname, '..');
 const FRONTEND_DIR = path.join(PROJECT_ROOT, 'frontend');
 const UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
-const DATA_DIR = path.join(__dirname, 'data');
+const PERSISTENT_ROOT = String(
+  process.env.VECT_DATA_DIR ||
+  process.env.DATA_DIR ||
+  process.env.RENDER_DISK_ROOT ||
+  ''
+).trim();
+const DATA_DIR = PERSISTENT_ROOT
+  ? path.resolve(PERSISTENT_ROOT, 'vect-data')
+  : path.join(__dirname, 'data');
 const VECT_OWN_DB_PATH = path.join(DATA_DIR, 'vect-own-submissions.json');
 const VECT_OWN_SESSION_COOKIE = 'vect_own_session';
 const VECT_OWN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -28,6 +36,8 @@ const VECT_OWN_SELECTION_WHATSAPP_MESSAGE = String(
   process.env.VECT_OWN_SELECTION_WHATSAPP_MESSAGE ||
   'Congratulation you have selected as a member of VECT Movers. For continue fffffff'
 ).trim();
+const SUPABASE_URL = String(process.env.SUPABASE_URL || '').trim().replace(/\/$/, '');
+const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -458,6 +468,170 @@ function writeJsonFile(filePath, value) {
   const tempPath = filePath + '.tmp';
   fs.writeFileSync(tempPath, JSON.stringify(value, null, 2));
   fs.renameSync(tempPath, filePath);
+}
+
+function hasSupabaseConfig() {
+  return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+}
+
+function normalizeSupabaseSubmissionRow(row) {
+  const safeRow = row && typeof row === 'object' ? row : {};
+  return {
+    id: String(safeRow.id || '').trim(),
+    createdAt: Number(safeRow.created_at || 0) || 0,
+    updatedAt: Number(safeRow.updated_at || 0) || 0,
+    ownerUpdatedAt: safeRow.owner_updated_at ? String(safeRow.owner_updated_at) : '',
+    status: String(safeRow.status || 'pending').trim().toLowerCase(),
+    reviewNote: String(safeRow.review_note || '').trim(),
+    reviewedBy: String(safeRow.reviewed_by || '').trim(),
+    reviewedAt: String(safeRow.reviewed_at || '').trim(),
+    whatsappNumber: String(safeRow.whatsapp_number || '').trim(),
+    fields: safeRow.fields && typeof safeRow.fields === 'object' ? safeRow.fields : {}
+  };
+}
+
+function serializeSubmissionForSupabase(submission) {
+  const safeSubmission = submission && typeof submission === 'object' ? submission : {};
+  return {
+    id: String(safeSubmission.id || '').trim(),
+    created_at: Number(safeSubmission.createdAt || 0) || 0,
+    updated_at: Number(safeSubmission.updatedAt || 0) || 0,
+    owner_updated_at: safeSubmission.ownerUpdatedAt ? String(safeSubmission.ownerUpdatedAt) : null,
+    status: String(safeSubmission.status || 'pending').trim().toLowerCase(),
+    review_note: String(safeSubmission.reviewNote || '').trim(),
+    reviewed_by: String(safeSubmission.reviewedBy || '').trim(),
+    reviewed_at: String(safeSubmission.reviewedAt || '').trim(),
+    whatsapp_number: String(safeSubmission.whatsappNumber || '').trim(),
+    fields: safeSubmission.fields && typeof safeSubmission.fields === 'object' ? safeSubmission.fields : {}
+  };
+}
+
+async function supabaseRequest(pathName, options) {
+  const response = await fetch(SUPABASE_URL + pathName, Object.assign({
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
+    }
+  }, options || {}));
+
+  if (!response.ok) {
+    let errorMessage = 'Supabase request failed.';
+
+    try {
+      const payload = await response.json();
+      errorMessage = String(
+        (payload && (payload.message || payload.error_description || payload.error)) ||
+        errorMessage
+      );
+    } catch (error) {
+      try {
+        const text = await response.text();
+        if (text) {
+          errorMessage = text;
+        }
+      } catch (nestedError) {
+        // Keep default message.
+      }
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  return response.json();
+}
+
+async function listVectOwnSubmissions() {
+  if (!hasSupabaseConfig()) {
+    return loadVectOwnSubmissions();
+  }
+
+  const rows = await supabaseRequest(
+    '/rest/v1/submissions?select=*&order=created_at.desc',
+    {
+      headers: {
+        Accept: 'application/json'
+      }
+    }
+  );
+
+  return Array.isArray(rows) ? rows.map(normalizeSupabaseSubmissionRow) : [];
+}
+
+async function getSubmissionByIdAsync(submissionId) {
+  if (!hasSupabaseConfig()) {
+    return getSubmissionById(submissionId);
+  }
+
+  const safeId = String(submissionId || '').trim();
+
+  if (!safeId) {
+    return null;
+  }
+
+  const rows = await supabaseRequest(
+    '/rest/v1/submissions?id=eq.' + encodeURIComponent(safeId) + '&select=*',
+    {
+      headers: {
+        Accept: 'application/json'
+      }
+    }
+  );
+
+  return Array.isArray(rows) && rows.length ? normalizeSupabaseSubmissionRow(rows[0]) : null;
+}
+
+async function createSubmissionRecord(submission) {
+  if (!hasSupabaseConfig()) {
+    const submissions = loadVectOwnSubmissions();
+    submissions.unshift(submission);
+    persistVectOwnSubmissions();
+    return submission;
+  }
+
+  const rows = await supabaseRequest('/rest/v1/submissions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify([serializeSubmissionForSupabase(submission)])
+  });
+
+  return Array.isArray(rows) && rows.length ? normalizeSupabaseSubmissionRow(rows[0]) : submission;
+}
+
+async function updateSubmissionRecord(submission) {
+  if (!hasSupabaseConfig()) {
+    const submissions = loadVectOwnSubmissions();
+    const submissionIndex = submissions.findIndex(function (item) {
+      return item && item.id === submission.id;
+    });
+
+    if (submissionIndex === -1) {
+      submissions.unshift(submission);
+    } else {
+      submissions[submissionIndex] = submission;
+    }
+
+    persistVectOwnSubmissions();
+    return submission;
+  }
+
+  const safeId = String(submission && submission.id || '').trim();
+  const rows = await supabaseRequest('/rest/v1/submissions?id=eq.' + encodeURIComponent(safeId), {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(serializeSubmissionForSupabase(submission))
+  });
+
+  return Array.isArray(rows) && rows.length ? normalizeSupabaseSubmissionRow(rows[0]) : submission;
 }
 
 function loadVectOwnSubmissions() {
@@ -1225,20 +1399,32 @@ async function handlePublicSubmissionCreate(request, response) {
     })
   };
 
-  const submissions = loadVectOwnSubmissions();
-  submissions.unshift(submission);
-  persistVectOwnSubmissions();
+  let savedSubmission;
+
+  try {
+    savedSubmission = await createSubmissionRecord(submission);
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to save submission.' });
+    return;
+  }
 
   sendJson(response, 200, {
     success: true,
-    submission: serializeSubmissionForList(submission)
+    submission: serializeSubmissionForList(savedSubmission)
   });
 }
 
 async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) {
   const pathParts = requestUrl.pathname.split('/').filter(Boolean);
   const submissionId = String(pathParts[2] || '').trim();
-  const submission = getSubmissionById(submissionId);
+  let submission;
+
+  try {
+    submission = await getSubmissionByIdAsync(submissionId);
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to load submission.' });
+    return;
+  }
 
   if (!submission) {
     sendJson(response, 404, { success: false, error: 'Submission not found.' });
@@ -1279,15 +1465,22 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
   submission.updatedAt = Date.now();
   submission.ownerUpdatedAt = new Date().toISOString();
 
-  persistVectOwnSubmissions();
+  let savedSubmission;
+
+  try {
+    savedSubmission = await updateSubmissionRecord(submission);
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to update submission.' });
+    return;
+  }
 
   sendJson(response, 200, {
     success: true,
-    submission: serializeSubmissionForList(submission)
+    submission: serializeSubmissionForList(savedSubmission)
   });
 }
 
-function handleVectOwnSubmissionList(requestUrl, request, response) {
+async function handleVectOwnSubmissionList(requestUrl, request, response) {
   const session = requireVectOwnSession(request, response);
 
   if (!session) {
@@ -1295,7 +1488,14 @@ function handleVectOwnSubmissionList(requestUrl, request, response) {
   }
 
   const statusFilter = String(requestUrl.searchParams.get('status') || '').trim().toLowerCase();
-  const submissions = loadVectOwnSubmissions();
+  let submissions;
+
+  try {
+    submissions = await listVectOwnSubmissions();
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to load submissions.' });
+    return;
+  }
   const filteredSubmissions = statusFilter && VECT_OWN_STATUSES.has(statusFilter)
     ? submissions.filter(function (submission) {
         return submission.status === statusFilter;
@@ -1308,7 +1508,7 @@ function handleVectOwnSubmissionList(requestUrl, request, response) {
   });
 }
 
-function handleVectOwnSubmissionDetail(requestUrl, request, response) {
+async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
   const session = requireVectOwnSession(request, response);
 
   if (!session) {
@@ -1316,7 +1516,14 @@ function handleVectOwnSubmissionDetail(requestUrl, request, response) {
   }
 
   const submissionId = String(requestUrl.pathname.split('/').pop() || '').trim();
-  const submission = getSubmissionById(submissionId);
+  let submission;
+
+  try {
+    submission = await getSubmissionByIdAsync(submissionId);
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to load submission.' });
+    return;
+  }
 
   if (!submission) {
     sendJson(response, 404, { success: false, error: 'Submission not found.' });
@@ -1337,7 +1544,14 @@ async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
   }
 
   const submissionId = String(requestUrl.pathname.split('/').pop() || '').trim();
-  const submission = getSubmissionById(submissionId);
+  let submission;
+
+  try {
+    submission = await getSubmissionByIdAsync(submissionId);
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to load submission.' });
+    return;
+  }
 
   if (!submission) {
     sendJson(response, 404, { success: false, error: 'Submission not found.' });
@@ -1368,14 +1582,21 @@ async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
   submission.reviewedAt = new Date().toISOString();
   submission.updatedAt = Date.now();
 
-  persistVectOwnSubmissions();
+  let savedSubmission;
+
+  try {
+    savedSubmission = await updateSubmissionRecord(submission);
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to update submission.' });
+    return;
+  }
 
   let notificationError = '';
 
   if (previousStatus !== 'accepted' && nextStatus === 'accepted') {
     try {
       await sendWhatsAppMessage(
-        submission.whatsappNumber || (submission.fields && submission.fields['owner-whatsapp-number']) || '',
+        savedSubmission.whatsappNumber || (savedSubmission.fields && savedSubmission.fields['owner-whatsapp-number']) || '',
         VECT_OWN_SELECTION_WHATSAPP_MESSAGE
       );
     } catch (error) {
@@ -1385,7 +1606,7 @@ async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
 
   sendJson(response, 200, {
     success: true,
-    submission: serializeSubmissionForList(submission),
+    submission: serializeSubmissionForList(savedSubmission),
     notificationError: notificationError
   });
 }
