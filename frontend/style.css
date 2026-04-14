@@ -4878,9 +4878,9 @@ h1 {
 }
 
 .vect-own-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .vect-own-tab {
@@ -4889,11 +4889,12 @@ h1 {
   border-radius: 999px;
   background: #fff;
   color: #111827;
-  padding: 10px 16px;
+  padding: 10px 8px;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
+  width: 100%;
 }
 
 .vect-own-tab.is-active {
@@ -5361,19 +5362,6 @@ h1 {
 
   .vect-own-main {
     padding: 18px 12px 22px;
-  }
-
-  .vect-own-tabs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
-    gap: 8px;
-  }
-
-  .vect-own-tab {
-    width: 100%;
-    justify-content: center;
-    padding: 10px 8px;
-    font-size: 0.82rem;
   }
 
   .vect-own-metric-value {
