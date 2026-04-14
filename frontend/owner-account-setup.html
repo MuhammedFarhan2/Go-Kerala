@@ -109,12 +109,19 @@
 
       if (isGoogleAccount) {
         if (passwordField) {
+          passwordField.style.display = 'none';
           passwordField.hidden = true;
         }
 
         if (confirmPasswordField) {
+          confirmPasswordField.style.display = 'none';
           confirmPasswordField.hidden = true;
         }
+
+        passwordInput.value = '';
+        passwordInput.disabled = true;
+        confirmPasswordInput.value = '';
+        confirmPasswordInput.disabled = true;
 
         if (subtitleNode) {
           subtitleNode.textContent = 'Continue with Google by adding your first name and last name. Password is not required.';
@@ -217,6 +224,8 @@
           localStorage.removeItem('owner-login-password');
           localStorage.setItem('owner-login-method', 'google');
         } else {
+          passwordInput.disabled = false;
+          confirmPasswordInput.disabled = false;
           sessionStorage.setItem('owner-password', password);
           localStorage.setItem('owner-login-password', password);
           localStorage.setItem('owner-login-method', 'email');

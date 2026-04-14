@@ -47,6 +47,10 @@
         <p class="vect-own-metric-label">Rejected</p>
         <strong class="vect-own-metric-value" data-vect-own-metric="rejected">0</strong>
       </article>
+      <article class="vect-own-metric-card">
+        <p class="vect-own-metric-label">Updated</p>
+        <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
+      </article>
     </section>
 
     <section class="vect-own-toolbar" aria-label="Owner controls">
@@ -60,6 +64,7 @@
         <button type="button" class="vect-own-tab" data-vect-own-tab="pending">Pending</button>
         <button type="button" class="vect-own-tab" data-vect-own-tab="accepted">Accepted</button>
         <button type="button" class="vect-own-tab" data-vect-own-tab="rejected">Rejected</button>
+        <button type="button" class="vect-own-tab" data-vect-own-tab="updated">Updated</button>
       </div>
     </section>
 
@@ -602,7 +607,7 @@
       function getStatusPresentation(status) {
         const safeStatus = String(status || '').trim().toLowerCase();
 
-        if (safeStatus === 'rejected') {
+        if (safeStatus === 'updated') {
           return {
             label: 'Updated',
             className: 'is-updated'
@@ -751,7 +756,8 @@
           total: 0,
           pending: 0,
           accepted: 0,
-          rejected: 0
+          rejected: 0,
+          updated: 0
         });
 
         countNode.textContent = counts.total + ' submissions';
@@ -963,11 +969,11 @@
         }
 
         if (noteSection) {
-          noteSection.hidden = submission.status !== 'pending' || !noteSectionOpen;
+          noteSection.hidden = !isActionableStatus(submission.status) || !noteSectionOpen;
         }
 
         if (noteToggleButton) {
-          noteToggleButton.hidden = submission.status !== 'pending';
+          noteToggleButton.hidden = !isActionableStatus(submission.status);
           noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
         }
 
@@ -1094,7 +1100,7 @@
             return submission.id === selectedSubmissionId;
           });
 
-          if (!currentSubmission || currentSubmission.status !== 'pending') {
+          if (!currentSubmission || !isActionableStatus(currentSubmission.status)) {
             noteSectionOpen = false;
             if (noteSection) {
               noteSection.hidden = true;
@@ -1240,3 +1246,7 @@
   <script src="../script.js?v=20260413-2"></script>
 </body>
 </html>
+      function isActionableStatus(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+        return safeStatus === 'pending' || safeStatus === 'updated';
+      }
