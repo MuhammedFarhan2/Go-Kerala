@@ -145,7 +145,7 @@
       const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const currentOrigin = /^https?:/i.test(window.location.origin || '') ? String(window.location.origin || '').trim().replace(/\/$/, '') : '';
       const isLocalHost = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(window.location.hostname || '');
-      const apiBaseUrl = isLocalHost ? currentOrigin : apiBaseFromMeta;
+      const apiBaseUrl = apiBaseFromMeta || 'https://go-kerala-backend.onrender.com';
       const titleText = document.querySelector('[data-owner-auth-title]');
       const subtitleText = document.querySelector('[data-owner-auth-subtitle]');
       const submitButton = form ? form.querySelector('.owner-auth-submit') : null;
@@ -269,36 +269,26 @@
       }
 
       async function fetchJsonWithRetry(url, options, retryDelays) {
-        const delays = Array.isArray(retryDelays) && retryDelays.length ? retryDelays : [3000, 6000, 10000, 15000, 20000, 25000];
-        let lastError = null;
+        try {
+          const response = await fetch(url, options);
+          const text = await response.text();
+          let data = {};
 
-        for (let attempt = 0; attempt <= delays.length; attempt += 1) {
           try {
-            const response = await fetch(url, options);
-            const text = await response.text();
-            let data = {};
-
-            try {
-              data = text ? JSON.parse(text) : {};
-            } catch (error) {
-              data = text ? { error: text } : {};
-            }
-
-            return {
-              ok: response.ok,
-              status: response.status,
-              data: data
-            };
+            data = text ? JSON.parse(text) : {};
           } catch (error) {
-            lastError = error;
-
-            if (attempt < delays.length) {
-              await wait(delays[attempt]);
-            }
+            data = text ? { error: text } : {};
           }
-        }
 
-        throw lastError || new Error('Network request failed.');
+          return {
+            ok: response.ok,
+            status: response.status,
+            data: data
+          };
+        } catch (error) {
+          console.error('Fetch error:', error);
+          throw error;
+        }
       }
 
       [emailInput, passwordInput].forEach(function (input) {
