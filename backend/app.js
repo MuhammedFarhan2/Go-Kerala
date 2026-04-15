@@ -484,7 +484,9 @@ function writeJsonFile(filePath, value) {
 }
 
 function hasSupabaseConfig() {
-  return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+  // Temporarily disable Supabase to use only local storage
+  return false;
+  // return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 }
 
 function normalizeSupabaseSubmissionRow(row) {
