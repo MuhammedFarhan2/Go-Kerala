@@ -103,7 +103,7 @@
               <strong class="vect-own-detail-value" data-vect-own-phone>-</strong>
             </div>
             <div class="vect-own-detail-meta-card">
-              <span class="vect-own-detail-label">Created</span>
+              <span class="vect-own-detail-label">Submitted</span>
               <strong class="vect-own-detail-value" data-vect-own-created>-</strong>
             </div>
             <div class="vect-own-detail-meta-card">
@@ -318,6 +318,7 @@
 
       function getHiddenFieldKeys() {
         return getDocumentFieldKeys().concat([
+          'owner-name',
           'owner-last-name',
           'owner-heavy-licence-photo-name-1',
           'owner-heavy-licence-photo-name-2',
@@ -339,7 +340,6 @@
       function getPreferredFieldOrder() {
         return [
           'owner-company-name',
-          'owner-name',
           'owner-first-name',
           'owner-email',
           'owner-whatsapp-number',
@@ -355,7 +355,6 @@
       function getFieldLabel(key) {
         const labels = {
           'owner-company-name': 'Company Name',
-          'owner-name': 'Name',
           'owner-first-name': 'First Name',
           'owner-email': 'Email',
           'owner-whatsapp-number': 'WhatsApp Number',
@@ -521,7 +520,7 @@
         try {
           localStorage.setItem(DASHBOARD_STATE_KEY, JSON.stringify(payload));
         } catch (error) {
-          // Ignore storage write errors.
+          // Ignore local cache write errors.
         }
       }
 
@@ -1008,16 +1007,7 @@
           return;
         }
 
-        // Create summary from raw fields if it doesn't exist
-        const fields = submission.fields || {};
-        const summary = submission.summary || {
-          companyName: fields['owner-company-name'] || fields['owner-name'] || 'Unnamed submission',
-          ownerName: fields['owner-name'] || 'Owner name not captured',
-          email: fields['owner-email'] || '-',
-          phone: submission.whatsappNumber || fields['owner-whatsapp-number'] || '-',
-          whatsappNumber: submission.whatsappNumber || fields['owner-whatsapp-number'] || '-'
-        };
-
+        const summary = submission.summary || {};
         const statusPresentation = getStatusPresentation(submission.status);
         selectedSubmissionId = submission.id;
         cachedSelectedSubmission = submission;
@@ -1033,8 +1023,8 @@
         }
 
         if (ownerNode) {
-          ownerNode.textContent = summary.ownerName || '-';
-          ownerNode.hidden = false;
+          ownerNode.textContent = '';
+          ownerNode.hidden = true;
         }
 
         if (phoneNode) {
@@ -1078,17 +1068,11 @@
       }
 
       function openSubmission(submissionId) {
-        console.log('=== OPEN SUBMISSION DEBUG ===');
-        console.log('Opening submission:', submissionId);
-        
         const selected = allSubmissions.find(function (submission) {
           return submission.id === submissionId;
         });
 
-        console.log('Found submission:', selected);
-
         if (!selected) {
-          console.log('Submission not found!');
           return;
         }
 
@@ -1097,94 +1081,67 @@
         saveDashboardState();
         renderList();
 
-        console.log('Fetching submission details...');
         getApi('/api/vect-own/submissions/' + encodeURIComponent(submissionId))
           .then(function (response) {
-            console.log('Detail response status:', response.status);
-            
             if (!response.ok) {
-              console.log('Detail response not ok:', response.statusText);
               throw new Error('Unable to load submission details.');
             }
 
             return response.json();
           })
           .then(function (payload) {
-            console.log('Detail payload received:', payload);
-            console.log('Submission to render:', payload.submission);
             renderDetail(payload.submission);
           })
-          .catch(function (error) {
-            console.log('Error loading details, using cached:', error);
+          .catch(function () {
             renderDetail(selected);
           });
-        console.log('=== END OPEN SUBMISSION DEBUG ===');
       }
 
       function refreshSubmissions(selectFirst) {
-        console.log('=== VECT OWN REFRESH DEBUG ===');
-        console.log('selectFirst:', selectFirst);
-        
         return getApi('/api/vect-own/submissions')
           .then(function (response) {
-            console.log('Response status:', response.status);
-            
             if (response.status === 401) {
-              console.log('401 Unauthorized - redirecting');
               window.location.replace('index.html');
               return null;
             }
 
             if (!response.ok) {
-              console.log('Response not ok:', response.statusText);
               throw new Error('Unable to load submissions.');
             }
 
             return response.json();
           })
           .then(function (payload) {
-            console.log('Received payload:', payload);
-            
             if (!payload) {
-              console.log('No payload received');
               return;
             }
 
             allSubmissions = Array.isArray(payload.submissions) ? payload.submissions : [];
-            console.log('All submissions loaded:', allSubmissions.length);
-            console.log('Submission IDs:', allSubmissions.map(s => s.id));
-            
             updateMetrics();
             renderList();
 
             if (selectFirst && allSubmissions.length) {
-              console.log('Auto-selecting first submission:', allSubmissions[0].id);
               openSubmission(allSubmissions[0].id);
             } else if (selectedSubmissionId) {
-              console.log('Looking for selected submission:', selectedSubmissionId);
               const stillSelected = allSubmissions.find(function (submission) {
                 return submission.id === selectedSubmissionId;
               });
 
               if (stillSelected) {
-                console.log('Found selected submission:', stillSelected.id);
                 if (cachedSelectedSubmission && cachedSelectedSubmission.id === selectedSubmissionId) {
                   renderDetail(cachedSelectedSubmission);
                 } else {
                   renderDetail(stillSelected);
                 }
               } else {
-                console.log('Selected submission not found');
                 selectedSubmissionId = '';
                 renderDetail(null);
               }
             } else {
-              console.log('No submissions to select');
               renderDetail(null);
             }
 
             saveDashboardState();
-            console.log('=== END VECT OWN REFRESH DEBUG ===');
           });
       }
 
@@ -1320,7 +1277,7 @@
           return response.json();
         })
         .then(function () {
-            return refreshSubmissions(true); // Auto-select first submission
+            return refreshSubmissions(false);
         })
         .catch(function () {
           // Redirect already handled above if needed.
