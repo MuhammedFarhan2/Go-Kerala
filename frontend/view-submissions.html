@@ -30,8 +30,16 @@
       <p>All owner applications and details</p>
     </div>
     
-    <button class="load-btn" onclick="loadSubmissions()">Load All Submissions</button>
-    <button class="load-btn" onclick="clearAllData()">Clear All Data</button>
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <h3>Search Options</h3>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="searchInput" placeholder="Search by Submission ID" style="flex: 1; min-width: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        <button class="load-btn" onclick="searchById()">Search ID</button>
+        <button class="load-btn" onclick="loadSubmissions()">Load All</button>
+        <button class="load-btn" onclick="clearAllData()">Clear All</button>
+      </div>
+      <div id="searchResults" style="margin-top: 10px;"></div>
+    </div>
     
     <div id="results"></div>
   </div>
@@ -46,7 +54,9 @@
 
     async function loadSubmissions() {
       const resultsDiv = document.getElementById('results');
+      const searchResultsDiv = document.getElementById('searchResults');
       resultsDiv.innerHTML = '<p>Loading submissions...</p>';
+      searchResultsDiv.innerHTML = '';
 
       try {
         const response = await fetch(getApiUrl('/api/debug/submissions'));
@@ -60,6 +70,50 @@
       } catch (error) {
         resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
         console.error('Error:', error);
+      }
+    }
+
+    async function searchById() {
+      const searchInput = document.getElementById('searchInput');
+      const searchResultsDiv = document.getElementById('searchResults');
+      const resultsDiv = document.getElementById('results');
+      
+      const submissionId = searchInput.value.trim();
+      
+      if (!submissionId) {
+        searchResultsDiv.innerHTML = '<p style="color: red;">Please enter a submission ID</p>';
+        return;
+      }
+
+      searchResultsDiv.innerHTML = '<p>Searching...</p>';
+      resultsDiv.innerHTML = '';
+
+      try {
+        const response = await fetch(getApiUrl('/api/debug/submissions'));
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const allSubmissions = await response.json();
+        
+        // Search for submission by ID (partial match)
+        const foundSubmission = allSubmissions.find(sub => 
+          sub.id.toLowerCase().includes(submissionId.toLowerCase())
+        );
+
+        if (foundSubmission) {
+          searchResultsDiv.innerHTML = `<p style="color: green;">Found submission: ${foundSubmission.id}</p>`;
+          displaySubmissions([foundSubmission]);
+        } else {
+          searchResultsDiv.innerHTML = `<p style="color: red;">No submission found with ID: ${submissionId}</p>`;
+          // Show all available IDs for reference
+          const availableIds = allSubmissions.map(sub => sub.id).join(', ');
+          searchResultsDiv.innerHTML += `<p style="font-size: 12px; color: #666;">Available IDs: ${availableIds}</p>`;
+        }
+      } catch (error) {
+        searchResultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        console.error('Search error:', error);
       }
     }
 
