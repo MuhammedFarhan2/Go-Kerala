@@ -1163,50 +1163,69 @@
       }
 
       function refreshSubmissions(selectFirst) {
+        console.log('=== VECT OWN REFRESH DEBUG ===');
+        console.log('selectFirst:', selectFirst);
+        
         return getApi('/api/vect-own/submissions')
           .then(function (response) {
+            console.log('Response status:', response.status);
+            
             if (response.status === 401) {
+              console.log('401 Unauthorized - redirecting');
               window.location.replace('index.html');
               return null;
             }
 
             if (!response.ok) {
+              console.log('Response not ok:', response.statusText);
               throw new Error('Unable to load submissions.');
             }
 
             return response.json();
           })
           .then(function (payload) {
+            console.log('Received payload:', payload);
+            
             if (!payload) {
+              console.log('No payload received');
               return;
             }
 
             allSubmissions = Array.isArray(payload.submissions) ? payload.submissions : [];
+            console.log('All submissions loaded:', allSubmissions.length);
+            console.log('Submission IDs:', allSubmissions.map(s => s.id));
+            
             updateMetrics();
             renderList();
 
             if (selectFirst && allSubmissions.length) {
+              console.log('Auto-selecting first submission:', allSubmissions[0].id);
               openSubmission(allSubmissions[0].id);
             } else if (selectedSubmissionId) {
+              console.log('Looking for selected submission:', selectedSubmissionId);
               const stillSelected = allSubmissions.find(function (submission) {
                 return submission.id === selectedSubmissionId;
               });
 
               if (stillSelected) {
+                console.log('Found selected submission:', stillSelected.id);
                 if (cachedSelectedSubmission && cachedSelectedSubmission.id === selectedSubmissionId) {
                   renderDetail(cachedSelectedSubmission);
                 } else {
                   renderDetail(stillSelected);
                 }
               } else {
+                console.log('Selected submission not found');
                 selectedSubmissionId = '';
                 renderDetail(null);
               }
             } else {
+              console.log('No submissions to select');
               renderDetail(null);
             }
 
             saveDashboardState();
+            console.log('=== END VECT OWN REFRESH DEBUG ===');
           });
       }
 
