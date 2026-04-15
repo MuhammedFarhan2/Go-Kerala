@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Submissions</title>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .submission { border: 1px solid #ccc; margin: 10px; padding: 10px; }
+    .field { margin: 5px 0; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>Debug All Submissions</h1>
+  <button onclick="loadSubmissions()">Load Submissions</button>
+  <button onclick="clearAllData()">Clear All Data</button>
+  <div id="results"></div>
+
+  <script>
+    const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+    const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
+
+    function getApiUrl(pathName) {
+      return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+    }
+
+    async function loadSubmissions() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p>Loading...</p>';
+
+      try {
+        // Try to load submissions directly from the file system
+        const response = await fetch(getApiUrl('/api/debug/submissions'));
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        displaySubmissions(data);
+      } catch (error) {
+        resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        console.error('Debug error:', error);
+      }
+    }
+
+    function displaySubmissions(data) {
+      const resultsDiv = document.getElementById('results');
+      
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        resultsDiv.innerHTML = '<p>No submissions found.</p>';
+        return;
+      }
+
+      let html = `<h2>${data.length} Submissions Found:</h2>`;
+      
+      data.forEach((submission, index) => {
+        html += `
+          <div class="submission">
+            <h3>Submission ${index + 1} - ID: ${submission.id}</h3>
+            <div class="field"><strong>Status:</strong> ${submission.status}</div>
+            <div class="field"><strong>Created:</strong> ${new Date(submission.createdAt).toLocaleString()}</div>
+            <div class="field"><strong>WhatsApp:</strong> ${submission.whatsappNumber}</div>
+            <div class="field"><strong>Fields:</strong></div>
+            <pre>${JSON.stringify(submission.fields, null, 2)}</pre>
+          </div>
+        `;
+      });
+
+      resultsDiv.innerHTML = html;
+    }
+
+    async function clearAllData() {
+      if (!confirm('Are you sure you want to clear all submission data?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/debug/clear'), { method: 'POST' });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        alert('All data cleared successfully!');
+        loadSubmissions();
+      } catch (error) {
+        alert('Error clearing data: ' + error.message);
+        console.error('Clear error:', error);
+      }
+    }
+
+    // Load submissions when page loads
+    window.addEventListener('load', loadSubmissions);
+  </script>
+</body>
+</html>

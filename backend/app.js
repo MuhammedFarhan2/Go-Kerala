@@ -482,6 +482,27 @@ function writeJsonFile(filePath, value) {
   fs.renameSync(tempPath, filePath);
 }
 
+// Debug handler functions
+async function handleDebugSubmissions(request, response) {
+  try {
+    const submissions = loadVectOwnSubmissions();
+    sendJson(response, 200, submissions);
+  } catch (error) {
+    sendJson(response, 500, { error: error.message || 'Unable to load submissions.' });
+  }
+}
+
+async function handleDebugClear(request, response) {
+  try {
+    // Clear all submissions
+    vectOwnSubmissions = [];
+    persistVectOwnSubmissions();
+    sendJson(response, 200, { success: true, message: 'All submissions cleared.' });
+  } catch (error) {
+    sendJson(response, 500, { error: error.message || 'Unable to clear submissions.' });
+  }
+}
+
 function hasSupabaseConfig() {
   // Supabase permanently removed - always use local storage
   return false;
@@ -1906,6 +1927,17 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/submissions') {
     handlePublicSubmissionCreate(request, response);
+    return;
+  }
+
+  // Debug endpoints for troubleshooting
+  if (request.method === 'GET' && requestUrl.pathname === '/api/debug/submissions') {
+    handleDebugSubmissions(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/debug/clear') {
+    handleDebugClear(request, response);
     return;
   }
 
