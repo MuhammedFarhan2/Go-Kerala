@@ -253,9 +253,8 @@
       }
 
       function normalizeImageText(value) {
-        return String(value || '')
-          .replace(/\s+/g, '')
-          .trim();
+        // Keep internal whitespace intact (URLs/data-urls can be sensitive).
+        return String(value || '').trim();
       }
 
       function isImageValue(value, key) {
@@ -302,6 +301,15 @@
 
         if (/^\//.test(text)) {
           return getApiUrl(text);
+        }
+
+        // Accept raw filenames too (stored by older flows).
+        if (/^(uploads\/).+/i.test(text)) {
+          return getApiUrl('/' + text);
+        }
+
+        if (/\.(png|jpe?g|webp|gif|svg)$/i.test(text)) {
+          return getApiUrl('/uploads/' + encodeURIComponent(text));
         }
 
         return '';

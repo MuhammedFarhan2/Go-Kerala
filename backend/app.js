@@ -753,6 +753,11 @@ function getUploadUrl(filename) {
     return '';
   }
 
+  // Already a usable URL / data URL (avoid double-wrapping into /uploads/...)
+  if (/^data:image\//i.test(raw) || /^https?:\/\//i.test(raw)) {
+    return raw;
+  }
+
   if (/^\/uploads\//i.test(raw)) {
     return raw;
   }
