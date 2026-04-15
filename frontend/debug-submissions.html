@@ -45,17 +45,61 @@
       searchResultsDiv.innerHTML = '';
 
       try {
-        const response = await fetch(getApiUrl('/api/debug/submissions'));
+        const apiUrl = getApiUrl('/api/debug/submissions');
+        console.log('Fetching from:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          const errorText = await response.text();
+          console.log('Error response:', errorText);
+          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('Received data:', data);
         displaySubmissions(data);
       } catch (error) {
+        console.error('Full error:', error);
         resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
-        console.error('Error:', error);
+        resultsDiv.innerHTML += `<p style="font-size: 12px;">Trying alternative endpoint...</p>`;
+        
+        // Try alternative endpoint
+        tryAlternativeEndpoint();
+      }
+    }
+
+    async function tryAlternativeEndpoint() {
+      const resultsDiv = document.getElementById('results');
+      try {
+        const apiUrl = getApiUrl('/api/vect-own/submissions');
+        console.log('Trying alternative:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('Alternative response:', data);
+        
+        if (data.success && data.submissions) {
+          displaySubmissions(data.submissions);
+        } else {
+          resultsDiv.innerHTML = `<p style="color: red;">Alternative endpoint returned unexpected data</p>`;
+        }
+      } catch (error) {
+        console.error('Alternative error:', error);
+        resultsDiv.innerHTML = `<p style="color: red;">Both endpoints failed: ${error.message}</p>`;
+        resultsDiv.innerHTML += `<p style="font-size: 12px;">Backend might be sleeping. Try again in 30 seconds.</p>`;
       }
     }
 
