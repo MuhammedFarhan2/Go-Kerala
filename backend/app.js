@@ -1584,31 +1584,39 @@ async function handleVectOwnSubmissionList(requestUrl, request, response) {
 }
 
 async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
+  console.log('=== VECT OWN SUBMISSION DETAIL DEBUG ===');
   const session = requireVectOwnSession(request, response);
 
   if (!session) {
+    console.log('No VECT Own session found for detail view');
     return;
   }
 
   const submissionId = String(requestUrl.pathname.split('/').pop() || '').trim();
+  console.log('Loading submission details for ID:', submissionId);
   let submission;
 
   try {
     submission = await getSubmissionByIdAsync(submissionId);
+    console.log('Found submission:', submission);
   } catch (error) {
+    console.error('Error loading submission details:', error);
     sendJson(response, 500, { success: false, error: error.message || 'Unable to load submission.' });
     return;
   }
 
   if (!submission) {
+    console.log('Submission not found for ID:', submissionId);
     sendJson(response, 404, { success: false, error: 'Submission not found.' });
     return;
   }
 
+  console.log('Sending submission details to frontend');
   sendJson(response, 200, {
     success: true,
     submission: submission
   });
+  console.log('=== END VECT OWN SUBMISSION DETAIL DEBUG ===');
 }
 
 async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
