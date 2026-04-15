@@ -46,7 +46,7 @@
       searchResultsDiv.innerHTML = '';
 
       try {
-        const apiUrl = getApiUrl('/api/debug/submissions');
+        const apiUrl = getApiUrl('/api/debug/submissions?password=debug123');
         console.log('Fetching from:', apiUrl);
         
         const response = await fetch(apiUrl);

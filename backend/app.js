@@ -498,6 +498,15 @@ function writeJsonFile(filePath, value) {
 // Debug handler functions
 async function handleDebugSubmissions(request, response) {
   try {
+    // Simple password check for debug endpoint
+    const url = new URL(request.url, `http://${request.headers.host}`);
+    const password = url.searchParams.get('password');
+    
+    if (password !== 'debug123') {
+      sendJson(response, 401, { error: 'Invalid password. Use ?password=debug123' });
+      return;
+    }
+    
     const submissions = loadVectOwnSubmissions();
     sendJson(response, 200, submissions);
   } catch (error) {
