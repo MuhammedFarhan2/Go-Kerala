@@ -753,7 +753,7 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
   const parsedDistricts = Array.isArray(districts) ? districts : tryParseJsonArray(districts);
 
   const summary = {
-    companyName: String(safeFields['owner-company-name'] || safeFields['owner-name'] || safeFields['owner-company'] || '').trim(),
+    companyName: String(safeFields['owner-company'] || safeFields['owner-company-name'] || safeFields['owner-name'] || '').trim(),
     ownerName: String(safeFields['owner-name'] || [safeFields['owner-first-name'], safeFields['owner-last-name']].filter(Boolean).join(' ')).trim(),
     email: String(safeFields['owner-email'] || '').trim(),
     phone: String(whatsappNumber || safeFields['owner-whatsapp-number'] || '').trim(),
@@ -761,9 +761,12 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
     categories: parsedCategories,
     districts: parsedDistricts,
     documents: {
-      heavyLicence: Boolean(safeFields['owner-heavy-licence-photo-name-1'] || safeFields['owner-heavy-licence-photo-name-2']),
-      aadhaar: Boolean(safeFields['owner-aadhaar-photo-name']),
-      profilePhoto: Boolean(safeFields['owner-profile-photo'])
+      heavyLicence: Boolean(safeFields['owner-heavy-licence-photo-url-1'] || safeFields['owner-heavy-licence-photo-url-2']),
+      aadhaar: Boolean(safeFields['owner-aadhaar-photo-url']),
+      profilePhoto: Boolean(safeFields['owner-profile-photo-url']),
+      panPhoto: Boolean(safeFields['owner-pan-photo-url']),
+      gstPhoto: Boolean(safeFields['owner-gst-photo-url']),
+      companyLogo: Boolean(safeFields['owner-company-logo-url'])
     }
   };
   
