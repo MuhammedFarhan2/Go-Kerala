@@ -5136,11 +5136,21 @@ h1 {
 .vect-own-field-row {
   position: relative;
   display: grid;
-  gap: 4px;
-  padding: 12px 96px 12px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: start;
+  padding: 12px 14px;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
   background: #fff;
+}
+
+.vect-own-field-row .vect-own-inline-accept {
+  position: static;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: start;
+  justify-self: end;
 }
 
 .vect-own-inline-accept {

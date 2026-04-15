@@ -318,7 +318,6 @@
 
       function getHiddenFieldKeys() {
         return getDocumentFieldKeys().concat([
-          'owner-name',
           'owner-last-name',
           'owner-heavy-licence-photo-name-1',
           'owner-heavy-licence-photo-name-2',
@@ -340,6 +339,7 @@
       function getPreferredFieldOrder() {
         return [
           'owner-company-name',
+          'owner-name',
           'owner-first-name',
           'owner-email',
           'owner-whatsapp-number',
@@ -355,6 +355,7 @@
       function getFieldLabel(key) {
         const labels = {
           'owner-company-name': 'Company Name',
+          'owner-name': 'Name',
           'owner-first-name': 'First Name',
           'owner-email': 'Email',
           'owner-whatsapp-number': 'WhatsApp Number',
