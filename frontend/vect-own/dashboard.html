@@ -697,6 +697,11 @@
         };
       }
 
+      function isActionableStatus(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+        return safeStatus === 'pending' || safeStatus === 'updated';
+      }
+
       function getOwnerPagePath(itemKey) {
         const routes = {
           'owner-company-name': 'owner-details.html',
@@ -1447,7 +1452,3 @@
   <script src="../script.js?v=20260414-2"></script>
 </body>
 </html>
-      function isActionableStatus(status) {
-        const safeStatus = String(status || '').trim().toLowerCase();
-        return safeStatus === 'pending' || safeStatus === 'updated';
-      }

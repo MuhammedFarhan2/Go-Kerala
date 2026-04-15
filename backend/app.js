@@ -746,6 +746,20 @@ function normalizeSubmissionFields(fields) {
   return safeFields;
 }
 
+function getUploadUrl(filename) {
+  const raw = String(filename || '').trim();
+
+  if (!raw) {
+    return '';
+  }
+
+  if (/^\/uploads\//i.test(raw)) {
+    return raw;
+  }
+
+  return '/uploads/' + encodeURIComponent(raw);
+}
+
 function summarizeSubmissionFields(fields, whatsappNumber) {
   console.log('=== COMPREHENSIVE FIELD DEBUG ===');
   console.log('Input fields:', fields);
@@ -769,12 +783,6 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
   console.log('  owner-aadhaar-photo-name:', safeFields['owner-aadhaar-photo-name']);
   console.log('  owner-heavy-licence-photo-name-1:', safeFields['owner-heavy-licence-photo-name-1']);
   console.log('  owner-heavy-licence-photo-name-2:', safeFields['owner-heavy-licence-photo-name-2']);
-
-  // Helper function to generate upload URLs
-  function getUploadUrl(filename) {
-    if (!filename) return '';
-    return '/uploads/' + encodeURIComponent(String(filename));
-  }
   
   const categories = safeFields['owner-categories'];
   const districts = safeFields['owner-districts'];
