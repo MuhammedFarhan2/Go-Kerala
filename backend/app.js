@@ -1639,9 +1639,13 @@ async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
   }
 
   console.log('Sending submission details to frontend');
+  const submissionWithSummary = Object.assign({}, submission, {
+    summary: summarizeSubmissionFields(submission.fields || {}, submission.whatsappNumber)
+  });
+  
   sendJson(response, 200, {
     success: true,
-    submission: submission
+    submission: submissionWithSummary
   });
   console.log('=== END VECT OWN SUBMISSION DETAIL DEBUG ===');
 }
