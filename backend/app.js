@@ -477,9 +477,22 @@ function readJsonFile(filePath, fallbackValue) {
 }
 
 function writeJsonFile(filePath, value) {
+  console.log('Writing to file:', filePath);
+  console.log('Data to write:', value);
+  
   const tempPath = filePath + '.tmp';
-  fs.writeFileSync(tempPath, JSON.stringify(value, null, 2));
-  fs.renameSync(tempPath, filePath);
+  console.log('Writing to temp file:', tempPath);
+  
+  try {
+    fs.writeFileSync(tempPath, JSON.stringify(value, null, 2));
+    console.log('Temp file written successfully');
+    
+    fs.renameSync(tempPath, filePath);
+    console.log('File renamed successfully');
+  } catch (error) {
+    console.error('File write error:', error);
+    throw error;
+  }
 }
 
 // Debug handler functions
@@ -619,15 +632,27 @@ async function getSubmissionByIdAsync(submissionId) {
 }
 
 async function createSubmissionRecord(submission) {
+  console.log('=== SUBMISSION DEBUG ===');
+  console.log('Submission received:', submission);
+  
   if (!hasSupabaseConfig()) {
     // Fallback to local file storage when Supabase is not configured
     try {
+      console.log('Using local file storage...');
       const submissions = loadVectOwnSubmissions();
+      console.log('Current submissions count:', submissions.length);
+      
       submissions.unshift(submission);
+      console.log('Added new submission, count now:', submissions.length);
+      
       persistVectOwnSubmissions();
+      console.log('Submissions persisted successfully');
+      
+      console.log('=== END SUBMISSION DEBUG ===');
       return submission;
     } catch (error) {
       console.error('File storage error:', error);
+      console.error('Error details:', error.stack);
       sendJson(response, 500, { success: false, error: 'Unable to save submission to local storage.' });
       return;
     }
@@ -635,6 +660,7 @@ async function createSubmissionRecord(submission) {
 
   if (!hasSupabaseConfig()) {
     try {
+      console.log('Using local file storage (second check)...');
       const submissions = loadVectOwnSubmissions();
       submissions.unshift(submission);
       persistVectOwnSubmissions();
