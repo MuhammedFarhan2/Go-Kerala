@@ -1133,11 +1133,17 @@
       }
 
       function openSubmission(submissionId) {
+        console.log('=== OPEN SUBMISSION DEBUG ===');
+        console.log('Opening submission:', submissionId);
+        
         const selected = allSubmissions.find(function (submission) {
           return submission.id === submissionId;
         });
 
+        console.log('Found submission:', selected);
+
         if (!selected) {
+          console.log('Submission not found!');
           return;
         }
 
@@ -1146,20 +1152,28 @@
         saveDashboardState();
         renderList();
 
+        console.log('Fetching submission details...');
         getApi('/api/vect-own/submissions/' + encodeURIComponent(submissionId))
           .then(function (response) {
+            console.log('Detail response status:', response.status);
+            
             if (!response.ok) {
+              console.log('Detail response not ok:', response.statusText);
               throw new Error('Unable to load submission details.');
             }
 
             return response.json();
           })
           .then(function (payload) {
+            console.log('Detail payload received:', payload);
+            console.log('Submission to render:', payload.submission);
             renderDetail(payload.submission);
           })
-          .catch(function () {
+          .catch(function (error) {
+            console.log('Error loading details, using cached:', error);
             renderDetail(selected);
           });
+        console.log('=== END OPEN SUBMISSION DEBUG ===');
       }
 
       function refreshSubmissions(selectFirst) {
