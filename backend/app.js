@@ -742,11 +742,26 @@ function normalizeSubmissionFields(fields) {
 }
 
 function summarizeSubmissionFields(fields, whatsappNumber) {
-  console.log('=== SUMMARIZE FIELDS DEBUG ===');
+  console.log('=== COMPREHENSIVE FIELD DEBUG ===');
   console.log('Input fields:', fields);
   console.log('WhatsApp number:', whatsappNumber);
   
   const safeFields = fields && typeof fields === 'object' ? fields : {};
+  
+  // Log ALL available field names
+  console.log('Available field names:', Object.keys(safeFields));
+  
+  // Check what we actually have
+  console.log('Checking for company fields:');
+  console.log('  owner-company:', safeFields['owner-company']);
+  console.log('  owner-company-name:', safeFields['owner-company-name']);
+  console.log('  owner-name:', safeFields['owner-name']);
+  
+  console.log('Checking for photo fields:');
+  console.log('  owner-profile-photo-url:', safeFields['owner-profile-photo-url']);
+  console.log('  owner-aadhaar-photo-url:', safeFields['owner-aadhaar-photo-url']);
+  console.log('  owner-pan-photo-url:', safeFields['owner-pan-photo-url']);
+  
   const categories = safeFields['owner-categories'];
   const districts = safeFields['owner-districts'];
   const parsedCategories = Array.isArray(categories) ? categories : tryParseJsonArray(categories);
@@ -771,7 +786,7 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
   };
   
   console.log('Generated summary:', summary);
-  console.log('=== END SUMMARIZE FIELDS DEBUG ===');
+  console.log('=== END COMPREHENSIVE FIELD DEBUG ===');
   
   return summary;
 }
