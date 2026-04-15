@@ -1680,6 +1680,9 @@ async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
     summary: summarizeSubmissionFields(safeFields, submission.whatsappNumber)
   });
   
+  console.log('Summary created:', submissionWithUrls.summary);
+  console.log('Full submission with URLs:', submissionWithUrls);
+  
   sendJson(response, 200, {
     success: true,
     submission: submissionWithUrls
