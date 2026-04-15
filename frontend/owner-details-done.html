@@ -97,8 +97,34 @@
         return data;
       }
 
+      function loadBackupFields() {
+        try {
+          const rawBackup = String(localStorage.getItem('owner-form-backup-v1') || '').trim();
+
+          if (!rawBackup) {
+            return {};
+          }
+
+          const parsed = JSON.parse(rawBackup);
+
+          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return {};
+          }
+
+          return Object.keys(parsed).reduce(function (accumulator, key) {
+            if (shouldKeepKey(key)) {
+              accumulator[key] = parsed[key];
+            }
+
+            return accumulator;
+          }, {});
+        } catch (error) {
+          return {};
+        }
+      }
+
       async function collectPayloadFields() {
-        return Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage));
+        return Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage), loadBackupFields());
       }
 
       async function syncReviewedSubmission() {
