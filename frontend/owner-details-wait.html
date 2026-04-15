@@ -117,6 +117,9 @@
       input.maxLength = 10;
       input.value = String(sessionStorage.getItem('owner-whatsapp-number') || '').replace(/^\+91/, '');
 
+      // Display all stored owner data for user reference
+      displayStoredOwnerData();
+
       function normalizeWhatsappNumber(value) {
         const digitsOnly = String(value || '').replace(/\D/g, '');
 
@@ -148,6 +151,64 @@
         return !blockedKeys.some(function (pattern) {
           return pattern.test(key);
         });
+      }
+
+      function displayStoredOwnerData() {
+        const storedData = {};
+        
+        // Collect all owner data from sessionStorage
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith('owner-') && !blockedKeys.some(pattern => pattern.test(key))) {
+            storedData[key] = sessionStorage.getItem(key);
+          }
+        }
+        
+        // Collect all owner data from localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('owner-') && !blockedKeys.some(pattern => pattern.test(key))) {
+            storedData[key] = localStorage.getItem(key);
+          }
+        }
+        
+        // Display stored data in console for debugging
+        if (Object.keys(storedData).length > 0) {
+          console.log('Stored Owner Data:', storedData);
+          
+          // You can also display this data on the page if needed
+          // For example, create a summary section
+          const dataSummary = Object.entries(storedData)
+            .map(([key, value]) => {
+              const displayName = key.replace('owner-', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              return `${displayName}: ${value}`;
+            })
+            .join('\n');
+          
+          console.log('Owner Data Summary:\n' + dataSummary);
+        } else {
+          console.log('No stored owner data found');
+        }
+      }
+
+      function clearOwnerData() {
+        // Clear all owner-related data from sessionStorage
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith('owner-')) {
+            sessionStorage.removeItem(key);
+          }
+        }
+        
+        // Clear all owner-related data from localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('owner-')) {
+            localStorage.removeItem(key);
+          }
+        }
+        
+        console.log('All owner data cleared after WhatsApp submission');
       }
 
       function collectStorage(source) {
@@ -302,7 +363,11 @@
 
         Promise.resolve(submitSubmission())
           .then(function () {
+            // Reset all stored data after successful WhatsApp submission
             if (isWhatsappReview) {
+              // Clear all owner-related data from sessionStorage and localStorage
+              clearOwnerData();
+              
               if (returnPage === 'owner-details-done.html') {
                 sessionStorage.setItem('owner-review-done-allowed', 'yes');
               }
