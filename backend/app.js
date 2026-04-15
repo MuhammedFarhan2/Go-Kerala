@@ -614,7 +614,6 @@ async function getSubmissionByIdAsync(submissionId) {
   }
 
   const safeId = String(submissionId || '').trim();
-
   if (!safeId) {
     return null;
   }
