@@ -761,6 +761,9 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
   console.log('  owner-profile-photo-url:', safeFields['owner-profile-photo-url']);
   console.log('  owner-aadhaar-photo-url:', safeFields['owner-aadhaar-photo-url']);
   console.log('  owner-pan-photo-url:', safeFields['owner-pan-photo-url']);
+  console.log('  owner-aadhaar-photo-name:', safeFields['owner-aadhaar-photo-name']);
+  console.log('  owner-heavy-licence-photo-name-1:', safeFields['owner-heavy-licence-photo-name-1']);
+  console.log('  owner-heavy-licence-photo-name-2:', safeFields['owner-heavy-licence-photo-name-2']);
   
   const categories = safeFields['owner-categories'];
   const districts = safeFields['owner-districts'];
@@ -776,12 +779,12 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
     categories: parsedCategories,
     districts: parsedDistricts,
     documents: {
-      heavyLicence: Boolean(safeFields['owner-heavy-licence-photo-url-1'] || safeFields['owner-heavy-licence-photo-url-2']),
-      aadhaar: Boolean(safeFields['owner-aadhaar-photo-url']),
-      profilePhoto: Boolean(safeFields['owner-profile-photo-url']),
-      panPhoto: Boolean(safeFields['owner-pan-photo-url']),
-      gstPhoto: Boolean(safeFields['owner-gst-photo-url']),
-      companyLogo: Boolean(safeFields['owner-company-logo-url'])
+      heavyLicence: Boolean(safeFields['owner-heavy-licence-photo-name-1'] || safeFields['owner-heavy-licence-photo-name-2']),
+      aadhaar: Boolean(safeFields['owner-aadhaar-photo-name']),
+      profilePhoto: Boolean(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name']),
+      panPhoto: Boolean(safeFields['owner-pan-photo-url'] || safeFields['owner-pan-photo-name']),
+      gstPhoto: Boolean(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
+      companyLogo: Boolean(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name'])
     }
   };
   
