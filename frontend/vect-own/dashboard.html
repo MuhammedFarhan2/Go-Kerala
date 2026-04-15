@@ -1342,7 +1342,7 @@
           return response.json();
         })
         .then(function () {
-            return refreshSubmissions(false);
+            return refreshSubmissions(true); // Auto-select first submission
         })
         .catch(function () {
           // Redirect already handled above if needed.
