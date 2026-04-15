@@ -764,6 +764,12 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
   console.log('  owner-aadhaar-photo-name:', safeFields['owner-aadhaar-photo-name']);
   console.log('  owner-heavy-licence-photo-name-1:', safeFields['owner-heavy-licence-photo-name-1']);
   console.log('  owner-heavy-licence-photo-name-2:', safeFields['owner-heavy-licence-photo-name-2']);
+
+  // Helper function to generate upload URLs
+  function getUploadUrl(filename) {
+    if (!filename) return '';
+    return '/uploads/' + encodeURIComponent(String(filename));
+  }
   
   const categories = safeFields['owner-categories'];
   const districts = safeFields['owner-districts'];
@@ -785,6 +791,16 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
       panPhoto: Boolean(safeFields['owner-pan-photo-url'] || safeFields['owner-pan-photo-name']),
       gstPhoto: Boolean(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
       companyLogo: Boolean(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name'])
+    },
+    // Add actual image URLs for frontend
+    images: {
+      profilePhotoUrl: getUploadUrl(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name']),
+      aadhaarPhotoUrl: getUploadUrl(safeFields['owner-aadhaar-photo-url'] || safeFields['owner-aadhaar-photo-name']),
+      panPhotoUrl: getUploadUrl(safeFields['owner-pan-photo-url'] || safeFields['owner-pan-photo-name']),
+      gstPhotoUrl: getUploadUrl(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
+      companyLogoUrl: getUploadUrl(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name']),
+      heavyLicencePhotoUrl1: getUploadUrl(safeFields['owner-heavy-licence-photo-name-1']),
+      heavyLicencePhotoUrl2: getUploadUrl(safeFields['owner-heavy-licence-photo-name-2'])
     }
   };
   
