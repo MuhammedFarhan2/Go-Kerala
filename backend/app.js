@@ -516,201 +516,55 @@ async function handleDebugClear(request, response) {
   }
 }
 
-function hasSupabaseConfig() {
-  // Supabase permanently removed - always use local storage
-  return false;
-}
-
-function normalizeSupabaseSubmissionRow(row) {
-  const safeRow = row && typeof row === 'object' ? row : {};
-  return {
-    id: String(safeRow.id || '').trim(),
-    createdAt: Number(safeRow.created_at || 0) || 0,
-    updatedAt: Number(safeRow.updated_at || 0) || 0,
-    ownerUpdatedAt: safeRow.owner_updated_at ? String(safeRow.owner_updated_at) : '',
-    status: String(safeRow.status || 'pending').trim().toLowerCase(),
-    reviewNote: String(safeRow.review_note || '').trim(),
-    reviewedBy: String(safeRow.reviewed_by || '').trim(),
-    reviewedAt: String(safeRow.reviewed_at || '').trim(),
-    whatsappNumber: String(safeRow.whatsapp_number || '').trim(),
-    fields: safeRow.fields && typeof safeRow.fields === 'object' ? safeRow.fields : {}
-  };
-}
-
-function serializeSubmissionForSupabase(submission) {
-  const safeSubmission = submission && typeof submission === 'object' ? submission : {};
-  return {
-    id: String(safeSubmission.id || '').trim(),
-    created_at: Number(safeSubmission.createdAt || 0) || 0,
-    updated_at: Number(safeSubmission.updatedAt || 0) || 0,
-    owner_updated_at: safeSubmission.ownerUpdatedAt ? String(safeSubmission.ownerUpdatedAt) : null,
-    status: String(safeSubmission.status || 'pending').trim().toLowerCase(),
-    review_note: String(safeSubmission.reviewNote || '').trim(),
-    reviewed_by: String(safeSubmission.reviewedBy || '').trim(),
-    reviewed_at: String(safeSubmission.reviewedAt || '').trim(),
-    whatsapp_number: String(safeSubmission.whatsappNumber || '').trim(),
-    fields: safeSubmission.fields && typeof safeSubmission.fields === 'object' ? safeSubmission.fields : {}
-  };
-}
-
-async function supabaseRequest(pathName, options) {
-  const response = await fetch(SUPABASE_URL + pathName, Object.assign({
-    headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
-    }
-  }, options || {}));
-
-  if (!response.ok) {
-    let errorMessage = 'Supabase request failed.';
-
-    try {
-      const payload = await response.json();
-      errorMessage = String(
-        (payload && (payload.message || payload.error_description || payload.error)) ||
-        errorMessage
-      );
-    } catch (error) {
-      try {
-        const text = await response.text();
-        if (text) {
-          errorMessage = text;
-        }
-      } catch (nestedError) {
-        // Keep default message.
-      }
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  if (response.status === 204) {
-    return null;
-  }
-
-  return response.json();
-}
+// All Supabase functions removed - using only local storage
 
 async function listVectOwnSubmissions() {
-  if (!hasSupabaseConfig()) {
-    return loadVectOwnSubmissions();
-  }
-
-  const rows = await supabaseRequest(
-    '/rest/v1/submissions?select=*&order=created_at.desc',
-    {
-      headers: {
-        Accept: 'application/json'
-      }
-    }
-  );
-
-  return Array.isArray(rows) ? rows.map(normalizeSupabaseSubmissionRow) : [];
+  return loadVectOwnSubmissions();
 }
 
 async function getSubmissionByIdAsync(submissionId) {
-  if (!hasSupabaseConfig()) {
-    return getSubmissionById(submissionId);
-  }
-
-  const safeId = String(submissionId || '').trim();
-  if (!safeId) {
-    return null;
-  }
-
-  const rows = await supabaseRequest(
-    '/rest/v1/submissions?id=eq.' + encodeURIComponent(safeId) + '&select=*',
-    {
-      headers: {
-        Accept: 'application/json'
-      }
-    }
-  );
-
-  return Array.isArray(rows) && rows.length ? normalizeSupabaseSubmissionRow(rows[0]) : null;
+  return getSubmissionById(submissionId);
 }
 
 async function createSubmissionRecord(submission) {
   console.log('=== SUBMISSION DEBUG ===');
   console.log('Submission received:', submission);
   
-  if (!hasSupabaseConfig()) {
-    // Fallback to local file storage when Supabase is not configured
-    try {
-      console.log('Using local file storage...');
-      const submissions = loadVectOwnSubmissions();
-      console.log('Current submissions count:', submissions.length);
-      
-      submissions.unshift(submission);
-      console.log('Added new submission, count now:', submissions.length);
-      
-      persistVectOwnSubmissions();
-      console.log('Submissions persisted successfully');
-      
-      console.log('=== END SUBMISSION DEBUG ===');
-      return submission;
-    } catch (error) {
-      console.error('File storage error:', error);
-      console.error('Error details:', error.stack);
-      sendJson(response, 500, { success: false, error: 'Unable to save submission to local storage.' });
-      return;
-    }
+  try {
+    console.log('Using local file storage...');
+    const submissions = loadVectOwnSubmissions();
+    console.log('Current submissions count:', submissions.length);
+    
+    submissions.unshift(submission);
+    console.log('Added new submission, count now:', submissions.length);
+    
+    persistVectOwnSubmissions();
+    console.log('Submissions persisted successfully');
+    
+    console.log('=== END SUBMISSION DEBUG ===');
+    return submission;
+  } catch (error) {
+    console.error('File storage error:', error);
+    console.error('Error details:', error.stack);
+    sendJson(response, 500, { success: false, error: 'Unable to save submission to local storage.' });
+    return;
   }
-
-  if (!hasSupabaseConfig()) {
-    try {
-      console.log('Using local file storage (second check)...');
-      const submissions = loadVectOwnSubmissions();
-      submissions.unshift(submission);
-      persistVectOwnSubmissions();
-      return submission;
-    } catch (error) {
-      console.error('File storage error:', error);
-      sendJson(response, 500, { success: false, error: 'Unable to save submission to local storage.' });
-      return;
-    }
-  }
-
-  const rows = await supabaseRequest('/rest/v1/submissions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation'
-    },
-    body: JSON.stringify([serializeSubmissionForSupabase(submission)])
-  });
-
-  return Array.isArray(rows) && rows.length ? normalizeSupabaseSubmissionRow(rows[0]) : submission;
 }
 
 async function updateSubmissionRecord(submission) {
-  if (!hasSupabaseConfig()) {
-    const submissions = loadVectOwnSubmissions();
-    const submissionIndex = submissions.findIndex(function (item) {
-      return item && item.id === submission.id;
-    });
-
-    if (submissionIndex === -1) {
-      submissions.unshift(submission);
-    } else {
-      submissions[submissionIndex] = submission;
-    }
-
-    persistVectOwnSubmissions();
-    return submission;
-  }
-
-  const safeId = String(submission && submission.id || '').trim();
-  const rows = await supabaseRequest('/rest/v1/submissions?id=eq.' + encodeURIComponent(safeId), {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation'
-    },
-    body: JSON.stringify(serializeSubmissionForSupabase(submission))
+  const submissions = loadVectOwnSubmissions();
+  const submissionIndex = submissions.findIndex(function (item) {
+    return item && item.id === submission.id;
   });
 
-  return Array.isArray(rows) && rows.length ? normalizeSupabaseSubmissionRow(rows[0]) : submission;
+  if (submissionIndex === -1) {
+    submissions.unshift(submission);
+  } else {
+    submissions[submissionIndex] = submission;
+  }
+
+  persistVectOwnSubmissions();
+  return submission;
 }
 
 async function deleteSubmissionRecord(submissionId) {
@@ -720,26 +574,18 @@ async function deleteSubmissionRecord(submissionId) {
     return false;
   }
 
-  if (!hasSupabaseConfig()) {
-    const submissions = loadVectOwnSubmissions();
-    const nextSubmissions = submissions.filter(function (item) {
-      return !item || item.id !== safeId;
-    });
-
-    if (nextSubmissions.length !== submissions.length) {
-      vectOwnSubmissions = nextSubmissions;
-      persistVectOwnSubmissions();
-      return true;
-    }
-
-    return false;
-  }
-
-  await supabaseRequest('/rest/v1/submissions?id=eq.' + encodeURIComponent(safeId), {
-    method: 'DELETE'
+  const submissions = loadVectOwnSubmissions();
+  const nextSubmissions = submissions.filter(function (item) {
+    return !item || item.id !== safeId;
   });
 
-  return true;
+  if (nextSubmissions.length !== submissions.length) {
+    vectOwnSubmissions = nextSubmissions;
+    persistVectOwnSubmissions();
+    return true;
+  }
+
+  return false;
 }
 
 function loadVectOwnSubmissions() {
