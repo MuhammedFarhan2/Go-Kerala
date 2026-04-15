@@ -103,7 +103,7 @@
               <strong class="vect-own-detail-value" data-vect-own-phone>-</strong>
             </div>
             <div class="vect-own-detail-meta-card">
-              <span class="vect-own-detail-label">Submitted</span>
+              <span class="vect-own-detail-label">Created</span>
               <strong class="vect-own-detail-value" data-vect-own-created>-</strong>
             </div>
             <div class="vect-own-detail-meta-card">
@@ -114,6 +114,15 @@
               <span class="vect-own-detail-label">Submission Id</span>
               <strong class="vect-own-detail-value vect-own-detail-id" data-vect-own-id>-</strong>
             </div>
+          </div>
+
+          <div class="vect-own-detail-section">
+            <h3 class="vect-own-detail-section-title">Search by ID</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+              <input type="text" id="vect-own-id-search" placeholder="Enter submission ID" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+              <button type="button" onclick="searchSubmissionById()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Search</button>
+            </div>
+            <div id="vect-own-search-results" style="font-size: 12px; color: #666;"></div>
           </div>
 
           <div class="vect-own-detail-section">
@@ -1065,6 +1074,32 @@
         renderFields(submission.fields || {});
         renderList();
         saveDashboardState();
+      }
+
+      function searchSubmissionById() {
+        const searchInput = document.getElementById('vect-own-id-search');
+        const resultsDiv = document.getElementById('vect-own-search-results');
+        
+        const submissionId = searchInput.value.trim();
+        
+        if (!submissionId) {
+          resultsDiv.innerHTML = '<span style="color: red;">Please enter a submission ID</span>';
+          return;
+        }
+
+        resultsDiv.innerHTML = '<span>Searching...</span>';
+
+        // Search in current submissions
+        const foundSubmission = allSubmissions.find(sub => 
+          sub.id.toLowerCase().includes(submissionId.toLowerCase())
+        );
+
+        if (foundSubmission) {
+          resultsDiv.innerHTML = '<span style="color: green;">Found: ' + foundSubmission.id + '</span>';
+          openSubmission(foundSubmission.id);
+        } else {
+          resultsDiv.innerHTML = '<span style="color: red;">Not found. Try: ' + allSubmissions.slice(0, 3).map(s => s.id.substring(0, 8) + '...').join(', ') + '</span>';
+        }
       }
 
       function openSubmission(submissionId) {
