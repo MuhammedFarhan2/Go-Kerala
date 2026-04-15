@@ -1542,31 +1542,45 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
 }
 
 async function handleVectOwnSubmissionList(requestUrl, request, response) {
+  console.log('=== VECT OWN SUBMISSION LIST DEBUG ===');
   const session = requireVectOwnSession(request, response);
 
   if (!session) {
+    console.log('No VECT Own session found');
     return;
   }
 
+  console.log('VECT Own session found, loading submissions...');
   const statusFilter = String(requestUrl.searchParams.get('status') || '').trim().toLowerCase();
   let submissions;
 
   try {
     submissions = await listVectOwnSubmissions();
+    console.log('Loaded submissions:', submissions.length);
+    console.log('Submissions data:', JSON.stringify(submissions, null, 2));
   } catch (error) {
+    console.error('Error loading submissions:', error);
     sendJson(response, 500, { success: false, error: error.message || 'Unable to load submissions.' });
     return;
   }
+  
   const filteredSubmissions = statusFilter && VECT_OWN_STATUSES.has(statusFilter)
     ? submissions.filter(function (submission) {
         return submission.status === statusFilter;
       })
     : submissions;
 
+  console.log('Filtered submissions:', filteredSubmissions.length);
+  
+  const serializedSubmissions = filteredSubmissions.map(serializeSubmissionForList);
+  console.log('Serialized submissions:', JSON.stringify(serializedSubmissions, null, 2));
+
   sendJson(response, 200, {
     success: true,
-    submissions: filteredSubmissions.map(serializeSubmissionForList)
+    submissions: serializedSubmissions
   });
+  
+  console.log('=== END VECT OWN SUBMISSION LIST DEBUG ===');
 }
 
 async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
