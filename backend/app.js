@@ -37,7 +37,6 @@ const VECT_OWN_SELECTION_WHATSAPP_MESSAGE = String(
   process.env.VECT_OWN_SELECTION_WHATSAPP_MESSAGE ||
   'Congratulation you have selected as a member of VECT Movers. For continue fffffff'
 ).trim();
-// Supabase variables removed - using only local storage
 
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -525,8 +524,6 @@ async function handleDebugClear(request, response) {
   }
 }
 
-// All Supabase functions removed - using only local storage
-
 async function listVectOwnSubmissions() {
   return loadVectOwnSubmissions();
 }
@@ -540,7 +537,7 @@ async function createSubmissionRecord(submission) {
   console.log('Submission received:', submission);
   
   try {
-    console.log('Using local file storage...');
+    console.log('Using local file persistence...');
     const submissions = loadVectOwnSubmissions();
     console.log('Current submissions count:', submissions.length);
     
@@ -553,9 +550,9 @@ async function createSubmissionRecord(submission) {
     console.log('=== END SUBMISSION DEBUG ===');
     return submission;
   } catch (error) {
-    console.error('File storage error:', error);
+    console.error('File persistence error:', error);
     console.error('Error details:', error.stack);
-    sendJson(response, 500, { success: false, error: 'Unable to save submission to local storage.' });
+    sendJson(response, 500, { success: false, error: 'Unable to save submission locally.' });
     return;
   }
 }
@@ -1473,7 +1470,7 @@ async function handlePublicSubmissionCreate(request, response) {
 
     console.log('Parsed payload:', payload);
 
-    const fields = normalizeSubmissionFields(payload.fields || payload.storage || payload);
+    const fields = normalizeSubmissionFields(payload.fields || payload);
     const whatsappNumber = normalizePhoneNumber(payload.whatsappNumber || fields['owner-whatsapp-number'] || '');
 
     if (!whatsappNumber) {
@@ -1551,7 +1548,7 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
     return;
   }
 
-  const fields = normalizeSubmissionFields(payload.fields || payload.storage || payload);
+  const fields = normalizeSubmissionFields(payload.fields || payload);
   const mergedFields = Object.assign({}, submission.fields || {}, fields);
   const nextWhatsappNumber = normalizePhoneNumber(
     payload.whatsappNumber ||
