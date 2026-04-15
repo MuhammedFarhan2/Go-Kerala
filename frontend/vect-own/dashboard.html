@@ -999,7 +999,11 @@
       }
 
       function renderDetail(submission) {
+        console.log('=== RENDER DETAIL DEBUG ===');
+        console.log('Rendering submission:', submission);
+        
         if (!submission) {
+          console.log('No submission to render - hiding detail');
           selectedSubmissionId = '';
           noteSectionOpen = false;
           cachedSelectedSubmission = null;
@@ -1015,19 +1019,28 @@
           return;
         }
 
+        console.log('Submission exists - showing detail');
         const summary = submission.summary || {};
+        console.log('Summary:', summary);
+        
         const statusPresentation = getStatusPresentation(submission.status);
+        console.log('Status presentation:', statusPresentation);
+        
         selectedSubmissionId = submission.id;
         cachedSelectedSubmission = submission;
         emptyNode.hidden = true;
         detailNode.hidden = false;
+        
+        console.log('Setting detail nodes...');
 
         if (detailSubtitle) {
           detailSubtitle.textContent = statusPresentation.label.toUpperCase();
+          console.log('Set subtitle:', statusPresentation.label);
         }
 
         if (companyNode) {
           companyNode.textContent = summary.companyName || 'Unnamed submission';
+          console.log('Set company:', summary.companyName || 'Unnamed submission');
         }
 
         if (ownerNode) {
@@ -1037,42 +1050,36 @@
 
         if (phoneNode) {
           phoneNode.textContent = summary.whatsappNumber || summary.phone || '-';
+          console.log('Set phone:', summary.whatsappNumber || summary.phone || '-');
         }
 
         if (createdNode) {
           createdNode.textContent = formatDate(submission.createdAt);
+          console.log('Set created:', formatDate(submission.createdAt));
         }
 
         if (emailNode) {
           emailNode.textContent = summary.email || '-';
+          console.log('Set email:', summary.email || '-');
         }
 
         if (idNode) {
           idNode.textContent = submission.id;
+          console.log('Set ID:', submission.id);
         }
 
         if (statusChip) {
           statusChip.textContent = statusPresentation.label;
           statusChip.className = 'vect-own-status-chip ' + statusPresentation.className;
+          console.log('Set status chip:', statusPresentation.label);
         }
 
-        if (noteInput) {
-          noteInput.value = draftReviewNotes[submission.id] || submission.reviewNote || '';
-        }
-
-        if (noteSection) {
-          noteSection.hidden = !isActionableStatus(submission.status) || !noteSectionOpen;
-        }
-
-        if (noteToggleButton) {
-          noteToggleButton.hidden = !isActionableStatus(submission.status);
-          noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
-        }
-
+        console.log('Rendering documents and fields...');
         renderDocuments(submission.fields || {});
         renderFields(submission.fields || {});
         renderList();
         saveDashboardState();
+        console.log('=== END RENDER DETAIL DEBUG ===');
       }
 
       function autoSearchById() {
