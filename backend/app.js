@@ -37,8 +37,7 @@ const VECT_OWN_SELECTION_WHATSAPP_MESSAGE = String(
   process.env.VECT_OWN_SELECTION_WHATSAPP_MESSAGE ||
   'Congratulation you have selected as a member of VECT Movers. For continue fffffff'
 ).trim();
-const SUPABASE_URL = String(process.env.SUPABASE_URL || '').trim().replace(/\/$/, '');
-const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+// Supabase variables removed - using only local storage
 
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -484,9 +483,8 @@ function writeJsonFile(filePath, value) {
 }
 
 function hasSupabaseConfig() {
-  // Temporarily disable Supabase to use only local storage
+  // Supabase permanently removed - always use local storage
   return false;
-  // return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 }
 
 function normalizeSupabaseSubmissionRow(row) {
