@@ -57,14 +57,39 @@
       let html = `<h2>${data.length} Submissions Found:</h2>`;
       
       data.forEach((submission, index) => {
+        const fields = submission.fields || {};
+        
         html += `
           <div class="submission">
             <h3>Submission ${index + 1} - ID: ${submission.id}</h3>
             <div class="field"><strong>Status:</strong> ${submission.status}</div>
             <div class="field"><strong>Created:</strong> ${new Date(submission.createdAt).toLocaleString()}</div>
             <div class="field"><strong>WhatsApp:</strong> ${submission.whatsappNumber}</div>
-            <div class="field"><strong>Fields:</strong></div>
-            <pre>${JSON.stringify(submission.fields, null, 2)}</pre>
+            
+            <h4>Personal Details:</h4>
+            <div class="field"><strong>Name:</strong> ${fields['owner-name'] || 'Not provided'}</div>
+            <div class="field"><strong>Email:</strong> ${fields['owner-email'] || 'Not provided'}</div>
+            <div class="field"><strong>Phone:</strong> ${fields['owner-phone'] || 'Not provided'}</div>
+            
+            <h4>Company Details:</h4>
+            <div class="field"><strong>Company Name:</strong> ${fields['owner-company-name'] || 'Not provided'}</div>
+            <div class="field"><strong>Company Address:</strong> ${fields['owner-company-address'] || 'Not provided'}</div>
+            <div class="field"><strong>Company Location:</strong> ${fields['owner-company-location'] || 'Not provided'}</div>
+            
+            <h4>Documents & Photos:</h4>
+            <div class="field"><strong>Profile Photo:</strong> ${fields['owner-profile-photo-url'] ? '<a href="' + fields['owner-profile-photo-url'] + '" target="_blank">View Photo</a>' : 'Not uploaded'}</div>
+            <div class="field"><strong>Aadhar Photo:</strong> ${fields['owner-aadhaar-photo-url'] ? '<a href="' + fields['owner-aadhaar-photo-url'] + '" target="_blank">View Photo</a>' : 'Not uploaded'}</div>
+            <div class="field"><strong>License Photo:</strong> ${fields['owner-heavy-licence-photo-url-1'] ? '<a href="' + fields['owner-heavy-licence-photo-url-1'] + '" target="_blank">View Photo</a>' : 'Not uploaded'}</div>
+            <div class="field"><strong>PAN Photo:</strong> ${fields['owner-pan-photo-url'] ? '<a href="' + fields['owner-pan-photo-url'] + '" target="_blank">View Photo</a>' : 'Not uploaded'}</div>
+            <div class="field"><strong>GST Photo:</strong> ${fields['owner-gst-photo-url'] ? '<a href="' + fields['owner-gst-photo-url'] + '" target="_blank">View Photo</a>' : 'Not uploaded'}</div>
+            <div class="field"><strong>Company Logo:</strong> ${fields['owner-company-logo-url'] ? '<a href="' + fields['owner-company-logo-url'] + '" target="_blank">View Logo</a>' : 'Not uploaded'}</div>
+            
+            <h4>Services:</h4>
+            <div class="field"><strong>Categories:</strong> ${fields['owner-categories'] || 'Not provided'}</div>
+            <div class="field"><strong>Districts:</strong> ${fields['owner-districts'] || 'Not provided'}</div>
+            
+            <h4>All Raw Data:</h4>
+            <pre>${JSON.stringify(submission, null, 2)}</pre>
           </div>
         `;
       });
