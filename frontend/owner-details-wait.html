@@ -399,6 +399,37 @@
 
             throw new Error(errorMessage);
           }
+
+          const submissionId = String(result.data && result.data.submission && result.data.submission.id || '').trim();
+
+          if (submissionId) {
+            const syncResponse = await fetchJsonWithRetry(getApiUrl('/api/submissions/' + encodeURIComponent(submissionId) + '/owner-update'), {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                fields: Object.assign({}, allStoredData, mediaFields, {
+                  'owner-whatsapp-number': whatsappNumber
+                }),
+                whatsappNumber: whatsappNumber
+              })
+            });
+
+            console.log('Owner update response:', syncResponse);
+
+            if (!syncResponse.ok || !syncResponse.data.success) {
+              let syncErrorMessage = 'Unable to sync submission details.';
+
+              if (syncResponse.data && syncResponse.data.error) {
+                syncErrorMessage = String(syncResponse.data.error);
+              }
+
+              throw new Error(syncErrorMessage);
+            }
+          } else {
+            console.warn('No submission ID returned from create request; skipping owner-update sync.');
+          }
         } catch (error) {
           console.error('Submission Error Details:', {
             message: error.message,

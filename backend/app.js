@@ -552,8 +552,7 @@ async function createSubmissionRecord(submission) {
   } catch (error) {
     console.error('File persistence error:', error);
     console.error('Error details:', error.stack);
-    sendJson(response, 500, { success: false, error: 'Unable to save submission locally.' });
-    return;
+    throw error;
   }
 }
 
