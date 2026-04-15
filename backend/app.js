@@ -17,7 +17,6 @@ const TWILIO_FROM_NUMBER = String(process.env.TWILIO_FROM_NUMBER || '').trim();
 const TWILIO_WHATSAPP_FROM_NUMBER = String(process.env.TWILIO_WHATSAPP_FROM_NUMBER || process.env.TWILIO_WHATSAPP_FROM || '').trim();
 const PROJECT_ROOT = path.join(__dirname, '..');
 const FRONTEND_DIR = path.join(PROJECT_ROOT, 'frontend');
-const UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
 const PERSISTENT_ROOT = String(
   process.env.VECT_DATA_DIR ||
   process.env.DATA_DIR ||
@@ -27,6 +26,8 @@ const PERSISTENT_ROOT = String(
 const DATA_DIR = PERSISTENT_ROOT
   ? path.resolve(PERSISTENT_ROOT, 'vect-data')
   : path.join(__dirname, 'data');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+const LEGACY_UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
 const VECT_OWN_DB_PATH = path.join(DATA_DIR, 'vect-own-submissions.json');
 const VECT_OWN_SESSION_COOKIE = 'vect_own_session';
 const VECT_OWN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -52,6 +53,7 @@ const MIME_TYPES = {
 };
 
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(LEGACY_UPLOADS_DIR, { recursive: true });
 try {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 } catch (error) {
@@ -452,6 +454,42 @@ function handleHealthCheck(response) {
 }
 
 function sendFile(response, filePath) {
+  fs.readFile(filePath, function (error, data) {
+    if (error) {
+      sendText(response, error.code === 'ENOENT' ? 404 : 500, error.code === 'ENOENT' ? 'Not found' : 'Server error');
+      return;
+    }
+
+    const extension = path.extname(filePath).toLowerCase();
+    response.writeHead(200, {
+      'Content-Type': MIME_TYPES[extension] || 'application/octet-stream'
+    });
+    response.end(data);
+  });
+}
+
+function sendUploadFile(response, rawFileName) {
+  const safeFileName = path.basename(String(rawFileName || '').trim());
+
+  if (!safeFileName || safeFileName !== String(rawFileName || '').trim()) {
+    sendText(response, 400, 'Invalid file name');
+    return;
+  }
+
+  const candidates = [
+    path.join(UPLOADS_DIR, safeFileName),
+    path.join(LEGACY_UPLOADS_DIR, safeFileName)
+  ];
+
+  const filePath = candidates.find(function (candidate) {
+    return candidate && fs.existsSync(candidate);
+  });
+
+  if (!filePath) {
+    sendText(response, 404, 'Not found');
+    return;
+  }
+
   fs.readFile(filePath, function (error, data) {
     if (error) {
       sendText(response, error.code === 'ENOENT' ? 404 : 500, error.code === 'ENOENT' ? 'Not found' : 'Server error');
@@ -1930,6 +1968,11 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'DELETE' && requestUrl.pathname === '/api/upload-heavy-licence') {
     handleUploadDelete(requestUrl, response);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname.startsWith('/uploads/')) {
+    sendUploadFile(response, requestUrl.pathname.slice('/uploads/'.length));
     return;
   }
 
