@@ -742,13 +742,17 @@ function normalizeSubmissionFields(fields) {
 }
 
 function summarizeSubmissionFields(fields, whatsappNumber) {
+  console.log('=== SUMMARIZE FIELDS DEBUG ===');
+  console.log('Input fields:', fields);
+  console.log('WhatsApp number:', whatsappNumber);
+  
   const safeFields = fields && typeof fields === 'object' ? fields : {};
   const categories = safeFields['owner-categories'];
   const districts = safeFields['owner-districts'];
   const parsedCategories = Array.isArray(categories) ? categories : tryParseJsonArray(categories);
   const parsedDistricts = Array.isArray(districts) ? districts : tryParseJsonArray(districts);
 
-  return {
+  const summary = {
     companyName: String(safeFields['owner-company-name'] || safeFields['owner-name'] || safeFields['owner-company'] || '').trim(),
     ownerName: String(safeFields['owner-name'] || [safeFields['owner-first-name'], safeFields['owner-last-name']].filter(Boolean).join(' ')).trim(),
     email: String(safeFields['owner-email'] || '').trim(),
@@ -762,6 +766,11 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
       profilePhoto: Boolean(safeFields['owner-profile-photo'])
     }
   };
+  
+  console.log('Generated summary:', summary);
+  console.log('=== END SUMMARIZE FIELDS DEBUG ===');
+  
+  return summary;
 }
 
 function tryParseJsonArray(value) {
