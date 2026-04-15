@@ -1658,13 +1658,26 @@ async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
   }
 
   console.log('Sending submission details to frontend');
-  const submissionWithSummary = Object.assign({}, submission, {
-    summary: summarizeSubmissionFields(submission.fields || {}, submission.whatsappNumber)
+  
+  const safeFields = submission.fields || {};
+  
+  // Convert photo filenames to URLs for frontend compatibility
+  const submissionWithUrls = Object.assign({}, submission, {
+    fields: Object.assign({}, safeFields, {
+      'owner-profile-photo-url': getUploadUrl(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name']),
+      'owner-aadhaar-photo-url': getUploadUrl(safeFields['owner-aadhaar-photo-url'] || safeFields['owner-aadhaar-photo-name']),
+      'owner-heavy-licence-photo-url-1': getUploadUrl(safeFields['owner-heavy-licence-photo-url-1'] || safeFields['owner-heavy-licence-photo-name-1']),
+      'owner-heavy-licence-photo-url-2': getUploadUrl(safeFields['owner-heavy-licence-photo-url-2'] || safeFields['owner-heavy-licence-photo-name-2']),
+      'owner-pan-photo-url': getUploadUrl(safeFields['owner-pan-photo-url'] || safeFields['owner-pan-photo-name']),
+      'owner-gst-photo-url': getUploadUrl(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
+      'owner-company-logo-url': getUploadUrl(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name'])
+    }),
+    summary: summarizeSubmissionFields(safeFields, submission.whatsappNumber)
   });
   
   sendJson(response, 200, {
     success: true,
-    submission: submissionWithSummary
+    submission: submissionWithUrls
   });
   console.log('=== END VECT OWN SUBMISSION DETAIL DEBUG ===');
 }
