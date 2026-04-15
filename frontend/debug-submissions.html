@@ -22,6 +22,7 @@
         <input type="text" id="searchInput" placeholder="Search by Submission ID" style="flex: 1; min-width: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
         <button onclick="searchById()">Search ID</button>
         <button onclick="loadSubmissions()">Load All</button>
+        <button onclick="tryVectOwnEndpoint()">Try VECT Own</button>
         <button onclick="clearAllData()">Clear All</button>
       </div>
       <div id="searchResults" style="margin-top: 10px;"></div>
@@ -196,6 +197,44 @@
       });
 
       resultsDiv.innerHTML = html;
+    }
+
+    async function tryVectOwnEndpoint() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p>Trying VECT Own endpoint...</p>';
+
+      try {
+        const apiUrl = getApiUrl('/api/vect-own/submissions');
+        console.log('Trying VECT Own:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('VECT Own response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log('VECT Own error:', errorText);
+          resultsDiv.innerHTML = `<p style="color: red;">VECT Own endpoint failed: ${response.status} - ${errorText}</p>`;
+          return;
+        }
+
+        const data = await response.json();
+        console.log('VECT Own response:', data);
+        
+        if (data.success && data.submissions) {
+          resultsDiv.innerHTML = `<p style="color: green;">Found ${data.submissions.length} submissions in VECT Own!</p>`;
+          displaySubmissions(data.submissions);
+        } else {
+          resultsDiv.innerHTML = `<p style="color: orange;">VECT Own endpoint returned: ${JSON.stringify(data)}</p>`;
+        }
+      } catch (error) {
+        console.error('VECT Own error:', error);
+        resultsDiv.innerHTML = `<p style="color: red;">VECT Own endpoint error: ${error.message}</p>`;
+      }
     }
 
     async function clearAllData() {
