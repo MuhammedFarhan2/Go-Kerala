@@ -310,9 +310,13 @@
       function getDocumentFieldKeys() {
         return [
           'owner-profile-photo',
+          'owner-profile-photo-url',
           'owner-heavy-licence-photo-url-1',
           'owner-heavy-licence-photo-url-2',
-          'owner-aadhaar-photo-url'
+          'owner-aadhaar-photo-url',
+          'owner-pan-photo-url',
+          'owner-gst-photo-url',
+          'owner-company-logo-url'
         ];
       }
 
@@ -355,6 +359,7 @@
       function getFieldLabel(key) {
         const labels = {
           'owner-company-name': 'Company Name',
+          'owner-name': 'Name',
           'owner-first-name': 'First Name',
           'owner-email': 'Email',
           'owner-whatsapp-number': 'WhatsApp Number',
@@ -376,6 +381,66 @@
           .replace(/\b\w/g, function (char) {
             return char.toUpperCase();
           });
+      }
+
+      function buildDisplayFields(submission) {
+        const fields = Object.assign({}, submission && submission.fields ? submission.fields : {});
+        const summary = submission && submission.summary ? submission.summary : {};
+        const images = summary && summary.images ? summary.images : {};
+
+        if (summary.companyName && !fields['owner-company-name']) {
+          fields['owner-company-name'] = summary.companyName;
+        }
+
+        if (summary.ownerName && !fields['owner-name']) {
+          fields['owner-name'] = summary.ownerName;
+        }
+
+        if (summary.email && !fields['owner-email']) {
+          fields['owner-email'] = summary.email;
+        }
+
+        if (summary.whatsappNumber && !fields['owner-whatsapp-number']) {
+          fields['owner-whatsapp-number'] = summary.whatsappNumber;
+        }
+
+        if (Array.isArray(summary.categories) && !fields['owner-categories']) {
+          fields['owner-categories'] = summary.categories;
+        }
+
+        if (Array.isArray(summary.districts) && !fields['owner-districts']) {
+          fields['owner-districts'] = summary.districts;
+        }
+
+        if (images.profilePhotoUrl && !fields['owner-profile-photo-url']) {
+          fields['owner-profile-photo-url'] = images.profilePhotoUrl;
+        }
+
+        if (images.aadhaarPhotoUrl && !fields['owner-aadhaar-photo-url']) {
+          fields['owner-aadhaar-photo-url'] = images.aadhaarPhotoUrl;
+        }
+
+        if (images.heavyLicencePhotoUrl1 && !fields['owner-heavy-licence-photo-url-1']) {
+          fields['owner-heavy-licence-photo-url-1'] = images.heavyLicencePhotoUrl1;
+        }
+
+        if (images.heavyLicencePhotoUrl2 && !fields['owner-heavy-licence-photo-url-2']) {
+          fields['owner-heavy-licence-photo-url-2'] = images.heavyLicencePhotoUrl2;
+        }
+
+        if (images.panPhotoUrl && !fields['owner-pan-photo-url']) {
+          fields['owner-pan-photo-url'] = images.panPhotoUrl;
+        }
+
+        if (images.gstPhotoUrl && !fields['owner-gst-photo-url']) {
+          fields['owner-gst-photo-url'] = images.gstPhotoUrl;
+        }
+
+        if (images.companyLogoUrl && !fields['owner-company-logo-url']) {
+          fields['owner-company-logo-url'] = images.companyLogoUrl;
+        }
+
+        return fields;
       }
 
       function resolveStoredUploadUrl(urlValue, fileNameValue) {
@@ -450,6 +515,14 @@
         const safeFields = fields || {};
         const documents = [
           {
+            key: 'owner-company-logo-url',
+            label: 'Company Logo',
+            value: resolveStoredUploadUrl(
+              safeFields['owner-company-logo-url'],
+              safeFields['owner-company-logo-name']
+            )
+          },
+          {
             key: 'owner-heavy-licence-photo-url-1',
             label: 'Licence Front',
             value: resolveStoredUploadUrl(
@@ -474,9 +547,12 @@
             )
           },
           {
-            key: 'owner-profile-photo',
+            key: 'owner-profile-photo-url',
             label: 'Profile Photo',
-            value: safeFields['owner-profile-photo']
+            value: resolveStoredUploadUrl(
+              safeFields['owner-profile-photo-url'],
+              safeFields['owner-profile-photo-name']
+            ) || safeFields['owner-profile-photo']
           }
         ].filter(function (item) {
           return isImageValue(item.value, item.label);
@@ -1007,6 +1083,7 @@
           return;
         }
 
+        const fields = buildDisplayFields(submission);
         const summary = submission.summary || {};
         const statusPresentation = getStatusPresentation(submission.status);
         selectedSubmissionId = submission.id;
@@ -1023,8 +1100,8 @@
         }
 
         if (ownerNode) {
-          ownerNode.textContent = '';
-          ownerNode.hidden = true;
+          ownerNode.textContent = summary.ownerName || fields['owner-name'] || '-';
+          ownerNode.hidden = false;
         }
 
         if (phoneNode) {
@@ -1061,8 +1138,8 @@
           noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
         }
 
-        renderDocuments(submission.fields || {});
-        renderFields(submission.fields || {});
+        renderDocuments(fields);
+        renderFields(fields);
         renderList();
         saveDashboardState();
       }
