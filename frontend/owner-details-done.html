@@ -98,23 +98,7 @@
       }
 
       async function collectPayloadFields() {
-        const mediaFields = {};
-
-        if (window.ownerMediaStore) {
-          await Promise.all(mediaFieldKeys.map(function (key) {
-            return window.ownerMediaStore.getItem(key)
-              .then(function (value) {
-                if (value) {
-                  mediaFields[key] = value;
-                }
-              })
-              .catch(function () {
-                return null;
-              });
-          }));
-        }
-
-        return Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage), mediaFields);
+        return Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage));
       }
 
       async function syncReviewedSubmission() {

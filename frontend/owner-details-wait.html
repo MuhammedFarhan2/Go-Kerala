@@ -409,7 +409,7 @@
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                fields: Object.assign({}, allStoredData, mediaFields, {
+                fields: Object.assign({}, allStoredData, {
                   'owner-whatsapp-number': whatsappNumber
                 }),
                 whatsappNumber: whatsappNumber
