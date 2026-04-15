@@ -192,23 +192,61 @@
       }
 
       function clearOwnerData() {
-        // Clear all owner-related data from sessionStorage
-        for (let i = 0; i < sessionStorage.length; i++) {
+        // Clear ALL owner-related data from sessionStorage
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
           const key = sessionStorage.key(i);
           if (key && key.startsWith('owner-')) {
+            console.log('Clearing sessionStorage:', key);
             sessionStorage.removeItem(key);
           }
         }
         
-        // Clear all owner-related data from localStorage
-        for (let i = 0; i < localStorage.length; i++) {
+        // Clear ALL owner-related data from localStorage
+        for (let i = localStorage.length - 1; i >= 0; i--) {
           const key = localStorage.key(i);
           if (key && key.startsWith('owner-')) {
+            console.log('Clearing localStorage:', key);
             localStorage.removeItem(key);
           }
         }
         
-        console.log('All owner data cleared after WhatsApp submission');
+        // Clear any uploaded photos from uploads directory
+        const photoKeys = [
+          'owner-profile-photo-url',
+          'owner-aadhaar-photo-url',
+          'owner-pan-photo-url',
+          'owner-gst-photo-url',
+          'owner-company-logo-url'
+        ];
+        
+        photoKeys.forEach(key => {
+          if (sessionStorage.getItem(key)) {
+            console.log('Clearing photo:', key);
+            sessionStorage.removeItem(key);
+          }
+          if (localStorage.getItem(key)) {
+            console.log('Clearing photo:', key);
+            localStorage.removeItem(key);
+          }
+        });
+        
+        // Clear any form backup data
+        if (sessionStorage.getItem('owner-form-backup')) {
+          console.log('Clearing form backup');
+          sessionStorage.removeItem('owner-form-backup');
+        }
+        
+        // Clear any session tokens
+        if (sessionStorage.getItem('owner-last-page')) {
+          sessionStorage.removeItem('owner-last-page');
+        }
+        
+        console.log('ALL owner data cleared after WhatsApp submission');
+        
+        // Clear the WhatsApp input field
+        if (input) {
+          input.value = '';
+        }
       }
 
       function collectStorage(source) {
@@ -310,12 +348,31 @@
           }));
         }
 
+        // Collect ALL stored data before submission
+        const allStoredData = {};
+        
+        // Collect from sessionStorage
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith('owner-') && !blockedKeys.some(pattern => pattern.test(key))) {
+            allStoredData[key] = sessionStorage.getItem(key);
+          }
+        }
+        
+        // Collect from localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('owner-') && !blockedKeys.some(pattern => pattern.test(key))) {
+            allStoredData[key] = localStorage.getItem(key);
+          }
+        }
+
         const payload = {
           whatsappNumber: whatsappNumber,
           sourcePage: 'owner-details-wait.html',
-          fields: {
+          fields: Object.assign({}, allStoredData, {
             'owner-whatsapp-number': whatsappNumber
-          }
+          })
         };
 
         // Debug: Log the API URL and payload
@@ -363,11 +420,10 @@
 
         Promise.resolve(submitSubmission())
           .then(function () {
-            // Reset all stored data after successful WhatsApp submission
+            // Reset all stored data after successful submission
+            clearOwnerData();
+            
             if (isWhatsappReview) {
-              // Clear all owner-related data from sessionStorage and localStorage
-              clearOwnerData();
-              
               if (returnPage === 'owner-details-done.html') {
                 sessionStorage.setItem('owner-review-done-allowed', 'yes');
               }
