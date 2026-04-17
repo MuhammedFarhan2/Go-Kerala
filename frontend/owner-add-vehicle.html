@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Vehicle</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260414-2">
+  <style>
+    .add-vehicle-main {
+      min-height: calc(100dvh - var(--header-height));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 14px 18px;
+      background: #f7f8fb;
+    }
+
+    .owner-blank-header {
+      justify-content: space-between !important;
+      padding-left: 1rem;
+      padding-right: 0.7rem;
+    }
+
+    .owner-blank-header .user-icon {
+      margin-left: auto;
+      margin-right: 0;
+      flex: 0 0 auto;
+    }
+
+    .add-vehicle-shell {
+      width: min(920px, 100%);
+      margin: 0 auto;
+    }
+
+    .add-vehicle-card {
+      border: 1px solid #111;
+      border-radius: 26px;
+      background: #fff;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
+      padding: 22px 14px 18px;
+    }
+
+    .add-vehicle-heading {
+      margin: 0 0 6px;
+      font-size: 1.08rem;
+      font-weight: 800;
+      line-height: 1.35;
+      color: #111;
+      text-align: left;
+    }
+
+    .add-vehicle-subheading {
+      margin: 0 0 16px;
+      font-size: 0.92rem;
+      color: #475569;
+      text-align: left;
+    }
+
+    .add-vehicle-eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .add-vehicle-title {
+      margin: 0;
+      font-size: 1.6rem;
+      font-weight: 900;
+      line-height: 1.15;
+      color: #0f172a;
+    }
+
+    .add-vehicle-copy {
+      margin: 10px 0 0;
+      color: #475569;
+      font-size: 0.98rem;
+      line-height: 1.5;
+    }
+
+    .add-vehicle-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 0;
+    }
+
+    .vehicle-type-card {
+      appearance: none;
+      border: 1px solid #111 !important;
+      border-radius: 18px;
+      background: #fff !important;
+      padding: 8px;
+      min-height: 112px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      box-shadow: none !important;
+      overflow: hidden;
+      outline: none;
+      position: relative;
+    }
+
+    .vehicle-type-card:hover {
+      transform: translateY(-2px);
+      border-color: #111;
+    }
+
+    .vehicle-type-card.is-selected {
+      border-color: #111 !important;
+      border-width: 1px !important;
+      box-shadow: none !important;
+    }
+
+    .vehicle-type-card.is-selected::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #16a34a;
+      box-shadow: 0 6px 14px rgba(22, 163, 74, 0.24);
+      z-index: 2;
+    }
+
+    .vehicle-type-card.is-selected::before {
+      content: "";
+      position: absolute;
+      top: 11px;
+      right: 11px;
+      width: 10px;
+      height: 6px;
+      border-left: 2.5px solid #fff;
+      border-bottom: 2.5px solid #fff;
+      transform: rotate(-45deg);
+      z-index: 3;
+    }
+
+    .vehicle-type-art {
+      width: calc(100% - 6px);
+      height: calc(100% - 6px);
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+      background: #fff;
+    }
+
+    .add-vehicle-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin: 18px 0 0;
+      width: 100%;
+    }
+
+    .add-vehicle-clear {
+      border: 0;
+      background: transparent;
+      color: #7b7b7b;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 20px;
+      cursor: pointer;
+    }
+
+    .add-vehicle-clear.is-disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .add-vehicle-next {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      background: #111;
+      color: #fff;
+      font-size: 0.98rem;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 12px 24px rgba(17, 17, 17, 0.16);
+    }
+
+    .add-vehicle-next.is-disabled {
+      pointer-events: none;
+      opacity: 0.45;
+      box-shadow: none;
+    }
+
+    @media (max-width: 640px) {
+      .add-vehicle-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header owner-fixed-header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+    <button type="button" class="user-icon" id="account-btn" aria-label="Open account">
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip-add-vehicle">
+            <circle cx="12" cy="12" r="11.75"></circle>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip-add-vehicle)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#ffffff"></circle>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#000"></path>
+        </g>
+      </svg>
+    </button>
+  </header>
+
+  <main class="add-vehicle-main">
+    <section class="add-vehicle-shell">
+      <div class="add-vehicle-card">
+        <h2 class="add-vehicle-heading">Which type of vehicle are you looking to add?</h2>
+        <p class="add-vehicle-subheading">Choose one vehicle type to continue.</p>
+        <div class="add-vehicle-grid" role="list" aria-label="Vehicle types">
+          <button type="button" class="vehicle-type-card" data-vehicle-type="bus">
+            <img class="vehicle-type-art" src="tour-bus.png" alt="Bus">
+          </button>
+          <button type="button" class="vehicle-type-card" data-vehicle-type="truck">
+            <img class="vehicle-type-art" src="white-flatbed-truck.png" alt="Truck">
+          </button>
+          <button type="button" class="vehicle-type-card" data-vehicle-type="excavator">
+            <img class="vehicle-type-art" src="yellow-hydraulic-excavator.png" alt="Excavator">
+          </button>
+          <button type="button" class="vehicle-type-card" data-vehicle-type="backhoe">
+            <img class="vehicle-type-art" src="yellow-backhoe-loader.png" alt="Backhoe">
+          </button>
+          <button type="button" class="vehicle-type-card" data-vehicle-type="box-truck">
+            <img class="vehicle-type-art" src="modern-white-box-truck.png" alt="Box truck">
+          </button>
+        </div>
+
+        <div class="add-vehicle-footer">
+          <button type="button" class="add-vehicle-clear is-disabled" data-add-vehicle-clear>Clear</button>
+          <a class="add-vehicle-next is-disabled" href="#" data-add-vehicle-next>Continue</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
+  <aside class="account-panel" id="account-panel" aria-hidden="true">
+    <div class="account-panel-nav">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 0 14px;">
+        <strong style="font-size:1.2rem;color:#111;">Account</strong>
+        <button type="button" class="fleet-account-close" id="account-close" aria-label="Close account" style="width:40px;height:40px;border:0;border-radius:50%;background:#f3f4f6;color:#111827;font-size:1.6rem;cursor:pointer;">&times;</button>
+      </div>
+      <div style="padding:0 0 12px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:18px;background:#f8fafc;">
+          <div class="owner-blank-account-avatar" id="accountAvatarLarge">VM</div>
+          <div>
+            <p class="owner-blank-account-name" id="accountCompanyName">VECT MOVERS</p>
+            <div class="owner-blank-account-sub" id="accountProfileName">Owner profile</div>
+          </div>
+        </div>
+      </div>
+      <a class="account-option" href="owner-blank-sheet.html">Last page</a>
+    </div>
+  </aside>
+
+  <script src="script.js?v=20260413-1"></script>
+    <script>
+    (function () {
+      const buttons = Array.from(document.querySelectorAll('[data-vehicle-type]'));
+      const nextButton = document.querySelector('[data-add-vehicle-next]');
+      const clearButton = document.querySelector('[data-add-vehicle-clear]');
+      const companyNode = document.getElementById('accountCompanyName');
+      const profileNode = document.getElementById('accountProfileName');
+      const avatarNode = document.getElementById('accountAvatarLarge');
+      const closeButton = document.getElementById('account-close');
+      const panel = document.getElementById('account-panel');
+      const backdrop = document.getElementById('account-backdrop');
+      let selectedType = '';
+
+      function setAvatar(text) {
+        const value = String(text || 'VM').trim();
+        const initials = value
+          .split(/\s+/)
+          .map(function (part) {
+            return part.charAt(0);
+          })
+          .slice(0, 2)
+          .join('')
+          .toUpperCase() || 'VM';
+
+        if (avatarNode) {
+          avatarNode.textContent = initials;
+        }
+      }
+
+      function updateNextButton() {
+        if (!nextButton) {
+          return;
+        }
+
+        if (!selectedType) {
+          nextButton.classList.add('is-disabled');
+          nextButton.setAttribute('href', '#');
+          if (clearButton) {
+            clearButton.classList.add('is-disabled');
+          }
+          return;
+        }
+
+        nextButton.classList.remove('is-disabled');
+        nextButton.setAttribute('href', 'owner-add-vehicle-next.html?vehicleType=' + encodeURIComponent(selectedType));
+        if (clearButton) {
+          clearButton.classList.remove('is-disabled');
+        }
+      }
+
+      buttons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const nextType = String(button.getAttribute('data-vehicle-type') || '').trim();
+          selectedType = selectedType === nextType ? '' : nextType;
+
+          buttons.forEach(function (item) {
+            item.classList.toggle('is-selected', item.getAttribute('data-vehicle-type') === selectedType);
+          });
+
+          if (selectedType) {
+            window.sessionStorage.setItem('owner-add-vehicle-type', selectedType);
+          } else {
+            window.sessionStorage.removeItem('owner-add-vehicle-type');
+          }
+
+          updateNextButton();
+        });
+      });
+
+      if (clearButton) {
+        clearButton.addEventListener('click', function () {
+          selectedType = '';
+          buttons.forEach(function (item) {
+            item.classList.remove('is-selected');
+          });
+          window.sessionStorage.removeItem('owner-add-vehicle-type');
+          updateNextButton();
+        });
+      }
+
+      const savedType = String(window.sessionStorage.getItem('owner-add-vehicle-type') || '').trim();
+      if (savedType) {
+        const savedButton = buttons.find(function (button) {
+          return button.getAttribute('data-vehicle-type') === savedType;
+        });
+
+        if (savedButton) {
+          savedButton.click();
+        }
+      }
+
+      updateNextButton();
+
+      const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
+      const profileName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || 'Owner profile').trim();
+
+      if (companyNode) {
+        companyNode.textContent = companyName;
+      }
+
+      if (profileNode) {
+        profileNode.textContent = profileName;
+      }
+
+      setAvatar(companyName || profileName);
+
+      if (closeButton && panel && backdrop) {
+        closeButton.addEventListener('click', function () {
+          panel.classList.remove('is-open');
+          panel.setAttribute('aria-hidden', 'true');
+          backdrop.classList.remove('is-visible');
+          backdrop.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+          var header = document.querySelector('.header');
+          if (header) {
+            header.classList.remove('panel-open');
+          }
+        });
+      }
+
+      if (backdrop) {
+        backdrop.addEventListener('click', function () {
+          if (closeButton) {
+            closeButton.click();
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

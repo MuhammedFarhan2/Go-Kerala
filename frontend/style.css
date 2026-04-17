@@ -155,30 +155,24 @@ button.submit-demo-expand-btn.is-view {
   padding-top: 12px;
 }
 
-.owner-profile-action-btn {
-  width: min(860px, calc(100% - 36px));
+.owner-profile-add-photo-btn {
+  width: min(420px, calc(50% - 18px));
   height: 58px;
+  min-width: 180px;
   font-size: 1.05rem;
   text-transform: none;
-  background: #ffffff;
-  color: #c9c9c9;
-  border: 1px solid #e7e7e7;
-  box-shadow: 0 10px 24px rgba(17, 17, 17, 0.06);
+  background: #111111;
+  color: #ffffff;
 }
 
-.owner-profile-action-btn.is-desktop {
-  background: #a1a1a1;
-  border-color: #d9d9d9;
-}
-
-.is-profile-modal-open,
-.is-profile-modal-open body {
+.is-profile-menu-open,
+.is-profile-menu-open body {
   overflow: hidden;
 }
 
-.is-profile-modal-open .owner-main,
-.is-profile-modal-open .owner-heavy-bottom-bar,
-.is-profile-modal-open .owner-header {
+.is-profile-menu-open .owner-main,
+.is-profile-menu-open .owner-heavy-bottom-bar,
+.is-profile-menu-open .owner-header {
   filter: blur(8px);
 }
 
@@ -244,6 +238,52 @@ button.submit-demo-expand-btn.is-view {
   background: #f3f3f3;
   color: #111;
   border: 1px solid #ededed;
+}
+
+.owner-profile-upload-menu {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 6px);
+  width: min(420px, calc(100% - 24px));
+  padding: 10px;
+  border-radius: 22px 22px 14px 14px;
+  background: #fff;
+  box-shadow: 0 -2px 18px rgba(17, 17, 17, 0.1);
+  opacity: 0;
+  transform: translate(-50%, 20px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.owner-profile-upload-menu.is-open {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.owner-profile-upload-option {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.owner-profile-upload-option + .owner-profile-upload-option {
+  margin-top: 6px;
+}
+
+.owner-profile-upload-option:hover {
+  background: #f4f5f7;
+}
+
+.owner-profile-upload-option[data-owner-profile-action="take-photo"] {
+  display: none;
 }
 
 .owner-profile-qr-content {
@@ -487,8 +527,16 @@ button.submit-demo-expand-btn.is-view {
     margin-top: 26px;
   }
 
-  .owner-profile-action-btn {
+  .owner-profile-add-photo-btn {
+    width: min(420px, calc(50% - 12px));
+  }
+
+  .owner-profile-upload-menu {
     width: calc(100% - 16px);
+  }
+
+  .owner-profile-upload-option[data-owner-profile-action="take-photo"] {
+    display: block;
   }
 
   .owner-profile-modal {

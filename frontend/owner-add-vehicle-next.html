@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Continue Setup</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260417-1">
+  <style>
+    .owner-next-header {
+      justify-content: space-between !important;
+      padding-left: 1rem;
+      padding-right: 0.7rem;
+    }
+
+    .owner-next-header .user-icon {
+      margin-left: auto;
+      margin-right: 0;
+      flex: 0 0 auto;
+    }
+
+    .owner-next-main {
+      min-height: calc(100dvh - var(--header-height));
+      background: #f7f8fb;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 64px 14px 18px;
+    }
+
+    .owner-next-card {
+      width: min(920px, 100%);
+      border: 1px solid #111;
+      border-radius: 26px;
+      background: #fff;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
+      padding: 22px 18px;
+    }
+
+    .owner-photo-section {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .owner-photo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .owner-photo-option {
+      min-height: 92px;
+      border: 1px solid #111;
+      border-radius: 20px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #111;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .owner-photo-option:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .owner-photo-option svg {
+      width: 30px;
+      height: 30px;
+      color: #111;
+    }
+
+    .owner-photo-hint {
+      margin: 0;
+      font-size: 0.92rem;
+      color: #111;
+      font-weight: 500;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-next-header owner-fixed-header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+    <button type="button" class="user-icon" id="account-btn" aria-label="Open account">
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip-next">
+            <circle cx="12" cy="12" r="11.75"></circle>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip-next)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#ffffff"></circle>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#000"></path>
+        </g>
+      </svg>
+    </button>
+  </header>
+
+  <main class="owner-next-main">
+    <section class="owner-next-card" aria-label="Continue setup">
+      <div class="owner-photo-section" id="owner-photo-section" hidden>
+        <p class="owner-photo-hint">Add photos of your Tourist bus in Black</p>
+        <div class="owner-photo-grid" aria-label="Bus photo options">
+          <button type="button" class="owner-photo-option" data-photo-option="camera">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+              <path d="M4.5 7.8h2.6l1.4-2.1h7l1.4 2.1h2.6a2 2 0 0 1 2 2v7.7a2 2 0 0 1-2 2H4.5a2 2 0 0 1-2-2V9.8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path>
+              <circle cx="12" cy="13.3" r="3.2" stroke="currentColor" stroke-width="1.7"></circle>
+            </svg>
+            <span>Take photo</span>
+          </button>
+          <button type="button" class="owner-photo-option" data-photo-option="upload">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+              <path d="M12 16.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+              <path d="M8.5 10.5 12 7l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M5 16.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+            <span>Upload photo</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
+  <aside class="account-panel" id="account-panel" aria-hidden="true">
+    <div class="account-panel-nav">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 0 14px;">
+        <strong style="font-size:1.2rem;color:#111;">Account</strong>
+        <button type="button" class="fleet-account-close" id="account-close" aria-label="Close account" style="width:40px;height:40px;border:0;border-radius:50%;background:#f3f4f6;color:#111827;font-size:1.6rem;cursor:pointer;">&times;</button>
+      </div>
+      <div style="padding:0 0 12px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:18px;background:#f8fafc;">
+          <div class="owner-blank-account-avatar" id="accountAvatarLarge">VM</div>
+          <div>
+            <p class="owner-blank-account-name" id="accountCompanyName">VECT MOVERS</p>
+            <div class="owner-blank-account-sub" id="accountProfileName">Owner profile</div>
+          </div>
+        </div>
+      </div>
+      <a class="account-option" href="owner-add-vehicle.html">Back</a>
+    </div>
+  </aside>
+
+  <script src="script.js?v=20260413-1"></script>
+  <script>
+    (function () {
+      const companyNode = document.getElementById('accountCompanyName');
+      const profileNode = document.getElementById('accountProfileName');
+      const avatarNode = document.getElementById('accountAvatarLarge');
+      const closeButton = document.getElementById('account-close');
+      const panel = document.getElementById('account-panel');
+      const backdrop = document.getElementById('account-backdrop');
+
+      const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
+      const profileName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || 'Owner profile').trim();
+
+      function setAvatar(text) {
+        const value = String(text || 'VM').trim();
+        const initials = value
+          .split(/\s+/)
+          .map(function (part) {
+            return part.charAt(0);
+          })
+          .slice(0, 2)
+          .join('')
+          .toUpperCase() || 'VM';
+
+        if (avatarNode) {
+          avatarNode.textContent = initials;
+        }
+      }
+
+      if (companyNode) {
+        companyNode.textContent = companyName;
+      }
+
+      if (profileNode) {
+        profileNode.textContent = profileName;
+      }
+
+      setAvatar(companyName || profileName);
+
+      const selectedType = String(new URLSearchParams(window.location.search).get('vehicleType') || '').trim();
+      const photoSection = document.getElementById('owner-photo-section');
+      const isBus = selectedType === 'bus';
+
+      if (photoSection) {
+        photoSection.hidden = !isBus;
+      }
+
+      if (closeButton && panel && backdrop) {
+        closeButton.addEventListener('click', function () {
+          panel.classList.remove('is-open');
+          panel.setAttribute('aria-hidden', 'true');
+          backdrop.classList.remove('is-visible');
+          backdrop.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+          var header = document.querySelector('.header');
+          if (header) {
+            header.classList.remove('panel-open');
+          }
+        });
+      }
+
+      if (backdrop) {
+        backdrop.addEventListener('click', function () {
+          if (closeButton) {
+            closeButton.click();
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VECT Movers</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260414-2">
+  <style>
+    .owner-blank-header .user-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      flex: 0 0 auto;
+      margin-left: auto;
+    }
+
+    .owner-blank-account-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+    }
+
+    .owner-blank-account-name {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 0.02em;
+    }
+
+    .owner-blank-account-sub {
+      margin-top: 4px;
+      font-size: 0.9rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .owner-blank-account-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 24px rgba(15, 23, 42, 0.2);
+      overflow: hidden;
+    }
+
+    .owner-blank-content {
+      padding-top: 28px;
+    }
+
+    .owner-calendar-preview {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+      color: #111827;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      min-height: 52px;
+    }
+
+    .owner-calendar-preview.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .owner-calendar-preview-date {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .owner-nav-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding-bottom: 92px;
+    }
+
+    .owner-page {
+      display: none;
+    }
+
+    .owner-page.is-active {
+      display: block;
+    }
+
+    .owner-page-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+      padding: 18px;
+    }
+
+    .owner-add-box {
+      min-height: 100px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #111111;
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+      cursor: pointer;
+    }
+
+    .owner-add-plus {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #184a9c;
+      color: #ffffff;
+      font-size: 1.3rem;
+      font-weight: 600;
+      line-height: 1;
+      box-shadow: 0 12px 22px rgba(13, 110, 253, 0.28);
+      transform: translateY(-1px);
+    }
+
+    .owner-add-box:hover .owner-add-plus {
+      transform: translateY(-1px) scale(1.04);
+    }
+
+    .owner-page-title {
+      margin: 0 0 15px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #211414;
+    }
+
+    .owner-booking-heading {
+      margin: -18px 0 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #000000;
+      letter-spacing: 0.01em;
+    }
+
+    .owner-page-copy {
+      margin: 0;
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .owner-bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1205;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 0;
+      box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+      padding: 0;
+    }
+
+    .owner-bottom-nav-inner {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0;
+      width: 100%;
+      margin: 0;
+    }
+
+    .owner-bottom-tab {
+      appearance: none;
+      border: 0;
+      border-right: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 0;
+      background: #fff;
+      color: #0f172a;
+      min-height: 62px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .owner-bottom-tab svg {
+      display: block;
+      width: 34px;
+      height: 34px;
+      margin: 0 auto;
+    }
+
+    .owner-bottom-tab-label-icon {
+      width: 25px;
+      height: 25px;
+    }
+
+    .owner-bottom-tab.is-active svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .owner-bottom-tab.is-active svg path,
+    .owner-bottom-tab.is-active svg rect,
+    .owner-bottom-tab.is-active svg circle {
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .owner-bottom-tab:last-child {
+      border-right: 0;
+    }
+
+    .owner-bottom-tab.is-active {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+      border-radius: 999px;
+      transform: translateY(-2px);
+      margin: 8px 10px;
+      width: calc(100% - 20px);
+      justify-self: center;
+      min-height: 46px;
+      box-shadow: 0 12px 24px rgba(17, 17, 17, 0.18);
+    }
+
+    .owner-bottom-tab:focus-visible {
+      outline: 2px solid #111;
+      outline-offset: 2px;
+    }
+
+    .owner-nav-shell {
+      padding-bottom: 62px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header owner-header owner-blank-header owner-fixed-header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+    <button type="button" class="user-icon" id="account-btn" aria-label="Open account">
+      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="60" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip-submit">
+            <circle cx="12" cy="12" r="11.75"/>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip-submit)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#ffffff"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#000"/>
+        </g>
+      </svg>
+    </button>
+  </header>
+
+  <main class="owner-main owner-blank-main">
+    <section class="owner-blank-sheet" aria-label="Blank owner sheet">
+      <div class="owner-blank-content owner-nav-shell">
+        <section class="owner-page is-active" data-owner-page="booking" aria-label="Booking page">
+          <div class="route-field">
+            <p class="owner-booking-heading">Your bookings can be viewed here</p>
+            <section class="route-calendar" aria-label="Travel date calendar">
+              <button
+                type="button"
+                class="route-calendar-nav"
+                data-calendar-nav="prev"
+                aria-label="Show previous month"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                  <path d="M14.5 5 8 12l6.5 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="route-calendar-nav"
+                data-calendar-nav="next"
+                aria-label="Show next month"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                  <path d="M9.5 5 16 12l-6.5 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+              <div class="route-calendar-months" data-calendar-months></div>
+            </section>
+            <div class="owner-calendar-preview" id="owner-calendar-preview" aria-live="polite" aria-hidden="true">
+              <div class="owner-calendar-preview-date" id="owner-calendar-preview-date">Tap any date</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="owner-page" data-owner-page="add-bus" aria-label="Add bus page">
+          <div class="owner-add-box" role="button" aria-label="Add bus" data-open-add-vehicle>
+            <div class="owner-add-plus" aria-hidden="true">+</div>
+          </div>
+        </section>
+
+        <section class="owner-page" data-owner-page="rent" aria-label="Rent page">
+          <div class="owner-page-card">
+            <h2 class="owner-page-title">Rent</h2>
+            <p class="owner-page-copy">This is the third navigation page. We can place the rent and payment section here next.</p>
+          </div>
+        </section>
+
+        <nav class="owner-bottom-nav" aria-label="Owner navigation">
+          <div class="owner-bottom-nav-inner">
+            <button type="button" class="owner-bottom-tab is-active" data-owner-tab="booking" aria-label="Booking">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                <rect x="3.4" y="4.9" width="17.2" height="15.7" rx="3" stroke="currentColor" stroke-width="1.8"></rect>
+                <path d="M3.4 9.2H20.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M7 3.2V7.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M12 3.2V7.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M17 3.2V7.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <button type="button" class="owner-bottom-tab" data-owner-tab="add-bus" aria-label="Add Bus">
+              <svg class="owner-bottom-tab-label-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"></circle>
+                <path d="M12 7.2V16.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M7.2 12H16.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <button type="button" class="owner-bottom-tab" data-owner-tab="rent" aria-label="Rent">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                <rect x="3.4" y="5" width="17.2" height="14" rx="2.4" stroke="#111111" stroke-width="1.8"></rect>
+                <path d="M3.4 8.8H20.6" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M7 12.2H9" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M10.6 12.2H12.6" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M14.2 12.2H16.2" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M14.8 15.2H17.4" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="M14.8 17.2H19" stroke="#111111" stroke-width="1.8" stroke-linecap="round"></path>
+              </svg>
+            </button>
+          </div>
+        </nav>
+    </section>
+  </main>
+
+  <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
+  <aside class="account-panel" id="account-panel" aria-hidden="true">
+    <div class="account-panel-nav">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 0 14px;">
+        <strong style="font-size:1.2rem;color:#111;">Account</strong>
+        <button type="button" class="fleet-account-close" id="account-close" aria-label="Close account" style="width:40px;height:40px;border:0;border-radius:50%;background:#f3f4f6;color:#111827;font-size:1.6rem;cursor:pointer;">&times;</button>
+      </div>
+      <div style="padding:0 0 12px;">
+        <div class="owner-blank-account-card">
+          <div class="owner-blank-account-avatar" id="accountAvatarLarge">VM</div>
+          <div>
+            <p class="owner-blank-account-name" id="accountCompanyName">VECT MOVERS</p>
+            <div class="owner-blank-account-sub" id="accountProfileName">Owner profile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <script src="script.js?v=20260413-1"></script>
+  <script>
+    (function () {
+      const companyNode = document.getElementById('accountCompanyName');
+      const profileNode = document.getElementById('accountProfileName');
+      const avatarNode = document.getElementById('accountAvatarLarge');
+      const closeButton = document.getElementById('account-close');
+      const panel = document.getElementById('account-panel');
+      const backdrop = document.getElementById('account-backdrop');
+      const previewNode = document.getElementById('owner-calendar-preview');
+      const previewDateNode = document.getElementById('owner-calendar-preview-date');
+      const tabs = Array.from(document.querySelectorAll('[data-owner-tab]'));
+      const pages = Array.from(document.querySelectorAll('[data-owner-page]'));
+      const addVehicleTrigger = document.querySelector('[data-open-add-vehicle]');
+
+      function setAvatar(text) {
+        const value = String(text || 'VM').trim();
+        const initials = value
+          .split(/\s+/)
+          .map(function (part) {
+            return part.charAt(0);
+          })
+          .slice(0, 2)
+          .join('')
+          .toUpperCase() || 'VM';
+
+        if (avatarNode) {
+          avatarNode.textContent = initials;
+        }
+      }
+
+      function formatDateKey(dateKey) {
+        if (!dateKey) {
+          return 'Tap any date';
+        }
+
+        const parts = String(dateKey).split('-').map(function (part) {
+          return Number(part);
+        });
+
+        if (parts.length !== 3 || parts.some(function (part) { return Number.isNaN(part); })) {
+          return String(dateKey);
+        }
+
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+
+        if (Number.isNaN(date.getTime())) {
+          return String(dateKey);
+        }
+
+        return date.toLocaleDateString([], {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+      }
+
+      function setActiveOwnerPage(pageName) {
+        const nextPage = String(pageName || 'booking');
+
+        tabs.forEach(function (tab) {
+          const isActive = tab.getAttribute('data-owner-tab') === nextPage;
+          tab.classList.toggle('is-active', isActive);
+          tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        pages.forEach(function (page) {
+          const isActive = page.getAttribute('data-owner-page') === nextPage;
+          page.classList.toggle('is-active', isActive);
+        });
+      }
+
+      const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
+      const profileName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || 'Owner profile').trim();
+
+      if (companyNode) {
+        companyNode.textContent = companyName;
+      }
+
+      if (profileNode) {
+        profileNode.textContent = profileName;
+      }
+
+      setAvatar(companyName || profileName);
+
+      if (window.ownerMediaStore && typeof window.ownerMediaStore.getItem === 'function') {
+        window.ownerMediaStore.getItem('owner-profile-photo').then(function (profilePhoto) {
+          if (!profilePhoto || !avatarNode) {
+            return;
+          }
+
+          avatarNode.textContent = '';
+          avatarNode.style.backgroundImage = 'url("' + profilePhoto.replace(/"/g, '%22') + '")';
+          avatarNode.style.backgroundSize = 'cover';
+          avatarNode.style.backgroundPosition = 'center';
+        }).catch(function () {
+          return;
+        });
+      }
+
+      if (closeButton && panel && backdrop) {
+        closeButton.addEventListener('click', function () {
+          panel.classList.remove('is-open');
+          panel.setAttribute('aria-hidden', 'true');
+          backdrop.classList.remove('is-visible');
+          backdrop.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+          var header = document.querySelector('.header');
+          if (header) {
+            header.classList.remove('panel-open');
+          }
+        });
+      }
+
+      if (backdrop) {
+        backdrop.addEventListener('click', function () {
+          if (closeButton) {
+            closeButton.click();
+          }
+        });
+      }
+
+      document.addEventListener('click', function (event) {
+        const dayButton = event.target.closest('.route-calendar-day[data-date-key]');
+
+        if (!dayButton) {
+          const ownerTab = event.target.closest('[data-owner-tab]');
+
+          if (ownerTab) {
+            setActiveOwnerPage(ownerTab.getAttribute('data-owner-tab'));
+          }
+          return;
+        }
+
+        const dateKey = dayButton.getAttribute('data-date-key');
+
+        if (!previewNode || !previewDateNode) {
+          return;
+        }
+
+        previewDateNode.textContent = formatDateKey(dateKey);
+        previewNode.classList.add('is-visible');
+        previewNode.setAttribute('aria-hidden', 'false');
+
+        window.setTimeout(function () {
+          previewNode.classList.add('is-visible');
+        }, 0);
+      });
+
+      if (addVehicleTrigger) {
+        addVehicleTrigger.addEventListener('click', function () {
+          window.location.href = 'owner-add-vehicle.html';
+        });
+      }
+
+      setActiveOwnerPage('booking');
+    })();
+  </script>
+</body>
+</html>

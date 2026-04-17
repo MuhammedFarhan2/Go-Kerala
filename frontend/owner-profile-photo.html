@@ -53,25 +53,26 @@
   <div class="owner-heavy-bottom-bar owner-profile-bottom-bar">
     <input
       type="file"
+      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+      hidden
+      data-owner-profile-upload-input
+    >
+    <input
+      type="file"
       accept="image/*"
-      capture="user"
+      capture="environment"
       hidden
       data-owner-profile-camera-input
     >
-    <button type="button" class="owner-next-btn owner-profile-action-btn" data-owner-profile-action-btn>
-      Take photo
-    </button>
-  </div>
 
-  <div class="owner-profile-modal-backdrop" hidden data-owner-profile-modal-backdrop>
-    <section class="owner-profile-modal" aria-label="Continue on mobile device">
-      <button type="button" class="owner-profile-modal-close" aria-label="Close dialog" data-owner-profile-modal-close>&times;</button>
-      <h2 class="owner-profile-modal-title">Continue on your mobile device</h2>
-      <p class="owner-profile-modal-text">
-        You can always come back later and continue required steps on this desktop.
-      </p>
-      <button type="button" class="owner-next-btn owner-profile-modal-action" data-owner-profile-qr-btn>Use QR code</button>
-    </section>
+    <div class="owner-profile-upload-menu" hidden data-owner-profile-upload-menu>
+      <button type="button" class="owner-profile-upload-option" data-owner-profile-action="take-photo">Take Photo with Back Camera</button>
+      <button type="button" class="owner-profile-upload-option" data-owner-profile-action="upload-photo">Upload Photo</button>
+    </div>
+
+    <button type="button" class="owner-next-btn owner-profile-add-photo-btn" data-owner-profile-action-btn>
+      Add photo
+    </button>
   </div>
 
   <div class="owner-profile-camera" hidden data-owner-profile-camera>
@@ -81,10 +82,10 @@
         <div class="owner-profile-camera-oval"></div>
       </div>
       <div class="owner-profile-camera-copy">
-        <h2 class="owner-profile-camera-title">Take a selfie</h2>
+        <h2 class="owner-profile-camera-title">Take a photo</h2>
         <p class="owner-profile-camera-text">Position your face in the oval and hold still.</p>
       </div>
-      <button type="button" class="owner-profile-camera-capture" aria-label="Capture selfie" data-owner-profile-camera-capture>
+      <button type="button" class="owner-profile-camera-capture" aria-label="Capture photo" data-owner-profile-camera-capture>
         <span class="owner-profile-camera-capture-ring"></span>
       </button>
     </div>
@@ -95,10 +96,10 @@
     (function () {
       const actionButton = document.querySelector('[data-owner-profile-action-btn]');
       const cameraInput = document.querySelector('[data-owner-profile-camera-input]');
+      const uploadInput = document.querySelector('[data-owner-profile-upload-input]');
       const cameraOverlay = document.querySelector('[data-owner-profile-camera]');
-      const modalBackdrop = document.querySelector('[data-owner-profile-modal-backdrop]');
-      const modalCloseButton = document.querySelector('[data-owner-profile-modal-close]');
-      const qrButton = document.querySelector('[data-owner-profile-qr-btn]');
+      const uploadMenu = document.querySelector('[data-owner-profile-upload-menu]');
+      const actionButtons = Array.from(document.querySelectorAll('[data-owner-profile-action]'));
       const videoNode = document.querySelector('[data-owner-profile-video]');
       const captureButton = document.querySelector('[data-owner-profile-camera-capture]');
       const ovalNode = document.querySelector('.owner-profile-camera-oval');
@@ -114,7 +115,7 @@
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       let activeStream = null;
 
-      if (!actionButton || !cameraInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !ovalNode) {
+      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !uploadMenu || !videoNode || !captureButton || !ovalNode) {
         return;
       }
 
@@ -123,12 +124,6 @@
       }
 
       const isMobileDevice = window.matchMedia('(max-width: 680px)').matches || window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-
-      actionButton.classList.toggle('is-desktop', !isMobileDevice);
-
-      if (!isMobileDevice) {
-        actionButton.textContent = 'Use my phone';
-      }
 
       function stopCamera() {
         if (activeStream) {
@@ -143,14 +138,24 @@
         document.documentElement.classList.remove('is-camera-open');
       }
 
-      function closeDesktopModal() {
-        modalBackdrop.hidden = true;
-        document.documentElement.classList.remove('is-profile-modal-open');
+      function closeMenu() {
+        uploadMenu.classList.remove('is-open');
+        document.documentElement.classList.remove('is-profile-menu-open');
+
+        window.setTimeout(function () {
+          if (!uploadMenu.classList.contains('is-open')) {
+            uploadMenu.hidden = true;
+          }
+        }, 220);
       }
 
-      function openDesktopModal() {
-        modalBackdrop.hidden = false;
-        document.documentElement.classList.add('is-profile-modal-open');
+      function openMenu() {
+        uploadMenu.hidden = false;
+        document.documentElement.classList.add('is-profile-menu-open');
+
+        window.requestAnimationFrame(function () {
+          uploadMenu.classList.add('is-open');
+        });
       }
 
       async function openCamera() {
@@ -162,7 +167,9 @@
         try {
           activeStream = await navigator.mediaDevices.getUserMedia({
             video: {
-              facingMode: 'user'
+              facingMode: {
+                ideal: 'environment'
+              }
             },
             audio: false
           });
@@ -261,30 +268,37 @@
       }
 
       actionButton.addEventListener('click', function () {
-        if (isMobileDevice) {
-          openCamera();
+        if (!isMobileDevice) {
+          uploadInput.click();
           return;
         }
 
-        openDesktopModal();
+        const isOpen = uploadMenu.classList.contains('is-open');
+
+        if (isOpen) {
+          closeMenu();
+          return;
+        }
+
+        openMenu();
       });
 
       captureButton.addEventListener('click', captureFromOval);
-      modalCloseButton.addEventListener('click', closeDesktopModal);
-      modalBackdrop.addEventListener('click', function (event) {
-        if (event.target === modalBackdrop) {
-          closeDesktopModal();
-        }
-      });
-      qrButton.addEventListener('click', function () {
-        const qrUrl = new URL('owner-profile-photo-qr.html', window.location.href);
+      actionButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const action = button.getAttribute('data-owner-profile-action');
 
-        if (isProfileReview) {
-          qrUrl.searchParams.set('review', reviewItem);
-          qrUrl.searchParams.set('return', returnPage);
-        }
+          closeMenu();
 
-        window.location.href = qrUrl.toString();
+          if (action === 'take-photo') {
+            openCamera();
+            return;
+          }
+
+          if (action === 'upload-photo') {
+            uploadInput.click();
+          }
+        });
       });
 
       cameraInput.addEventListener('change', function () {
@@ -303,6 +317,36 @@
         };
 
         reader.readAsDataURL(file);
+      });
+
+      uploadInput.addEventListener('change', function () {
+        const file = uploadInput.files && uploadInput.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function () {
+          finishProfilePhotoCapture(String(reader.result || '')).catch(function (error) {
+            window.alert(error.message || 'Unable to save profile photo.');
+          });
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+      document.addEventListener('click', function (event) {
+        if (!uploadMenu.classList.contains('is-open')) {
+          return;
+        }
+
+        if (uploadMenu.contains(event.target) || actionButton.contains(event.target)) {
+          return;
+        }
+
+        closeMenu();
       });
     })();
   </script>

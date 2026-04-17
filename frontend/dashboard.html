@@ -253,8 +253,9 @@
       }
 
       function normalizeImageText(value) {
-        // Keep internal whitespace intact (URLs/data-urls can be sensitive).
-        return String(value || '').trim();
+        return String(value || '')
+          .replace(/\s+/g, '')
+          .trim();
       }
 
       function isImageValue(value, key) {
@@ -303,47 +304,7 @@
           return getApiUrl(text);
         }
 
-        // Accept raw filenames too (stored by older flows).
-        if (/^(uploads\/).+/i.test(text)) {
-          return getApiUrl('/' + text);
-        }
-
-        if (/\.(png|jpe?g|webp|gif|svg)$/i.test(text)) {
-          return getApiUrl('/uploads/' + encodeURIComponent(text));
-        }
-
         return '';
-      }
-
-      const imageObjectUrlCache = new Map();
-
-      function resolveRenderableImageUrl(value) {
-        const directUrl = getImageUrl(value);
-
-        if (!directUrl) {
-          return Promise.resolve('');
-        }
-
-        if (!/^data:image\//i.test(directUrl)) {
-          return Promise.resolve(directUrl);
-        }
-
-        if (imageObjectUrlCache.has(directUrl)) {
-          return Promise.resolve(imageObjectUrlCache.get(directUrl));
-        }
-
-        return fetch(directUrl)
-          .then(function (response) {
-            return response.blob();
-          })
-          .then(function (blob) {
-            const objectUrl = URL.createObjectURL(blob);
-            imageObjectUrlCache.set(directUrl, objectUrl);
-            return objectUrl;
-          })
-          .catch(function () {
-            return directUrl;
-          });
       }
 
       function getDocumentFieldKeys() {
@@ -563,7 +524,7 @@
           },
           {
             key: 'owner-heavy-licence-photo-url-1',
-            label: 'Heavy Driving Licence Front',
+            label: 'Licence Front',
             value: resolveStoredUploadUrl(
               safeFields['owner-heavy-licence-photo-url-1'],
               safeFields['owner-heavy-licence-photo-name-1']
@@ -571,7 +532,7 @@
           },
           {
             key: 'owner-heavy-licence-photo-url-2',
-            label: 'Heavy Driving Licence Back',
+            label: 'Licence Back',
             value: resolveStoredUploadUrl(
               safeFields['owner-heavy-licence-photo-url-2'],
               safeFields['owner-heavy-licence-photo-name-2']
@@ -579,7 +540,7 @@
           },
           {
             key: 'owner-aadhaar-photo-url',
-            label: 'Aadhaar Card',
+            label: 'Aadhaar',
             value: resolveStoredUploadUrl(
               safeFields['owner-aadhaar-photo-url'],
               safeFields['owner-aadhaar-photo-name']
@@ -602,80 +563,18 @@
           return;
         }
 
-        documentsNode.innerHTML = '';
-
-        documents.forEach(function (item) {
+        documentsNode.innerHTML = documents.map(function (item) {
+          const imageUrl = getImageUrl(item.value);
           const itemState = getItemReviewState(selectedSubmissionId, item.key);
-          const card = document.createElement('article');
-          const acceptButton = document.createElement('button');
-          const labelNode = document.createElement('p');
-          const imageNode = document.createElement('img');
-          const viewButton = document.createElement('button');
-          const fallbackNode = document.createElement('p');
-
-          card.className = 'vect-own-document-card';
-
-          acceptButton.type = 'button';
-          acceptButton.className = 'vect-own-inline-accept vect-own-document-accept' + (itemState === 'deselected' ? ' is-deselected' : '');
-          acceptButton.setAttribute('data-vect-own-item-key', item.key);
-          acceptButton.setAttribute('data-vect-own-item-label', item.label);
-          acceptButton.textContent = getReviewToggleLabel(itemState);
-
-          labelNode.className = 'vect-own-document-label';
-          labelNode.textContent = item.label;
-
-          imageNode.className = 'vect-own-image-preview';
-          imageNode.alt = item.label;
-          imageNode.loading = 'lazy';
-          imageNode.decoding = 'async';
-
-          viewButton.type = 'button';
-          viewButton.className = 'vect-own-image-link';
-          viewButton.textContent = 'View full image';
-          viewButton.disabled = true;
-
-          fallbackNode.className = 'vect-own-empty-state';
-          fallbackNode.hidden = true;
-          fallbackNode.textContent = 'Loading preview...';
-
-          card.appendChild(acceptButton);
-          card.appendChild(labelNode);
-          card.appendChild(imageNode);
-          card.appendChild(viewButton);
-          card.appendChild(fallbackNode);
-          documentsNode.appendChild(card);
-
-          resolveRenderableImageUrl(item.value)
-            .then(function (imageUrl) {
-              if (!imageUrl) {
-                imageNode.hidden = true;
-                fallbackNode.hidden = false;
-                fallbackNode.textContent = 'No preview available.';
-                return;
-              }
-
-              imageNode.src = imageUrl;
-              viewButton.disabled = false;
-              viewButton.setAttribute('data-vect-own-image-url', imageUrl);
-              viewButton.setAttribute('data-vect-own-image-label', item.label);
-
-              imageNode.addEventListener('error', function () {
-                imageNode.hidden = true;
-                fallbackNode.hidden = false;
-                fallbackNode.textContent = 'Unable to load preview. Use View full image.';
-              }, { once: true });
-
-              imageNode.addEventListener('load', function () {
-                imageNode.hidden = false;
-                fallbackNode.hidden = true;
-              }, { once: true });
-            })
-            .catch(function () {
-              imageNode.hidden = true;
-              fallbackNode.hidden = false;
-              fallbackNode.textContent = 'Unable to load preview. Use View full image.';
-            });
-        });
+          return [
+            '<article class="vect-own-document-card">',
+            '<button type="button" class="vect-own-inline-accept vect-own-document-accept' + (itemState === 'deselected' ? ' is-deselected' : '') + '" data-vect-own-item-key="' + escapeHtml(item.key) + '" data-vect-own-item-label="' + escapeHtml(item.label) + '">' + getReviewToggleLabel(itemState) + '</button>',
+            '<p class="vect-own-document-label">' + escapeHtml(item.label) + '</p>',
+            '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(item.label) + '" class="vect-own-image-preview">',
+            '<button type="button" class="vect-own-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(item.label) + '">View full image</button>',
+            '</article>'
+          ].join('');
+        }).join('');
       }
 
       function getApiUrl(pathName) {
@@ -796,11 +695,6 @@
           label: safeStatus || 'pending',
           className: 'is-' + (safeStatus || 'pending')
         };
-      }
-
-      function isActionableStatus(status) {
-        const safeStatus = String(status || '').trim().toLowerCase();
-        return safeStatus === 'pending' || safeStatus === 'updated';
       }
 
       function getOwnerPagePath(itemKey) {
@@ -1553,3 +1447,7 @@
   <script src="../script.js?v=20260414-2"></script>
 </body>
 </html>
+      function isActionableStatus(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+        return safeStatus === 'pending' || safeStatus === 'updated';
+      }
