@@ -315,6 +315,37 @@
         return '';
       }
 
+      const imageObjectUrlCache = new Map();
+
+      function resolveRenderableImageUrl(value) {
+        const directUrl = getImageUrl(value);
+
+        if (!directUrl) {
+          return Promise.resolve('');
+        }
+
+        if (!/^data:image\//i.test(directUrl)) {
+          return Promise.resolve(directUrl);
+        }
+
+        if (imageObjectUrlCache.has(directUrl)) {
+          return Promise.resolve(imageObjectUrlCache.get(directUrl));
+        }
+
+        return fetch(directUrl)
+          .then(function (response) {
+            return response.blob();
+          })
+          .then(function (blob) {
+            const objectUrl = URL.createObjectURL(blob);
+            imageObjectUrlCache.set(directUrl, objectUrl);
+            return objectUrl;
+          })
+          .catch(function () {
+            return directUrl;
+          });
+      }
+
       function getDocumentFieldKeys() {
         return [
           'owner-profile-photo',
@@ -571,18 +602,80 @@
           return;
         }
 
-        documentsNode.innerHTML = documents.map(function (item) {
-          const imageUrl = getImageUrl(item.value);
+        documentsNode.innerHTML = '';
+
+        documents.forEach(function (item) {
           const itemState = getItemReviewState(selectedSubmissionId, item.key);
-          return [
-            '<article class="vect-own-document-card">',
-            '<button type="button" class="vect-own-inline-accept vect-own-document-accept' + (itemState === 'deselected' ? ' is-deselected' : '') + '" data-vect-own-item-key="' + escapeHtml(item.key) + '" data-vect-own-item-label="' + escapeHtml(item.label) + '">' + getReviewToggleLabel(itemState) + '</button>',
-            '<p class="vect-own-document-label">' + escapeHtml(item.label) + '</p>',
-            '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(item.label) + '" class="vect-own-image-preview">',
-            '<button type="button" class="vect-own-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(item.label) + '">View full image</button>',
-            '</article>'
-          ].join('');
-        }).join('');
+          const card = document.createElement('article');
+          const acceptButton = document.createElement('button');
+          const labelNode = document.createElement('p');
+          const imageNode = document.createElement('img');
+          const viewButton = document.createElement('button');
+          const fallbackNode = document.createElement('p');
+
+          card.className = 'vect-own-document-card';
+
+          acceptButton.type = 'button';
+          acceptButton.className = 'vect-own-inline-accept vect-own-document-accept' + (itemState === 'deselected' ? ' is-deselected' : '');
+          acceptButton.setAttribute('data-vect-own-item-key', item.key);
+          acceptButton.setAttribute('data-vect-own-item-label', item.label);
+          acceptButton.textContent = getReviewToggleLabel(itemState);
+
+          labelNode.className = 'vect-own-document-label';
+          labelNode.textContent = item.label;
+
+          imageNode.className = 'vect-own-image-preview';
+          imageNode.alt = item.label;
+          imageNode.loading = 'lazy';
+          imageNode.decoding = 'async';
+
+          viewButton.type = 'button';
+          viewButton.className = 'vect-own-image-link';
+          viewButton.textContent = 'View full image';
+          viewButton.disabled = true;
+
+          fallbackNode.className = 'vect-own-empty-state';
+          fallbackNode.hidden = true;
+          fallbackNode.textContent = 'Loading preview...';
+
+          card.appendChild(acceptButton);
+          card.appendChild(labelNode);
+          card.appendChild(imageNode);
+          card.appendChild(viewButton);
+          card.appendChild(fallbackNode);
+          documentsNode.appendChild(card);
+
+          resolveRenderableImageUrl(item.value)
+            .then(function (imageUrl) {
+              if (!imageUrl) {
+                imageNode.hidden = true;
+                fallbackNode.hidden = false;
+                fallbackNode.textContent = 'No preview available.';
+                return;
+              }
+
+              imageNode.src = imageUrl;
+              viewButton.disabled = false;
+              viewButton.setAttribute('data-vect-own-image-url', imageUrl);
+              viewButton.setAttribute('data-vect-own-image-label', item.label);
+
+              imageNode.addEventListener('error', function () {
+                imageNode.hidden = true;
+                fallbackNode.hidden = false;
+                fallbackNode.textContent = 'Unable to load preview. Use View full image.';
+              }, { once: true });
+
+              imageNode.addEventListener('load', function () {
+                imageNode.hidden = false;
+                fallbackNode.hidden = true;
+              }, { once: true });
+            })
+            .catch(function () {
+              imageNode.hidden = true;
+              fallbackNode.hidden = false;
+              fallbackNode.textContent = 'Unable to load preview. Use View full image.';
+            });
+        });
       }
 
       function getApiUrl(pathName) {
