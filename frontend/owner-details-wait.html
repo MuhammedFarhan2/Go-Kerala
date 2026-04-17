@@ -394,13 +394,16 @@
         }
 
         Object.assign(allStoredData, loadBackupFields());
+        Object.assign(allStoredData, mediaFields);
+
+        const payloadFields = Object.assign({}, allStoredData, {
+          'owner-whatsapp-number': whatsappNumber
+        });
 
         const payload = {
           whatsappNumber: whatsappNumber,
           sourcePage: 'owner-details-wait.html',
-          fields: Object.assign({}, allStoredData, {
-            'owner-whatsapp-number': whatsappNumber
-          })
+          fields: payloadFields
         };
 
         // Debug: Log the API URL and payload
@@ -437,9 +440,7 @@
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                fields: Object.assign({}, allStoredData, {
-                  'owner-whatsapp-number': whatsappNumber
-                }),
+                fields: payloadFields,
                 whatsappNumber: whatsappNumber
               })
             });

@@ -253,9 +253,8 @@
       }
 
       function normalizeImageText(value) {
-        return String(value || '')
-          .replace(/\s+/g, '')
-          .trim();
+        // Keep internal whitespace intact (URLs/data-urls can be sensitive).
+        return String(value || '').trim();
       }
 
       function isImageValue(value, key) {
@@ -302,6 +301,15 @@
 
         if (/^\//.test(text)) {
           return getApiUrl(text);
+        }
+
+        // Accept raw filenames too (stored by older flows).
+        if (/^(uploads\/).+/i.test(text)) {
+          return getApiUrl('/' + text);
+        }
+
+        if (/\.(png|jpe?g|webp|gif|svg)$/i.test(text)) {
+          return getApiUrl('/uploads/' + encodeURIComponent(text));
         }
 
         return '';
@@ -524,7 +532,7 @@
           },
           {
             key: 'owner-heavy-licence-photo-url-1',
-            label: 'Licence Front',
+            label: 'Heavy Driving Licence Front',
             value: resolveStoredUploadUrl(
               safeFields['owner-heavy-licence-photo-url-1'],
               safeFields['owner-heavy-licence-photo-name-1']
@@ -532,7 +540,7 @@
           },
           {
             key: 'owner-heavy-licence-photo-url-2',
-            label: 'Licence Back',
+            label: 'Heavy Driving Licence Back',
             value: resolveStoredUploadUrl(
               safeFields['owner-heavy-licence-photo-url-2'],
               safeFields['owner-heavy-licence-photo-name-2']
@@ -540,7 +548,7 @@
           },
           {
             key: 'owner-aadhaar-photo-url',
-            label: 'Aadhaar',
+            label: 'Aadhaar Card',
             value: resolveStoredUploadUrl(
               safeFields['owner-aadhaar-photo-url'],
               safeFields['owner-aadhaar-photo-name']
@@ -695,6 +703,11 @@
           label: safeStatus || 'pending',
           className: 'is-' + (safeStatus || 'pending')
         };
+      }
+
+      function isActionableStatus(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+        return safeStatus === 'pending' || safeStatus === 'updated';
       }
 
       function getOwnerPagePath(itemKey) {
@@ -1447,7 +1460,3 @@
   <script src="../script.js?v=20260414-2"></script>
 </body>
 </html>
-      function isActionableStatus(status) {
-        const safeStatus = String(status || '').trim().toLowerCase();
-        return safeStatus === 'pending' || safeStatus === 'updated';
-      }

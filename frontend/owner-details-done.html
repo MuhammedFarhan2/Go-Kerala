@@ -124,7 +124,29 @@
       }
 
       async function collectPayloadFields() {
-        return Object.assign({}, collectStorage(sessionStorage), collectStorage(localStorage), loadBackupFields());
+        const mediaFields = {};
+
+        if (window.ownerMediaStore) {
+          await Promise.all(mediaFieldKeys.map(function (key) {
+            return window.ownerMediaStore.getItem(key)
+              .then(function (value) {
+                if (value) {
+                  mediaFields[key] = value;
+                }
+              })
+              .catch(function () {
+                // Ignore missing local media and continue with the rest of the sync.
+              });
+          }));
+        }
+
+        return Object.assign(
+          {},
+          collectStorage(sessionStorage),
+          collectStorage(localStorage),
+          loadBackupFields(),
+          mediaFields
+        );
       }
 
       async function syncReviewedSubmission() {
