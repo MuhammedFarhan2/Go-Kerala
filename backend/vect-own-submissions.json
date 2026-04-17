@@ -1,0 +1,36 @@
+[
+  {
+    "id": "567dd8cf-a184-43ab-9c39-c0e31c8736aa",
+    "createdAt": 1776251016568,
+    "updatedAt": 1776251016568,
+    "status": "pending",
+    "reviewNote": "",
+    "reviewedBy": "",
+    "reviewedAt": "",
+    "whatsappNumber": "+911111111111",
+    "fields": {
+      "owner-whatsapp-number": "+911111111111",
+      "owner-company-name": "Img Test",
+      "owner-heavy-licence-photo-url-1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=",
+      "owner-aadhaar-photo-url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
+    }
+  },
+  {
+    "id": "9d100a58-7f63-4bd9-9f0b-7e4178030426",
+    "createdAt": 1776250152830,
+    "updatedAt": 1776250152830,
+    "status": "pending",
+    "reviewNote": "",
+    "reviewedBy": "",
+    "reviewedAt": "",
+    "whatsappNumber": "+911234567890",
+    "fields": {
+      "owner-company-name": "Test Co",
+      "owner-name": "Test Owner",
+      "owner-email": "test@example.com",
+      "owner-whatsapp-number": "+911234567890",
+      "owner-address": "Addr",
+      "owner-city": "City"
+    }
+  }
+]

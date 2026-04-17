@@ -855,8 +855,8 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
       panPhotoUrl: getUploadUrl(safeFields['owner-pan-photo-url'] || safeFields['owner-pan-photo-name']),
       gstPhotoUrl: getUploadUrl(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
       companyLogoUrl: getUploadUrl(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name']),
-      heavyLicencePhotoUrl1: getUploadUrl(safeFields['owner-heavy-licence-photo-name-1']),
-      heavyLicencePhotoUrl2: getUploadUrl(safeFields['owner-heavy-licence-photo-name-2'])
+      heavyLicencePhotoUrl1: getUploadUrl(safeFields['owner-heavy-licence-photo-url-1'] || safeFields['owner-heavy-licence-photo-name-1']),
+      heavyLicencePhotoUrl2: getUploadUrl(safeFields['owner-heavy-licence-photo-url-2'] || safeFields['owner-heavy-licence-photo-name-2'])
     }
   };
   
