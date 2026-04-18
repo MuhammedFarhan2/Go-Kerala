@@ -1028,7 +1028,8 @@
 
           const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
           const ownerName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || '').trim();
-          const whatsappNumber = String(sessionStorage.getItem('owner-whatsapp-number') || localStorage.getItem('owner-whatsapp-number') || '').trim();
+          const storedWhatsappNumber = String(sessionStorage.getItem('owner-whatsapp-number') || localStorage.getItem('owner-whatsapp-number') || '').trim();
+          const whatsappNumber = storedWhatsappNumber || '+910000000000';
           const payload = {
             whatsappNumber: whatsappNumber,
             fields: {
