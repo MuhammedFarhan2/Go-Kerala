@@ -391,6 +391,42 @@
       background: #fff;
     }
 
+    .vect-own-tourist-image-card {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .vect-own-tourist-image-preview {
+      width: min(320px, 100%);
+      max-height: 280px;
+      border: 1px solid #dbe2ea;
+      border-radius: 14px;
+      background: #f8fafc;
+      object-fit: cover;
+    }
+
+    .vect-own-tourist-image-link {
+      appearance: none;
+      align-self: start;
+      border: 0;
+      background: transparent;
+      color: #0f4aa3;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .vect-own-tourist-image-link:hover {
+      text-decoration: underline;
+    }
+
     .vect-own-tourist-file-name {
       margin: 0;
       font-size: 0.92rem;
@@ -1267,19 +1303,35 @@
         ].join('');
       }
 
+      function buildTouristImageCard(title, value, itemKey) {
+        const safeValue = String(value || '').trim();
+        const imageUrl = resolveStoredUploadUrl('', safeValue);
+
+        if (!safeValue) {
+          return [
+            '<div class="vect-own-tourist-image-card">',
+            '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
+            '<p class="vect-own-tourist-file-empty">No file uploaded</p>',
+            '</div>'
+          ].join('');
+        }
+
+        return [
+          '<div class="vect-own-tourist-image-card">',
+          '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
+          imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
+          imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
+          '</div>'
+        ].join('');
+      }
+
       function buildTouristFileSection(title, values, itemKeyPrefix) {
         const safeValues = Array.isArray(values) ? values.filter(function (item) {
           return String(item || '').trim();
         }) : [];
 
         const items = safeValues.length ? safeValues.map(function (value, index) {
-          const imageUrl = resolveStoredUploadUrl('', value);
-          return [
-            '<div class="vect-own-tourist-file-row">',
-            '<p class="vect-own-tourist-file-name">' + escapeHtml(valueToText(value)) + '</p>',
-            imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + ' ' + (index + 1) + '" class="vect-own-tourist-file-preview">' : '',
-            '</div>'
-          ].join('');
+          return buildTouristImageCard(title + ' ' + (index + 1), value, itemKeyPrefix + '-' + index);
         }).join('') : '<p class="vect-own-tourist-file-empty">No file uploaded</p>';
 
         return [
@@ -1316,9 +1368,7 @@
         }
 
         const photoRows = (touristBusDetails.photos || []).slice(0, 4).map(function (name, index) {
-          const itemKey = 'tourist-photo-' + index;
-          const imageUrl = resolveStoredUploadUrl('', name);
-          return buildTouristReviewRow('Photo ' + (index + 1), name, itemKey, imageUrl);
+          return buildTouristImageCard('Photo ' + (index + 1), name, 'tourist-photo-' + index);
         }).join('');
 
         touristSubmissionContentNode.innerHTML = [
