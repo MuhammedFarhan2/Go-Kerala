@@ -831,6 +831,15 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
   const districts = safeFields['owner-districts'];
   const parsedCategories = Array.isArray(categories) ? categories : tryParseJsonArray(categories);
   const parsedDistricts = Array.isArray(districts) ? districts : tryParseJsonArray(districts);
+  const busPhotos = tryParseJsonArray(safeFields['owner-bus-photos'] || safeFields.photos || safeFields['owner-bus-photos-url']);
+  const busRc = tryParseJsonArray(safeFields['owner-bus-rc'] || safeFields.rc || safeFields['owner-bus-rc-url']);
+  const busInsurance = tryParseJsonArray(safeFields['owner-bus-insurance'] || safeFields.insurance || safeFields['owner-bus-insurance-url']);
+  const busPermit = tryParseJsonArray(safeFields['owner-bus-permit'] || safeFields.permit || safeFields['owner-bus-permit-url']);
+  const busType = String(safeFields['owner-bus-type'] || '').trim();
+  const busSeats = String(safeFields['owner-bus-seats'] || '').trim();
+  const busTv = String(safeFields['owner-bus-tv'] || '').trim();
+  const busPlace = String(safeFields['owner-bus-place'] || '').trim();
+  const busPermitType = String(safeFields['owner-bus-permit-type'] || '').trim();
 
   const summary = {
     companyName: String(safeFields['owner-company'] || safeFields['owner-company-name'] || safeFields['owner-name'] || '').trim(),
@@ -857,6 +866,17 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
       companyLogoUrl: getUploadUrl(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name']),
       heavyLicencePhotoUrl1: getUploadUrl(safeFields['owner-heavy-licence-photo-url-1'] || safeFields['owner-heavy-licence-photo-name-1']),
       heavyLicencePhotoUrl2: getUploadUrl(safeFields['owner-heavy-licence-photo-url-2'] || safeFields['owner-heavy-licence-photo-name-2'])
+    },
+    bus: {
+      type: busType,
+      seats: busSeats,
+      tvMusic: busTv,
+      place: busPlace,
+      permitType: busPermitType,
+      photos: busPhotos,
+      rc: busRc,
+      insurance: busInsurance,
+      permit: busPermit
     }
   };
   
