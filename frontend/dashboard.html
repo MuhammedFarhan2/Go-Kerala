@@ -9,6 +9,501 @@
   </script>
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="../style.css?v=20260414-2">
+  <style>
+    .vect-own-main {
+      padding-bottom: 92px;
+    }
+
+    .vect-own-page {
+      display: none;
+    }
+
+    .vect-own-page.is-active {
+      display: block;
+    }
+
+    .vect-own-page-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+      padding: 18px;
+    }
+
+    .vect-own-paper-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .vect-own-paper-brand {
+      display: grid;
+      gap: 2px;
+    }
+
+    .vect-own-paper-brand .logo {
+      margin: 0;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .vect-own-paper-brand .logo-sub {
+      margin: 0;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+    }
+
+    .vect-own-paper-signout {
+      border: 1px solid #111;
+      border-radius: 999px;
+      background: #fff;
+      color: #111;
+      min-height: 40px;
+      padding: 0 16px;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .vect-own-paper-title {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .vect-own-paper-copy {
+      margin: 0;
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .vect-own-product-page {
+      width: min(1200px, calc(100% - 24px));
+      margin: 0 auto;
+    }
+
+    .vect-own-bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1205;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+      padding: 0;
+    }
+
+    .vect-own-bottom-nav-inner {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      width: min(960px, calc(100% - 24px));
+      margin: 10px auto 12px;
+    }
+
+    .vect-own-bottom-tab {
+      appearance: none;
+      border: 1px solid #111;
+      border-radius: 22px;
+      background: #fff;
+      color: #0f172a;
+      min-height: 64px;
+      font-size: 1.06rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .vect-own-bottom-tab:last-child {
+      border-right: 1px solid #111;
+    }
+
+    .vect-own-bottom-tab.is-active {
+      background: #111;
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(17, 17, 17, 0.18);
+    }
+
+    .vect-own-tourist-page {
+      width: min(920px, calc(100% - 24px));
+      margin: 0 auto;
+    }
+
+    .vect-own-tourist-submissions-layout {
+      display: grid;
+      gap: 16px;
+      margin-top: 2px;
+    }
+
+    .vect-own-tourist-bottom-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .vect-own-tourist-selected-summary {
+      display: grid;
+      gap: 16px;
+    }
+
+    .vect-own-tourist-form-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .vect-own-tourist-flow-title {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
+      line-height: 1.1;
+      font-weight: 700;
+      color: #111;
+      text-align: left;
+    }
+
+    .vect-own-tourist-form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .vect-own-tourist-question {
+      display: grid;
+      gap: 8px;
+    }
+
+    .vect-own-tourist-label {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.3;
+      font-weight: 700;
+      color: #111;
+    }
+
+    .vect-own-tourist-review-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .vect-own-tourist-review-main {
+      display: grid;
+      gap: 10px;
+    }
+
+    .vect-own-tourist-value {
+      width: 100%;
+      min-height: 48px;
+      padding: 0;
+      color: #111;
+      display: flex;
+      align-items: center;
+      font-size: 0.96rem;
+      font-weight: 600;
+    }
+
+    .vect-own-tourist-value.is-muted {
+      color: #6b7280;
+    }
+
+    .vect-own-tourist-photo-block {
+      display: grid;
+      gap: 8px;
+    }
+
+    .vect-own-tourist-upload-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .vect-own-tourist-upload-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    .vect-own-tourist-upload-name {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.35;
+      font-weight: 700;
+      color: #111;
+      word-break: break-word;
+    }
+
+    .vect-own-tourist-upload-button {
+      appearance: none;
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid #f04444;
+      border-radius: 999px;
+      background: #fff;
+      color: #f04444;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: default;
+    }
+
+    .vect-own-tourist-photo-preview {
+      width: 100%;
+      max-width: 280px;
+      height: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #f8fafc;
+      object-fit: cover;
+    }
+
+    .vect-own-tourist-upload-note {
+      margin: 0 0 0 6px;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      color: #4b5563;
+    }
+
+    .vect-own-tourist-choice-stack {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .vect-own-tourist-choice-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: fit-content;
+    }
+
+    .vect-own-tourist-upload-action {
+      width: min(220px, 100%);
+      min-height: 46px;
+      border: 1px solid #111;
+      border-radius: 999px;
+      background: #fff;
+      color: #111;
+      font: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: default;
+    }
+
+    .vect-own-tourist-review-toggle {
+      min-width: 86px;
+      min-height: 34px;
+      border: 0 !important;
+      border-radius: 999px;
+      background: #111827 !important;
+      color: #fff !important;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .vect-own-tourist-review-toggle.is-deselected {
+      background: #dc2626 !important;
+    }
+
+    .vect-own-tourist-review-group {
+      display: grid;
+      gap: 12px;
+    }
+
+    .vect-own-tourist-card {
+      display: grid;
+      gap: 18px;
+    }
+
+    .vect-own-tourist-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .vect-own-tourist-kicker {
+      margin: 0 0 4px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #52525b;
+    }
+
+    .vect-own-tourist-title {
+      margin: 0;
+      font-size: clamp(1.4rem, 2.8vw, 2rem);
+      line-height: 1.1;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .vect-own-tourist-subtitle {
+      margin: 6px 0 0;
+      color: #64748b;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+
+    .vect-own-tourist-top-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    .vect-own-tourist-pill {
+      appearance: none;
+      border: 1px solid #111;
+      border-radius: 24px;
+      background: #fff;
+      color: #111;
+      min-height: 92px;
+      width: 100%;
+      padding: 18px 22px;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .vect-own-tourist-pill.is-pending {
+      background: #fff;
+      color: #111;
+    }
+
+    .vect-own-tourist-pill.is-reject {
+      background: #fff;
+      color: #111;
+    }
+
+    .vect-own-tourist-pill.is-update {
+      background: #fff;
+      color: #111;
+    }
+
+    .vect-own-tourist-pill.is-selected {
+      background: #111 !important;
+      color: #fff !important;
+    }
+
+    .vect-own-tourist-pill.is-selected:hover {
+      background: #111 !important;
+      color: #fff !important;
+    }
+
+    .vect-own-tourist-bottom-box .vect-own-detail-actions {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .vect-own-tourist-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .vect-own-tourist-summary-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: #fff;
+      padding: 14px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .vect-own-tourist-summary-label {
+      margin: 0;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .vect-own-tourist-summary-value {
+      margin: 0;
+      font-size: 0.96rem;
+      line-height: 1.45;
+      font-weight: 700;
+      color: #111;
+      word-break: break-word;
+    }
+
+    .vect-own-tourist-files {
+      display: grid;
+      gap: 12px;
+    }
+
+    .vect-own-tourist-file-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: #fff;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .vect-own-tourist-file-title {
+      margin: 0;
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .vect-own-tourist-file-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .vect-own-tourist-file-item {
+      margin: 0;
+      font-size: 0.82rem;
+      line-height: 1.35;
+      color: #475569;
+      word-break: break-word;
+    }
+
+    .vect-own-tourist-empty {
+      border: 1px dashed #cbd5e1;
+      border-radius: 18px;
+      padding: 18px;
+      color: #64748b;
+      background: #fff;
+      line-height: 1.5;
+    }
+
+    .vect-own-tourist-bottom-box {
+      border: 1px solid #e5e7eb;
+      border-radius: 22px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .vect-own-tourist-bottom-box .vect-own-detail-actions {
+      margin-top: 0;
+    }
+  </style>
 </head>
 <body class="vect-own-body">
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -34,112 +529,226 @@
   </header>
 
   <main class="vect-own-main">
-    <section class="vect-own-overview" aria-label="Submission overview">
-      <article class="vect-own-metric-card">
-        <p class="vect-own-metric-label">Pending</p>
-        <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
-      </article>
-      <article class="vect-own-metric-card">
-        <p class="vect-own-metric-label">Accepted</p>
-        <strong class="vect-own-metric-value" data-vect-own-metric="accepted">0</strong>
-      </article>
-      <article class="vect-own-metric-card">
-        <p class="vect-own-metric-label">Rejected</p>
-        <strong class="vect-own-metric-value" data-vect-own-metric="rejected">0</strong>
-      </article>
-      <article class="vect-own-metric-card">
-        <p class="vect-own-metric-label">Updated</p>
-        <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
-      </article>
-    </section>
-
-    <section class="vect-own-toolbar" aria-label="Owner controls">
-      <label class="vect-own-search-wrap">
-        <span class="vect-own-search-label">Search</span>
-        <input type="search" class="vect-own-search-input" placeholder="Name, company, phone, or id" data-vect-own-search>
-      </label>
-
-      <div class="vect-own-tabs" role="tablist" aria-label="Submission filters">
-        <button type="button" class="vect-own-tab is-active" data-vect-own-tab="all">All</button>
-        <button type="button" class="vect-own-tab" data-vect-own-tab="pending">Pending</button>
-        <button type="button" class="vect-own-tab" data-vect-own-tab="accepted">Accepted</button>
-        <button type="button" class="vect-own-tab" data-vect-own-tab="rejected">Rejected</button>
-        <button type="button" class="vect-own-tab" data-vect-own-tab="updated">Updated</button>
-      </div>
-    </section>
-
-    <section class="vect-own-board">
-      <div class="vect-own-list-panel">
-        <div class="vect-own-section-head">
-          <h2 class="vect-own-section-title">Submissions</h2>
-          <p class="vect-own-section-subtitle" data-vect-own-list-subtitle>Newest first</p>
-        </div>
-
-        <div class="vect-own-list" data-vect-own-list aria-live="polite"></div>
-      </div>
-
-      <aside class="vect-own-detail-panel" aria-label="Submission detail">
-        <div class="vect-own-section-head">
-          <h2 class="vect-own-section-title">Review</h2>
-          <p class="vect-own-section-subtitle" data-vect-own-detail-subtitle>Select a submission</p>
-        </div>
-
-        <div class="vect-own-detail-empty" data-vect-own-empty>
-          Choose a submission to view all entered details.
-        </div>
-
-        <article class="vect-own-detail-card" hidden data-vect-own-detail>
-          <div class="vect-own-detail-top">
-            <div>
-              <p class="vect-own-detail-company" data-vect-own-company>-</p>
-              <p class="vect-own-detail-meta" data-vect-own-owner>-</p>
-            </div>
-            <span class="vect-own-status-chip" data-vect-own-status>Pending</span>
-          </div>
-
-          <div class="vect-own-detail-meta-grid">
-            <div class="vect-own-detail-meta-card">
-              <span class="vect-own-detail-label">Phone</span>
-              <strong class="vect-own-detail-value" data-vect-own-phone>-</strong>
-            </div>
-            <div class="vect-own-detail-meta-card">
-              <span class="vect-own-detail-label">Created</span>
-              <strong class="vect-own-detail-value" data-vect-own-created>-</strong>
-            </div>
-            <div class="vect-own-detail-meta-card">
-              <span class="vect-own-detail-label">Email</span>
-              <strong class="vect-own-detail-value" data-vect-own-email>-</strong>
-            </div>
-            <div class="vect-own-detail-meta-card">
-              <span class="vect-own-detail-label">Submission Id</span>
-              <strong class="vect-own-detail-value vect-own-detail-id" data-vect-own-id>-</strong>
-            </div>
-          </div>
-
-          <div class="vect-own-detail-section">
-            <h3 class="vect-own-detail-section-title">Captured details</h3>
-            <dl class="vect-own-field-list" data-vect-own-fields></dl>
-          </div>
-
-          <div class="vect-own-detail-section">
-            <h3 class="vect-own-detail-section-title">Uploaded documents</h3>
-            <div class="vect-own-document-grid" data-vect-own-documents></div>
-          </div>
-
-          <div class="vect-own-detail-section vect-own-note-section" hidden data-vect-own-note-section>
-            <h3 class="vect-own-detail-section-title">Owner note</h3>
-            <textarea class="vect-own-note-input" rows="4" placeholder="Optional review note" data-vect-own-note></textarea>
-          </div>
-
-          <div class="vect-own-detail-actions">
-            <button type="button" class="vect-own-action is-note" data-vect-own-note-toggle>Review note</button>
-            <button type="button" class="vect-own-action is-reject" data-vect-own-action="rejected">Reject</button>
-            <button type="button" class="vect-own-action is-accept" data-vect-own-action="accepted">Accept</button>
-          </div>
+    <section class="vect-own-page is-active" data-vect-own-page="dashboard" aria-label="Submission overview">
+      <section class="vect-own-overview" aria-label="Submission overview">
+        <article class="vect-own-metric-card">
+          <p class="vect-own-metric-label">Pending</p>
+          <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
         </article>
-      </aside>
+        <article class="vect-own-metric-card">
+          <p class="vect-own-metric-label">Accepted</p>
+          <strong class="vect-own-metric-value" data-vect-own-metric="accepted">0</strong>
+        </article>
+        <article class="vect-own-metric-card">
+          <p class="vect-own-metric-label">Rejected</p>
+          <strong class="vect-own-metric-value" data-vect-own-metric="rejected">0</strong>
+        </article>
+        <article class="vect-own-metric-card">
+          <p class="vect-own-metric-label">Updated</p>
+          <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
+        </article>
+      </section>
+
+      <section class="vect-own-toolbar" aria-label="Owner controls">
+        <label class="vect-own-search-wrap">
+          <span class="vect-own-search-label">Search</span>
+          <input type="search" class="vect-own-search-input" placeholder="Name, company, phone, or id" data-vect-own-search>
+        </label>
+
+        <div class="vect-own-tabs" role="tablist" aria-label="Submission filters">
+          <button type="button" class="vect-own-tab is-active" data-vect-own-tab="all">All</button>
+          <button type="button" class="vect-own-tab" data-vect-own-tab="pending">Pending</button>
+          <button type="button" class="vect-own-tab" data-vect-own-tab="accepted">Accepted</button>
+          <button type="button" class="vect-own-tab" data-vect-own-tab="rejected">Rejected</button>
+          <button type="button" class="vect-own-tab" data-vect-own-tab="updated">Updated</button>
+        </div>
+      </section>
+
+      <section class="vect-own-board">
+        <div class="vect-own-list-panel">
+          <div class="vect-own-section-head">
+            <h2 class="vect-own-section-title">Submissions</h2>
+            <p class="vect-own-section-subtitle" data-vect-own-list-subtitle>Newest first</p>
+          </div>
+
+          <div class="vect-own-list" data-vect-own-list aria-live="polite"></div>
+        </div>
+
+        <aside class="vect-own-detail-panel" aria-label="Submission detail">
+          <div class="vect-own-section-head">
+            <h2 class="vect-own-section-title">Review</h2>
+            <p class="vect-own-section-subtitle" data-vect-own-detail-subtitle>Select a submission</p>
+          </div>
+
+          <div class="vect-own-detail-empty" data-vect-own-empty>
+            Choose a submission to view all entered details.
+          </div>
+
+          <article class="vect-own-detail-card" hidden data-vect-own-detail>
+            <div class="vect-own-detail-top">
+              <div>
+                <p class="vect-own-detail-company" data-vect-own-company>-</p>
+                <p class="vect-own-detail-meta" data-vect-own-owner>-</p>
+              </div>
+              <span class="vect-own-status-chip" data-vect-own-status>Pending</span>
+            </div>
+
+            <div class="vect-own-detail-meta-grid">
+              <div class="vect-own-detail-meta-card">
+                <span class="vect-own-detail-label">Phone</span>
+                <strong class="vect-own-detail-value" data-vect-own-phone>-</strong>
+              </div>
+              <div class="vect-own-detail-meta-card">
+                <span class="vect-own-detail-label">Created</span>
+                <strong class="vect-own-detail-value" data-vect-own-created>-</strong>
+              </div>
+              <div class="vect-own-detail-meta-card">
+                <span class="vect-own-detail-label">Email</span>
+                <strong class="vect-own-detail-value" data-vect-own-email>-</strong>
+              </div>
+              <div class="vect-own-detail-meta-card">
+                <span class="vect-own-detail-label">Submission Id</span>
+                <strong class="vect-own-detail-value vect-own-detail-id" data-vect-own-id>-</strong>
+              </div>
+            </div>
+
+            <div class="vect-own-detail-section">
+              <h3 class="vect-own-detail-section-title">Captured details</h3>
+              <dl class="vect-own-field-list" data-vect-own-fields></dl>
+            </div>
+
+            <div class="vect-own-detail-section">
+              <h3 class="vect-own-detail-section-title">Uploaded documents</h3>
+              <div class="vect-own-document-grid" data-vect-own-documents></div>
+            </div>
+
+            <div class="vect-own-detail-section vect-own-note-section" hidden data-vect-own-note-section>
+              <h3 class="vect-own-detail-section-title">Owner note</h3>
+              <textarea class="vect-own-note-input" rows="4" placeholder="Optional review note" data-vect-own-note></textarea>
+            </div>
+
+            <div class="vect-own-detail-actions">
+              <button type="button" class="vect-own-action is-note" data-vect-own-note-toggle>Review note</button>
+              <button type="button" class="vect-own-action is-accept" data-vect-own-action="accepted">Accept</button>
+              <button type="button" class="vect-own-action is-reject" data-vect-own-action="rejected">Reject</button>
+            </div>
+          </article>
+        </aside>
+      </section>
+
+    </section>
+
+    <section class="vect-own-page" data-vect-own-page="submission" aria-label="Submission page">
+      <div class="vect-own-product-page">
+        <div class="product-container owner-product-container" aria-label="Owner vehicle categories">
+          <button type="button" class="product-box product-box-featured owner-product-box" data-owner-category="tourist">
+            <span class="product-icon" aria-hidden="true">
+              <img src="../tour-bus.png" alt="Tour bus" class="product-icon-image-featured" />
+            </span>
+            <span class="product-copy">
+              <strong>TOURIST BUS</strong>
+              <span>Include all types of buses</span>
+            </span>
+          </button>
+
+          <button type="button" class="product-box owner-product-box" data-owner-category="truck">
+            <span class="product-icon" aria-hidden="true">
+              <img src="../modern-white-box-truck.png" alt="White box truck" class="product-icon-image-vehicle" />
+            </span>
+            <span class="product-copy">
+              <strong>Closed Body Trucks</strong>
+              <span>Includes Closed Body Pickups, Lorries, etc.</span>
+            </span>
+          </button>
+
+          <button type="button" class="product-box owner-product-box" data-owner-category="open-truck">
+            <span class="product-icon" aria-hidden="true">
+              <img src="../white-flatbed-truck.png" alt="White flatbed truck" class="product-icon-image-vehicle" />
+            </span>
+            <span class="product-copy">
+              <strong>Open Body Trucks</strong>
+              <span>Includes Open Body Pickups, Lorries, etc.</span>
+            </span>
+          </button>
+
+          <button type="button" class="product-box owner-product-box" data-owner-category="excavator">
+            <span class="product-icon" aria-hidden="true">
+              <img src="../yellow-hydraulic-excavator.png" alt="Yellow hydraulic excavator" class="product-icon-image-vehicle product-icon-image-excavator" />
+            </span>
+            <span class="product-copy">
+              <strong>Excavators</strong>
+              <span>Includes all types of excavators like Hitachi, Komatsu, etc.</span>
+            </span>
+          </button>
+
+          <button type="button" class="product-box owner-product-box" data-owner-category="backhoe">
+            <span class="product-icon" aria-hidden="true">
+              <img src="../yellow-backhoe-loader.png" alt="Yellow backhoe loader" class="product-icon-image-vehicle" />
+            </span>
+            <span class="product-copy">
+              <strong>Backhoe Loaders</strong>
+              <span>Includes all types of backhoe loaders like JCB, CAT, etc.</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="vect-own-page" data-vect-own-page="tourist-bus" aria-label="Other cards review page">
+      <div class="vect-own-tourist-page">
+        <article class="vect-own-page-card vect-own-tourist-card">
+          <div class="vect-own-tourist-top">
+            <div>
+              <p class="vect-own-tourist-kicker" data-vect-own-vehicle-kicker>Tourist Bus</p>
+              <h2 class="vect-own-tourist-title" data-vect-own-vehicle-title>Review tourist bus details</h2>
+              <p class="vect-own-tourist-subtitle" data-vect-own-vehicle-subtitle>Loaded from <code>owner-add-vehicle-next.html</code></p>
+            </div>
+            <span class="vect-own-status-chip" data-vect-own-tourist-status>Pending</span>
+          </div>
+
+          <div class="vect-own-tourist-top-actions">
+            <button type="button" class="vect-own-tourist-pill is-pending" data-vect-own-tourist-action="pending">Pending</button>
+            <button type="button" class="vect-own-tourist-pill is-reject" data-vect-own-tourist-action="rejected">Reject</button>
+            <button type="button" class="vect-own-tourist-pill is-update" data-vect-own-tourist-action="updated">Update</button>
+          </div>
+
+          <section class="vect-own-tourist-submissions-layout" aria-label="Submission list and details">
+            <div class="vect-own-list-panel">
+              <div class="vect-own-section-head">
+                <h3 class="vect-own-section-title">Submissions</h3>
+                <p class="vect-own-section-subtitle" data-vect-own-tourist-list-subtitle>Choose one to view details</p>
+              </div>
+
+              <div class="vect-own-list" data-vect-own-tourist-list aria-live="polite"></div>
+            </div>
+
+            <div class="vect-own-detail-panel">
+              <div class="vect-own-section-head">
+                <h3 class="vect-own-section-title">Selected submission</h3>
+                <p class="vect-own-section-subtitle" data-vect-own-tourist-detail-subtitle>Select a submission</p>
+              </div>
+
+              <div class="vect-own-detail-empty" data-vect-own-tourist-empty>
+                Choose a submission from the list to view its details below.
+              </div>
+
+              <article class="vect-own-tourist-selected-summary" hidden data-vect-own-tourist-detail>
+                <div class="vect-own-tourist-review-group" data-vect-own-tourist-content></div>
+              </article>
+            </div>
+          </section>
+        </article>
+      </div>
     </section>
   </main>
+
+  <nav class="vect-own-bottom-nav" aria-label="Vect Own navigation">
+    <div class="vect-own-bottom-nav-inner">
+      <button type="button" class="vect-own-bottom-tab is-active" data-vect-own-page-tab="dashboard">Dashboard</button>
+      <button type="button" class="vect-own-bottom-tab" data-vect-own-page-tab="submission">Submission</button>
+      <button type="button" class="vect-own-bottom-tab" data-vect-own-page-tab="navigation3">Navigation 3</button>
+    </div>
+  </nav>
 
   <div class="vect-own-lightbox" hidden data-vect-own-lightbox>
     <div class="vect-own-lightbox-backdrop" data-vect-own-lightbox-close></div>
@@ -158,7 +767,8 @@
       const listSubtitle = document.querySelector('[data-vect-own-list-subtitle]');
       const countNode = document.querySelector('[data-vect-own-count]');
       const searchInput = document.querySelector('[data-vect-own-search]');
-      const logoutButton = document.querySelector('[data-vect-own-logout]');
+      const logoutButtons = Array.from(document.querySelectorAll('[data-vect-own-logout]'));
+      const logoutButton = logoutButtons[0] || null;
       const noteInput = document.querySelector('[data-vect-own-note]');
       const noteSection = document.querySelector('[data-vect-own-note-section]');
       const noteToggleButton = document.querySelector('[data-vect-own-note-toggle]');
@@ -181,11 +791,30 @@
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const SESSION_KEY = 'vect-own-session-token';
       const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
-      const ACCEPT_WHATSAPP_MESSAGE = 'Congratulation you have selected as a member of VECT Movers. For continue fffffff';
+      const ACCEPT_WHATSAPP_MESSAGE = 'Congratulation you have selected as a member of VECT Movers. Please open this link after accept: ' + new URL('../owner-blank-sheet.html', window.location.href).toString();
       const REJECT_INTRO_MESSAGE = 'Sorry, your valuation have rejected because';
+      const pageTabs = Array.from(document.querySelectorAll('[data-vect-own-page-tab]'));
+      const pages = Array.from(document.querySelectorAll('[data-vect-own-page]'));
+      const touristBusCard = document.querySelector('[data-owner-category="tourist"]');
+      const ownerProductCards = Array.from(document.querySelectorAll('.owner-product-box'));
+      const touristVehicleKickerNode = document.querySelector('[data-vect-own-vehicle-kicker]');
+      const touristVehicleTitleNode = document.querySelector('[data-vect-own-vehicle-title]');
+      const touristVehicleSubtitleNode = document.querySelector('[data-vect-own-vehicle-subtitle]');
+      const touristBusStatusNode = document.querySelector('[data-vect-own-tourist-status]');
+      const touristBusActionButtons = Array.from(document.querySelectorAll('[data-vect-own-tourist-action]'));
+      const touristSubmissionListNode = document.querySelector('[data-vect-own-tourist-list]');
+      const touristSubmissionListSubtitleNode = document.querySelector('[data-vect-own-tourist-list-subtitle]');
+      const touristSubmissionEmptyNode = document.querySelector('[data-vect-own-tourist-empty]');
+      const touristSubmissionDetailNode = document.querySelector('[data-vect-own-tourist-detail]');
+      const touristSubmissionDetailSubtitleNode = document.querySelector('[data-vect-own-tourist-detail-subtitle]');
+      const touristSubmissionContentNode = document.querySelector('[data-vect-own-tourist-content]');
+      const TOURIST_BUS_STATUS_KEY = 'vect-own-tourist-bus-status';
       let allSubmissions = [];
       let selectedSubmissionId = '';
       let activeFilter = 'all';
+      let highlightedFilter = '';
+      let activePage = 'dashboard';
+      let currentVehicleCategory = 'tourist';
       let searchTerm = '';
       let noteSectionOpen = false;
       let cachedSelectedSubmission = null;
@@ -194,6 +823,355 @@
 
       if (!listNode || !detailNode || !emptyNode) {
         return;
+      }
+
+      function setActivePage(pageName, options) {
+        const shouldPushHistory = Boolean(options && options.pushHistory);
+        activePage = pageName;
+        const activeNavPage = pageName === 'tourist-bus' ? 'submission' : pageName;
+
+        pages.forEach(function (page) {
+          const isActive = page.getAttribute('data-vect-own-page') === pageName;
+          page.classList.toggle('is-active', isActive);
+        });
+
+        pageTabs.forEach(function (tab) {
+          const isActive = tab.getAttribute('data-vect-own-page-tab') === activeNavPage;
+          tab.classList.toggle('is-active', isActive);
+        });
+
+        saveDashboardState({ pushHistory: shouldPushHistory });
+      }
+
+      function getVehicleDisplayName(category) {
+        const safeCategory = String(category || '').trim().toLowerCase();
+        const labels = {
+          tourist: 'Tourist Bus',
+          truck: 'Closed Body Trucks',
+          'open-truck': 'Open Body Trucks',
+          excavator: 'Excavator',
+          backhoe: 'Backhoe Loader'
+        };
+
+        return labels[safeCategory] || 'Other Cards';
+      }
+
+      function updateVehicleHeader(category) {
+        currentVehicleCategory = String(category || 'tourist').trim().toLowerCase() || 'tourist';
+        const vehicleName = getVehicleDisplayName(currentVehicleCategory);
+
+        if (touristVehicleKickerNode) {
+          touristVehicleKickerNode.textContent = vehicleName;
+        }
+
+        if (touristVehicleTitleNode) {
+          touristVehicleTitleNode.textContent = 'Review ' + vehicleName + ' details';
+        }
+
+        if (touristVehicleSubtitleNode) {
+          touristVehicleSubtitleNode.innerHTML = 'Loaded from <code>owner-add-vehicle-next.html</code>';
+        }
+      }
+
+      function applyFilterHighlight() {
+        const activeTabName = highlightedFilter || activeFilter;
+
+        tabs.forEach(function (tab) {
+          tab.classList.toggle('is-active', tab.getAttribute('data-vect-own-tab') === activeTabName);
+        });
+      }
+
+      function highlightStatusTab(tabName) {
+        highlightedFilter = String(tabName || '').trim();
+        applyFilterHighlight();
+        saveDashboardState();
+      }
+
+      function syncSubmissionActionButtons(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+
+        actionButtons.forEach(function (button) {
+          const buttonStatus = String(button.getAttribute('data-vect-own-action') || '').trim().toLowerCase();
+          button.classList.toggle('is-selected', !!safeStatus && buttonStatus === safeStatus);
+        });
+      }
+
+      function syncTouristBusActionButtons(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+
+        touristBusActionButtons.forEach(function (button) {
+          const buttonStatus = String(button.getAttribute('data-vect-own-tourist-action') || '').trim().toLowerCase();
+          button.classList.toggle('is-selected', !!safeStatus && buttonStatus === safeStatus);
+        });
+      }
+
+      function readBusStorageValue(key) {
+        return String(sessionStorage.getItem('owner-bus-page-' + key) || '').trim();
+      }
+
+      function readBusStorageList(key) {
+        try {
+          const raw = sessionStorage.getItem('owner-bus-page-' + key) || '[]';
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed.filter(function (item) {
+            return String(item || '').trim();
+          }) : [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function getTouristBusReviewStatus() {
+        const stored = String(sessionStorage.getItem(TOURIST_BUS_STATUS_KEY) || '').trim().toLowerCase();
+
+        if (stored === 'accepted' || stored === 'rejected' || stored === 'pending' || stored === 'updated') {
+          return stored;
+        }
+
+        return 'pending';
+      }
+
+      function setTouristBusReviewStatus(status) {
+        const clean = String(status || '').trim().toLowerCase();
+
+        if (clean === 'accepted' || clean === 'rejected' || clean === 'pending' || clean === 'updated') {
+          sessionStorage.setItem(TOURIST_BUS_STATUS_KEY, clean);
+        } else {
+          sessionStorage.removeItem(TOURIST_BUS_STATUS_KEY);
+        }
+
+        renderTouristBusReview();
+      }
+
+      function getTouristBusStatusPresentation(status) {
+        if (status === 'accepted') {
+          return { className: 'is-accepted', label: 'Accepted' };
+        }
+
+        if (status === 'rejected') {
+          return { className: 'is-rejected', label: 'Rejected' };
+        }
+
+        if (status === 'updated') {
+          return { className: 'is-updated', label: 'Updated' };
+        }
+
+        return { className: 'is-pending', label: 'Pending' };
+      }
+
+      function renderTouristBusReview() {
+        if (!touristSubmissionListNode || !touristSubmissionDetailNode) {
+          return;
+        }
+
+        updateVehicleHeader(currentVehicleCategory);
+
+        const reviewStatus = getTouristBusReviewStatus();
+
+        syncTouristBusActionButtons(reviewStatus);
+
+        if (touristBusStatusNode) {
+          const statusPresentation = getTouristBusStatusPresentation(reviewStatus);
+          touristBusStatusNode.textContent = statusPresentation.label;
+          touristBusStatusNode.className = 'vect-own-status-chip ' + statusPresentation.className;
+        }
+
+        renderTouristSubmissionList();
+        renderTouristSubmissionDetail(getSelectedSubmission());
+      }
+
+      function openTouristBusReview() {
+        updateVehicleHeader(currentVehicleCategory || 'tourist');
+        setActivePage('tourist-bus', { pushHistory: true });
+        renderTouristBusReview();
+      }
+
+      function renderTouristSubmissionList() {
+        if (!touristSubmissionListNode) {
+          return;
+        }
+
+        const submissions = Array.isArray(allSubmissions) ? allSubmissions.slice() : [];
+        const reviewStatus = getTouristBusReviewStatus();
+        const visible = submissions.filter(function (submission) {
+          return reviewStatus === 'pending' || reviewStatus === 'accepted' || reviewStatus === 'rejected' || reviewStatus === 'updated'
+            ? String(submission.status || '').trim().toLowerCase() === reviewStatus
+            : true;
+        });
+
+        if (touristSubmissionListSubtitleNode) {
+          touristSubmissionListSubtitleNode.textContent = visible.length + ' visible';
+        }
+
+        touristSubmissionListNode.innerHTML = '';
+
+        if (!visible.length) {
+          touristSubmissionListNode.innerHTML = '<div class="vect-own-empty-state">No submissions match this view.</div>';
+          return;
+        }
+
+        visible.forEach(function (submission) {
+          const card = document.createElement('button');
+          const summary = submission.summary || {};
+          const statusPresentation = getStatusPresentation(submission.status);
+
+          card.type = 'button';
+          card.className = 'vect-own-list-item' + (submission.id === selectedSubmissionId ? ' is-active' : '');
+          card.setAttribute('aria-label', 'Open submission ' + (summary.companyName || 'Unnamed submission'));
+          card.innerHTML = [
+            '<div class="vect-own-list-item-top">',
+            '<strong class="vect-own-list-item-title">' + escapeHtml(summary.companyName || 'Unnamed submission') + '</strong>',
+            '<span class="vect-own-status-chip ' + escapeHtml(statusPresentation.className) + '">' + escapeHtml(statusPresentation.label) + '</span>',
+            '</div>',
+            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.ownerName || 'Owner name not captured') + '</p>',
+            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.whatsappNumber || summary.phone || '-') + '</p>',
+            '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>'
+          ].join('');
+
+          card.addEventListener('click', function () {
+            openSubmission(submission.id);
+          });
+
+          touristSubmissionListNode.appendChild(card);
+        });
+      }
+
+      function getTouristBusDetails(submission, fields) {
+        const safeFields = fields || {};
+        const summary = submission && submission.summary ? submission.summary : {};
+        const images = summary && summary.images ? summary.images : {};
+        const stringFields = Object.assign({}, safeFields);
+
+        function readValue(keys) {
+          for (let index = 0; index < keys.length; index += 1) {
+            const key = keys[index];
+            const value = stringFields[key];
+
+            if (value !== undefined && value !== null && String(value).trim() !== '') {
+              return value;
+            }
+          }
+
+          return '';
+        }
+
+        function toList(value) {
+          if (Array.isArray(value)) {
+            return value.filter(function (item) {
+              return String(item || '').trim();
+            });
+          }
+
+          if (value && typeof value === 'string') {
+            return [value];
+          }
+
+          return [];
+        }
+
+        const sessionBusType = readBusStorageValue('type');
+        const sessionSeats = readBusStorageValue('seats');
+        const sessionTv = readBusStorageValue('tv');
+        const sessionPlace = readBusStorageValue('place');
+        const sessionPermitType = readBusStorageValue('permitType');
+        const sessionPhotos = readBusStorageList('photos');
+        const sessionRc = readBusStorageList('rc');
+        const sessionInsurance = readBusStorageList('insurance');
+        const sessionPermit = readBusStorageList('permit');
+
+        const busType = readValue([
+          'owner-bus-type',
+          'bus-type',
+          'vehicle-bus-type',
+          'type',
+          'owner-categories'
+        ]) || sessionBusType || (Array.isArray(summary.categories) ? summary.categories[0] : '');
+        const seats = readValue(['owner-bus-seats', 'bus-seats', 'seats']) || sessionSeats;
+        const tvMusic = readValue(['owner-bus-tv', 'bus-tv', 'tv']) || sessionTv;
+        const place = readValue(['owner-bus-place', 'bus-place', 'place']) || sessionPlace || summary.place || summary.villageName || summary.location;
+        const permitType = readValue(['permitType', 'owner-permit', 'bus-permit']) || sessionPermitType;
+        const photoValues = toList(images.photos || safeFields['owner-bus-photos'] || safeFields.photos || sessionPhotos);
+        const rcBookValues = toList(images.rc || safeFields['owner-bus-rc'] || safeFields.rc || sessionRc);
+        const insuranceValues = toList(images.insurance || safeFields['owner-bus-insurance'] || safeFields.insurance || sessionInsurance);
+        const permitValues = toList(images.permit || safeFields['owner-bus-permit'] || safeFields.permit || sessionPermit);
+
+        return {
+          busType: busType,
+          seats: seats,
+          tvMusic: tvMusic,
+          place: place,
+          permitType: permitType,
+          photos: photoValues,
+          rcBook: rcBookValues,
+          insurance: insuranceValues,
+          permitFiles: permitValues
+        };
+      }
+
+      function buildTouristReviewRow(label, value, itemKey, imageUrl) {
+        const hasValue = value !== null && value !== undefined && String(value).trim() !== '' && String(value).trim() !== '-';
+        const safeValue = hasValue ? escapeHtml(valueToText(value)) : '-';
+        const reviewState = getItemReviewState(selectedSubmissionId, itemKey);
+        const toggleLabel = reviewState === 'deselected' ? 'Accept' : 'Deselect';
+        const toggleClass = reviewState === 'deselected' ? ' is-deselected' : '';
+        const imageBlock = imageUrl ? [
+          '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(label) + '" class="vect-own-tourist-photo-preview">',
+          '<p class="vect-own-tourist-upload-note">' + escapeHtml(valueToText(value)) + '</p>'
+        ].join('') : '<div class="vect-own-tourist-value is-muted">' + safeValue + '</div>';
+
+        return [
+          '<div class="vect-own-tourist-review-row">',
+          '<div class="vect-own-tourist-review-main">',
+          '<p class="vect-own-tourist-label">' + escapeHtml(label) + '</p>',
+          imageUrl ? imageBlock : '<div class="vect-own-tourist-value">' + safeValue + '</div>',
+          '</div>',
+          '<button type="button" class="vect-own-inline-accept vect-own-tourist-review-toggle' + toggleClass + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(label) + '">' + escapeHtml(toggleLabel) + '</button>',
+          '</div>'
+        ].join('');
+      }
+
+      function renderTouristSubmissionDetail(submission) {
+        if (!touristSubmissionDetailNode || !touristSubmissionEmptyNode || !touristSubmissionContentNode) {
+          return;
+        }
+
+        if (!submission) {
+          touristSubmissionDetailNode.hidden = true;
+          touristSubmissionEmptyNode.hidden = false;
+          if (touristSubmissionDetailSubtitleNode) {
+            touristSubmissionDetailSubtitleNode.textContent = 'Select a submission';
+          }
+          touristSubmissionContentNode.innerHTML = '';
+          return;
+        }
+
+        const fields = buildDisplayFields(submission);
+        const touristBusDetails = getTouristBusDetails(submission, fields);
+
+        touristSubmissionEmptyNode.hidden = true;
+        touristSubmissionDetailNode.hidden = false;
+
+        if (touristSubmissionDetailSubtitleNode) {
+          touristSubmissionDetailSubtitleNode.textContent = 'REVIEW';
+        }
+
+        const photoRows = (touristBusDetails.photos || []).slice(0, 4).map(function (name, index) {
+          const itemKey = 'tourist-photo-' + index;
+          const imageUrl = resolveStoredUploadUrl('', name);
+          return buildTouristReviewRow('Photo ' + (index + 1), name, itemKey, imageUrl);
+        }).join('');
+
+        touristSubmissionContentNode.innerHTML = [
+          '<div class="vect-own-tourist-form-shell">',
+          '<div><p class="vect-own-tourist-flow-title">Fill the Following</p></div>',
+          '<div class="vect-own-tourist-form">',
+          buildTouristReviewRow('Bus Type', touristBusDetails.busType || '-', 'tourist-bus-type'),
+          buildTouristReviewRow('Number of seats', touristBusDetails.seats || '-', 'tourist-seats'),
+          buildTouristReviewRow('TV/Music Systems', touristBusDetails.tvMusic || '-', 'tourist-tv'),
+          '<div class="vect-own-tourist-question"><p class="vect-own-tourist-label">Photos</p><div class="vect-own-tourist-photo-block"><div class="vect-own-tourist-upload-list">' + (photoRows || '<div class="vect-own-empty-state">No file uploaded</div>') + '</div><p class="vect-own-tourist-upload-note">Front view, Back view, Side view, Interior (seats clearly visible)</p></div></div>',
+          '</div>',
+          '</div>'
+        ].join('');
       }
 
       function formatDate(value) {
@@ -253,9 +1231,8 @@
       }
 
       function normalizeImageText(value) {
-        return String(value || '')
-          .replace(/\s+/g, '')
-          .trim();
+        // Keep internal whitespace intact (URLs/data-urls can be sensitive).
+        return String(value || '').trim();
       }
 
       function isImageValue(value, key) {
@@ -304,7 +1281,47 @@
           return getApiUrl(text);
         }
 
+        // Accept raw filenames too (stored by older flows).
+        if (/^(uploads\/).+/i.test(text)) {
+          return getApiUrl('/' + text);
+        }
+
+        if (/\.(png|jpe?g|webp|gif|svg)$/i.test(text)) {
+          return getApiUrl('/uploads/' + encodeURIComponent(text));
+        }
+
         return '';
+      }
+
+      const imageObjectUrlCache = new Map();
+
+      function resolveRenderableImageUrl(value) {
+        const directUrl = getImageUrl(value);
+
+        if (!directUrl) {
+          return Promise.resolve('');
+        }
+
+        if (!/^data:image\//i.test(directUrl)) {
+          return Promise.resolve(directUrl);
+        }
+
+        if (imageObjectUrlCache.has(directUrl)) {
+          return Promise.resolve(imageObjectUrlCache.get(directUrl));
+        }
+
+        return fetch(directUrl)
+          .then(function (response) {
+            return response.blob();
+          })
+          .then(function (blob) {
+            const objectUrl = URL.createObjectURL(blob);
+            imageObjectUrlCache.set(directUrl, objectUrl);
+            return objectUrl;
+          })
+          .catch(function () {
+            return directUrl;
+          });
       }
 
       function getDocumentFieldKeys() {
@@ -507,8 +1524,10 @@
         return escapeHtml(valueToText(value));
       }
 
-      function renderDocuments(fields) {
-        if (!documentsNode) {
+      function renderDocuments(fields, targetNode) {
+        const node = targetNode || documentsNode;
+
+        if (!node) {
           return;
         }
 
@@ -524,7 +1543,7 @@
           },
           {
             key: 'owner-heavy-licence-photo-url-1',
-            label: 'Licence Front',
+            label: 'Heavy Driving Licence Front',
             value: resolveStoredUploadUrl(
               safeFields['owner-heavy-licence-photo-url-1'],
               safeFields['owner-heavy-licence-photo-name-1']
@@ -532,7 +1551,7 @@
           },
           {
             key: 'owner-heavy-licence-photo-url-2',
-            label: 'Licence Back',
+            label: 'Heavy Driving Licence Back',
             value: resolveStoredUploadUrl(
               safeFields['owner-heavy-licence-photo-url-2'],
               safeFields['owner-heavy-licence-photo-name-2']
@@ -540,7 +1559,7 @@
           },
           {
             key: 'owner-aadhaar-photo-url',
-            label: 'Aadhaar',
+            label: 'Aadhaar Card',
             value: resolveStoredUploadUrl(
               safeFields['owner-aadhaar-photo-url'],
               safeFields['owner-aadhaar-photo-name']
@@ -559,31 +1578,147 @@
         });
 
         if (!documents.length) {
-          documentsNode.innerHTML = '<div class="vect-own-empty-state">No uploaded document images available yet.</div>';
+          node.innerHTML = '<div class="vect-own-empty-state">No uploaded document images available yet.</div>';
           return;
         }
 
-        documentsNode.innerHTML = documents.map(function (item) {
-          const imageUrl = getImageUrl(item.value);
+        node.innerHTML = '';
+
+        documents.forEach(function (item) {
           const itemState = getItemReviewState(selectedSubmissionId, item.key);
-          return [
-            '<article class="vect-own-document-card">',
-            '<button type="button" class="vect-own-inline-accept vect-own-document-accept' + (itemState === 'deselected' ? ' is-deselected' : '') + '" data-vect-own-item-key="' + escapeHtml(item.key) + '" data-vect-own-item-label="' + escapeHtml(item.label) + '">' + getReviewToggleLabel(itemState) + '</button>',
-            '<p class="vect-own-document-label">' + escapeHtml(item.label) + '</p>',
-            '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(item.label) + '" class="vect-own-image-preview">',
-            '<button type="button" class="vect-own-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(item.label) + '">View full image</button>',
-            '</article>'
-          ].join('');
-        }).join('');
+          const card = document.createElement('article');
+          const acceptButton = document.createElement('button');
+          const labelNode = document.createElement('p');
+          const imageNode = document.createElement('img');
+          const viewButton = document.createElement('button');
+          const fallbackNode = document.createElement('p');
+
+          card.className = 'vect-own-document-card';
+
+          acceptButton.type = 'button';
+          acceptButton.className = 'vect-own-inline-accept vect-own-document-accept' + (itemState === 'deselected' ? ' is-deselected' : '');
+          acceptButton.setAttribute('data-vect-own-item-key', item.key);
+          acceptButton.setAttribute('data-vect-own-item-label', item.label);
+          acceptButton.textContent = getReviewToggleLabel(itemState);
+
+          labelNode.className = 'vect-own-document-label';
+          labelNode.textContent = item.label;
+
+          imageNode.className = 'vect-own-image-preview';
+          imageNode.alt = item.label;
+          imageNode.loading = 'lazy';
+          imageNode.decoding = 'async';
+
+          viewButton.type = 'button';
+          viewButton.className = 'vect-own-image-link';
+          viewButton.textContent = 'View full image';
+          viewButton.disabled = true;
+
+          fallbackNode.className = 'vect-own-empty-state';
+          fallbackNode.hidden = true;
+          fallbackNode.textContent = 'Loading preview...';
+
+          card.appendChild(acceptButton);
+          card.appendChild(labelNode);
+          card.appendChild(imageNode);
+          card.appendChild(viewButton);
+          card.appendChild(fallbackNode);
+          node.appendChild(card);
+
+          resolveRenderableImageUrl(item.value)
+            .then(function (imageUrl) {
+              if (!imageUrl) {
+                imageNode.hidden = true;
+                fallbackNode.hidden = false;
+                fallbackNode.textContent = 'No preview available.';
+                return;
+              }
+
+              imageNode.src = imageUrl;
+              viewButton.disabled = false;
+              viewButton.setAttribute('data-vect-own-image-url', imageUrl);
+              viewButton.setAttribute('data-vect-own-image-label', item.label);
+
+              imageNode.addEventListener('error', function () {
+                imageNode.hidden = true;
+                fallbackNode.hidden = false;
+                fallbackNode.textContent = 'Unable to load preview. Use View full image.';
+              }, { once: true });
+
+              imageNode.addEventListener('load', function () {
+                imageNode.hidden = false;
+                fallbackNode.hidden = true;
+              }, { once: true });
+            })
+            .catch(function () {
+              imageNode.hidden = true;
+              fallbackNode.hidden = false;
+              fallbackNode.textContent = 'Unable to load preview. Use View full image.';
+            });
+        });
       }
 
       function getApiUrl(pathName) {
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
-      function saveDashboardState() {
+      function readDashboardLocationState() {
+        try {
+          const params = new URLSearchParams(window.location.search);
+
+          return {
+            activePage: String(params.get('page') || '').trim(),
+            selectedSubmissionId: String(params.get('submissionId') || '').trim(),
+            vehicleCategory: String(params.get('vehicle') || '').trim()
+          };
+        } catch (error) {
+          return {
+            activePage: '',
+            selectedSubmissionId: '',
+            vehicleCategory: ''
+          };
+        }
+      }
+
+      function syncDashboardLocation(pushHistory) {
+        try {
+          const url = new URL(window.location.href);
+
+          if (activePage && activePage !== 'dashboard') {
+            url.searchParams.set('page', activePage);
+          } else {
+            url.searchParams.delete('page');
+          }
+
+          if (selectedSubmissionId) {
+            url.searchParams.set('submissionId', selectedSubmissionId);
+          } else {
+            url.searchParams.delete('submissionId');
+          }
+
+          if (currentVehicleCategory) {
+            url.searchParams.set('vehicle', currentVehicleCategory);
+          } else {
+            url.searchParams.delete('vehicle');
+          }
+
+          if (pushHistory) {
+            window.history.pushState({}, '', url.toString());
+          } else {
+            window.history.replaceState({}, '', url.toString());
+          }
+        } catch (error) {
+          // Ignore URL sync errors.
+        }
+      }
+
+      function saveDashboardState(options) {
+        const pushHistory = Boolean(options && options.pushHistory);
         const payload = {
           activeFilter: activeFilter,
+          highlightedFilter: highlightedFilter,
+          activePage: activePage,
+          currentVehicleCategory: currentVehicleCategory,
           searchTerm: searchTerm,
           selectedSubmissionId: selectedSubmissionId,
           noteSectionOpen: noteSectionOpen,
@@ -598,6 +1733,8 @@
         } catch (error) {
           // Ignore local cache write errors.
         }
+
+        syncDashboardLocation(pushHistory);
       }
 
       function loadDashboardState() {
@@ -615,15 +1752,24 @@
       }
 
       function restoreDashboardState() {
+        const locationState = readDashboardLocationState();
         const savedState = loadDashboardState();
 
         if (!savedState || typeof savedState !== 'object') {
+          activePage = locationState.activePage || 'dashboard';
+          selectedSubmissionId = locationState.selectedSubmissionId || '';
+          currentVehicleCategory = locationState.vehicleCategory || 'tourist';
+          setActivePage(activePage);
+          updateVehicleHeader(currentVehicleCategory);
           return;
         }
 
         activeFilter = String(savedState.activeFilter || 'all');
+        highlightedFilter = String(savedState.highlightedFilter || '').trim();
+        activePage = locationState.activePage || String(savedState.activePage || 'dashboard');
         searchTerm = String(savedState.searchTerm || '').trim().toLowerCase();
-        selectedSubmissionId = String(savedState.selectedSubmissionId || '').trim();
+        selectedSubmissionId = locationState.selectedSubmissionId || String(savedState.selectedSubmissionId || '').trim();
+        currentVehicleCategory = locationState.vehicleCategory || String(savedState.currentVehicleCategory || 'tourist').trim() || 'tourist';
         noteSectionOpen = Boolean(savedState.noteSectionOpen);
         cachedSelectedSubmission = savedState.cachedSelectedSubmission && typeof savedState.cachedSelectedSubmission === 'object'
           ? savedState.cachedSelectedSubmission
@@ -640,9 +1786,10 @@
           searchInput.value = searchTerm;
         }
 
-        tabs.forEach(function (tab) {
-          tab.classList.toggle('is-active', tab.getAttribute('data-vect-own-tab') === activeFilter);
-        });
+        setActivePage(activePage);
+        updateVehicleHeader(currentVehicleCategory);
+
+        applyFilterHighlight();
 
         updateMetrics();
         renderList();
@@ -695,6 +1842,11 @@
           label: safeStatus || 'pending',
           className: 'is-' + (safeStatus || 'pending')
         };
+      }
+
+      function isActionableStatus(status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+        return safeStatus === 'pending' || safeStatus === 'updated' || safeStatus === 'accepted' || safeStatus === 'rejected';
       }
 
       function getOwnerPagePath(itemKey) {
@@ -815,10 +1967,8 @@
 
       function setActiveTab(tabName) {
         activeFilter = tabName;
-
-        tabs.forEach(function (tab) {
-          tab.classList.toggle('is-active', tab.getAttribute('data-vect-own-tab') === tabName);
-        });
+        highlightedFilter = '';
+        applyFilterHighlight();
 
         saveDashboardState();
         renderList();
@@ -1023,7 +2173,8 @@
         });
       }
 
-      function renderFields(fields) {
+      function renderFields(fields, targetNode) {
+        const node = targetNode || fieldsNode;
         const hiddenFieldKeys = getHiddenFieldKeys();
         const preferredOrder = getPreferredFieldOrder();
         const entries = Object.entries(fields || {}).filter(function (entry) {
@@ -1047,12 +2198,16 @@
           return left[0].localeCompare(right[0]);
         });
 
-        if (!entries.length) {
-          fieldsNode.innerHTML = '<div class="vect-own-empty-state">No saved field data found.</div>';
+        if (!node) {
           return;
         }
 
-        fieldsNode.innerHTML = entries.map(function (entry) {
+        if (!entries.length) {
+          node.innerHTML = '<div class="vect-own-empty-state">No saved field data found.</div>';
+          return;
+        }
+
+        node.innerHTML = entries.map(function (entry) {
           const key = entry[0];
           const value = entry[1];
           const itemState = getItemReviewState(selectedSubmissionId, key);
@@ -1071,6 +2226,7 @@
           selectedSubmissionId = '';
           noteSectionOpen = false;
           cachedSelectedSubmission = null;
+          syncSubmissionActionButtons('');
           emptyNode.hidden = false;
           detailNode.hidden = true;
           if (noteSection) {
@@ -1079,6 +2235,8 @@
           if (noteToggleButton) {
             noteToggleButton.hidden = true;
           }
+          renderTouristSubmissionList();
+          renderTouristSubmissionDetail(null);
           saveDashboardState();
           return;
         }
@@ -1145,8 +2303,12 @@
           noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
         }
 
+        syncSubmissionActionButtons(submission.status);
+
         renderDocuments(fields);
         renderFields(fields);
+        renderTouristSubmissionList();
+        renderTouristSubmissionDetail(submission);
         renderList();
         saveDashboardState();
       }
@@ -1257,6 +2419,7 @@
               renderDetail(null);
             }
 
+            renderTouristBusReview();
             saveDashboardState();
             console.log('=== END VECT OWN REFRESH DEBUG ===');
           });
@@ -1265,6 +2428,19 @@
       tabs.forEach(function (tab) {
         tab.addEventListener('click', function () {
           setActiveTab(tab.getAttribute('data-vect-own-tab') || 'all');
+        });
+      });
+
+      pageTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          const targetPage = tab.getAttribute('data-vect-own-page-tab') || 'dashboard';
+          if (targetPage === 'navigation3') {
+            return;
+          }
+          setActivePage(targetPage, { pushHistory: true });
+          if (targetPage === 'submission') {
+            renderTouristBusReview();
+          }
         });
       });
 
@@ -1285,14 +2461,38 @@
         });
       }
 
-      logoutButton.addEventListener('click', function () {
-        getApi('/api/vect-own/logout', {
-          method: 'POST'
-        })
-          .finally(function () {
-            localStorage.removeItem(SESSION_KEY);
-            window.location.replace('index.html');
-          });
+      logoutButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          getApi('/api/vect-own/logout', {
+            method: 'POST'
+          })
+            .finally(function () {
+              localStorage.removeItem(SESSION_KEY);
+              window.location.replace('index.html');
+            });
+        });
+      });
+
+      if (touristBusCard) {
+        touristBusCard.addEventListener('click', function () {
+          updateVehicleHeader('tourist');
+          openTouristBusReview();
+        });
+      }
+
+      ownerProductCards.forEach(function (card) {
+        card.addEventListener('click', function () {
+          const category = String(card.getAttribute('data-owner-category') || 'tourist').trim().toLowerCase();
+          updateVehicleHeader(category);
+          openTouristBusReview();
+        });
+      });
+
+      touristBusActionButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const nextStatus = button.getAttribute('data-vect-own-tourist-action');
+          setTouristBusReviewStatus(nextStatus);
+        });
       });
 
       if (noteToggleButton) {
@@ -1325,6 +2525,7 @@
         button.addEventListener('click', function () {
           const nextStatus = button.getAttribute('data-vect-own-action');
           const currentSubmission = getSelectedSubmission();
+          const targetSubmissionId = selectedSubmissionId;
 
           if (!selectedSubmissionId || !nextStatus) {
             return;
@@ -1333,6 +2534,7 @@
           const noteValue = noteInput ? String(noteInput.value || '').trim() : '';
           draftReviewNotes[selectedSubmissionId] = noteValue;
           saveDashboardState();
+          syncSubmissionActionButtons(nextStatus);
 
           getApi('/api/vect-own/submissions/' + encodeURIComponent(selectedSubmissionId), {
             method: 'PATCH',
@@ -1357,7 +2559,7 @@
               return refreshSubmissions(false);
             })
             .then(function () {
-              openSubmission(selectedSubmissionId);
+              openSubmission(targetSubmissionId);
 
               if (nextStatus === 'accepted' && currentSubmission) {
                 const whatsappLink = getWhatsappLink(currentSubmission);
@@ -1381,6 +2583,11 @@
 
       restoreDashboardState();
 
+      window.addEventListener('popstate', function () {
+        restoreDashboardState();
+        renderTouristBusReview();
+      });
+
       fetch(getApiUrl('/api/vect-own/me'), {
         headers: getSessionHeaders()
       })
@@ -1394,7 +2601,7 @@
           return response.json();
         })
         .then(function () {
-            return refreshSubmissions(true); // Auto-select first submission
+            return refreshSubmissions(false);
         })
         .catch(function () {
           // Redirect already handled above if needed.
@@ -1447,7 +2654,3 @@
   <script src="../script.js?v=20260414-2"></script>
 </body>
 </html>
-      function isActionableStatus(status) {
-        const safeStatus = String(status || '').trim().toLowerCase();
-        return safeStatus === 'pending' || safeStatus === 'updated';
-      }

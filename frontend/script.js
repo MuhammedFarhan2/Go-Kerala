@@ -2187,6 +2187,7 @@
 
   const uniqueDistrictData = getUniqueData('from');
   const uniqueTouristData = getUniqueData('to');
+  window.ownerBusPlaceOptions = Array.from(new Set(uniqueDistrictData.concat(uniqueTouristData)));
 
   if (!toggles.length) {
     return;

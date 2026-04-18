@@ -17,6 +17,26 @@ input[type="reset"],
   color: #fff !important;
 }
 
+button.owner-choice-button {
+  background: #fff !important;
+  border: 1px solid #111 !important;
+  color: #111 !important;
+  box-shadow: none !important;
+}
+
+button.owner-choice-button:hover {
+  background: #f7f7f7 !important;
+  border-color: #111 !important;
+  color: #111 !important;
+}
+
+button.owner-choice-button.is-selected {
+  background: #111 !important;
+  border-color: #111 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
 button.route-bus-counter-btn {
   background: #fff !important;
   border-color: #e3e3e3 !important;
@@ -4949,6 +4969,7 @@ h1 {
   background: #111827;
   color: #fff;
   border-color: #111827;
+  box-shadow: 0 10px 22px rgba(17, 24, 39, 0.12);
 }
 
 .vect-own-board {
@@ -4998,6 +5019,7 @@ h1 {
   display: grid;
   gap: 6px;
   width: 100%;
+  min-height: 98px;
   padding: 16px;
   border: 1px solid #dbe2ea;
   border-radius: 18px;
@@ -5352,33 +5374,68 @@ h1 {
 
 .vect-own-detail-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
 .vect-own-action {
-  height: 50px;
-  border: 0;
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid #111827;
   border-radius: 16px;
+  background: #fff;
+  color: #111827;
   font: inherit;
   font-size: 0.95rem;
   font-weight: 800;
   cursor: pointer;
+  letter-spacing: 0.01em;
 }
 
-.vect-own-action.is-accept {
-  background: #16a34a;
-  color: #fff;
-}
-
-.vect-own-action.is-reject {
-  background: #dc2626;
-  color: #fff;
-}
-
-.vect-own-action.is-note {
-  background: #e5e7eb;
+.vect-own-action.is-pending,
+.vect-own-action.is-reject,
+.vect-own-action.is-update {
+  background: #fff;
   color: #111827;
+}
+
+.vect-own-action.is-accept,
+.vect-own-action.is-accept.is-selected {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+
+.vect-own-action.is-reject,
+.vect-own-action.is-reject.is-selected {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.vect-own-action:hover {
+  background: #000;
+  color: #fff;
+}
+
+.vect-own-action:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+.vect-own-action.is-selected {
+  background: #111827;
+  color: #fff;
+}
+
+.vect-own-action.is-accept.is-selected,
+.vect-own-action.is-reject.is-selected {
+  color: #fff;
+}
+
+.vect-own-action.is-selected:hover {
+  background: #111827;
+  color: #fff;
 }
 
 .vect-own-detail-empty {
