@@ -1328,10 +1328,11 @@
           buildTouristReviewRow('Bus Type', touristBusDetails.busType || '-', 'tourist-bus-type'),
           buildTouristReviewRow('Number of seats', touristBusDetails.seats || '-', 'tourist-seats'),
           buildTouristReviewRow('TV/Music Systems', touristBusDetails.tvMusic || '-', 'tourist-tv'),
-          buildTouristReviewRow('Permit Type', touristBusDetails.permitType || '-', 'tourist-permit-type'),
+          buildTouristReviewRow('Place', touristBusDetails.place || '-', 'tourist-place'),
           '<div class="vect-own-tourist-question"><p class="vect-own-tourist-label">Photos</p><div class="vect-own-tourist-photo-block"><div class="vect-own-tourist-upload-list">' + (photoRows || '<div class="vect-own-empty-state">No file uploaded</div>') + '</div><p class="vect-own-tourist-upload-note">Front view, Back view, Side view, Interior (seats clearly visible)</p></div></div>',
           buildTouristFileSection('R.C Book', touristBusDetails.rcBook, 'tourist-rc'),
           buildTouristFileSection('Insurance', touristBusDetails.insurance, 'tourist-insurance'),
+          buildTouristReviewRow('Permit Type', touristBusDetails.permitType || '-', 'tourist-permit-type'),
           buildTouristFileSection('Permit', touristBusDetails.permitFiles, 'tourist-permit'),
           '</div>',
           '</div>'
