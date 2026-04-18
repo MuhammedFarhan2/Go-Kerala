@@ -131,8 +131,102 @@
     }
 
     .vect-own-tourist-page {
-      width: min(920px, calc(100% - 24px));
+      width: min(1200px, calc(100% - 24px));
       margin: 0 auto;
+    }
+
+    @media (max-width: 680px) {
+      .vect-own-main {
+        padding: 8px 4px 96px;
+      }
+
+      .vect-own-page-card {
+        padding: 14px 10px;
+        border-radius: 24px;
+      }
+
+      .vect-own-tourist-page {
+        width: calc(100% - 4px);
+      }
+
+      .vect-own-tourist-card {
+        gap: 16px;
+      }
+
+      .vect-own-tourist-top {
+        gap: 10px;
+      }
+
+      .vect-own-tourist-top-actions {
+        gap: 8px;
+      }
+
+        .vect-own-tourist-pill {
+          min-height: 42px;
+          border-radius: 18px;
+          padding: 8px 10px;
+          font-size: 0.9rem;
+        }
+
+      .vect-own-tourist-submissions-layout {
+        gap: 14px;
+      }
+
+      .vect-own-list-panel,
+      .vect-own-detail-panel {
+        padding: 0;
+      }
+
+      .vect-own-list-panel {
+        padding: 10px 8px 12px;
+      }
+
+      .vect-own-detail-panel {
+        padding: 12px 8px 14px;
+      }
+
+      .vect-own-detail-empty {
+        padding: 40px;
+      }
+
+      .vect-own-tourist-form-shell {
+        gap: 140px;
+      }
+
+      .vect-own-tourist-form {
+        gap: 12px;
+      }
+
+      .vect-own-tourist-review-row {
+        gap: 10px;
+        padding: 1px;
+        border-radius: 16px;
+      }
+
+      .vect-own-tourist-file-row {
+        gap: 8px;
+        padding: 12px;
+      }
+
+      .vect-own-tourist-file-preview {
+        max-width: 100%;
+      }
+
+      .vect-own-tourist-upload-list {
+        gap: 8px;
+      }
+
+      .vect-own-tourist-upload-row {
+        padding: 10px;
+      }
+
+      .vect-own-tourist-file-section {
+        gap: 6px;
+      }
+
+      .vect-own-tourist-file-list {
+        gap: 8px;
+      }
     }
 
     .vect-own-tourist-submissions-layout {
@@ -276,6 +370,85 @@
       font-size: 0.82rem;
       line-height: 1.4;
       color: #4b5563;
+    }
+
+    .vect-own-tourist-file-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .vect-own-tourist-file-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .vect-own-tourist-file-row {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .vect-own-tourist-image-card {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .vect-own-tourist-image-preview {
+      width: min(320px, 100%);
+      max-height: 280px;
+      border: 1px solid #dbe2ea;
+      border-radius: 14px;
+      background: #f8fafc;
+      object-fit: cover;
+    }
+
+    .vect-own-tourist-image-link {
+      appearance: none;
+      align-self: start;
+      border: 0;
+      background: transparent;
+      color: #0f4aa3;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .vect-own-tourist-image-link:hover {
+      text-decoration: underline;
+    }
+
+    .vect-own-tourist-file-name {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.35;
+      font-weight: 700;
+      color: #111;
+      word-break: break-word;
+    }
+
+    .vect-own-tourist-file-preview {
+      width: min(320px, 100%);
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #f8fafc;
+      object-fit: cover;
+    }
+
+    .vect-own-tourist-file-empty {
+      margin: 0;
+      color: #64748b;
+      font-size: 0.92rem;
+      line-height: 1.4;
     }
 
     .vect-own-tourist-choice-stack {
@@ -1130,6 +1303,45 @@
         ].join('');
       }
 
+      function buildTouristImageCard(title, value, itemKey) {
+        const safeValue = String(value || '').trim();
+        const imageUrl = resolveStoredUploadUrl('', safeValue);
+
+        if (!safeValue) {
+          return [
+            '<div class="vect-own-tourist-image-card">',
+            '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
+            '<p class="vect-own-tourist-file-empty">No file uploaded</p>',
+            '</div>'
+          ].join('');
+        }
+
+        return [
+          '<div class="vect-own-tourist-image-card">',
+          '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
+          imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
+          imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
+          '</div>'
+        ].join('');
+      }
+
+      function buildTouristFileSection(title, values, itemKeyPrefix) {
+        const safeValues = Array.isArray(values) ? values.filter(function (item) {
+          return String(item || '').trim();
+        }) : [];
+
+        const items = safeValues.length ? safeValues.map(function (value, index) {
+          return buildTouristImageCard(title + ' ' + (index + 1), value, itemKeyPrefix + '-' + index);
+        }).join('') : '<p class="vect-own-tourist-file-empty">No file uploaded</p>';
+
+        return [
+          '<div class="vect-own-tourist-file-section">',
+          '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
+          '<div class="vect-own-tourist-file-list" data-vect-own-item-prefix="' + escapeHtml(itemKeyPrefix || '') + '">' + items + '</div>',
+          '</div>'
+        ].join('');
+      }
+
       function renderTouristSubmissionDetail(submission) {
         if (!touristSubmissionDetailNode || !touristSubmissionEmptyNode || !touristSubmissionContentNode) {
           return;
@@ -1156,9 +1368,7 @@
         }
 
         const photoRows = (touristBusDetails.photos || []).slice(0, 4).map(function (name, index) {
-          const itemKey = 'tourist-photo-' + index;
-          const imageUrl = resolveStoredUploadUrl('', name);
-          return buildTouristReviewRow('Photo ' + (index + 1), name, itemKey, imageUrl);
+          return buildTouristImageCard('Photo ' + (index + 1), name, 'tourist-photo-' + index);
         }).join('');
 
         touristSubmissionContentNode.innerHTML = [
@@ -1168,7 +1378,12 @@
           buildTouristReviewRow('Bus Type', touristBusDetails.busType || '-', 'tourist-bus-type'),
           buildTouristReviewRow('Number of seats', touristBusDetails.seats || '-', 'tourist-seats'),
           buildTouristReviewRow('TV/Music Systems', touristBusDetails.tvMusic || '-', 'tourist-tv'),
+          buildTouristReviewRow('Place', touristBusDetails.place || '-', 'tourist-place'),
           '<div class="vect-own-tourist-question"><p class="vect-own-tourist-label">Photos</p><div class="vect-own-tourist-photo-block"><div class="vect-own-tourist-upload-list">' + (photoRows || '<div class="vect-own-empty-state">No file uploaded</div>') + '</div><p class="vect-own-tourist-upload-note">Front view, Back view, Side view, Interior (seats clearly visible)</p></div></div>',
+          buildTouristFileSection('R.C Book', touristBusDetails.rcBook, 'tourist-rc'),
+          buildTouristFileSection('Insurance', touristBusDetails.insurance, 'tourist-insurance'),
+          buildTouristReviewRow('Permit Type', touristBusDetails.permitType || '-', 'tourist-permit-type'),
+          buildTouristFileSection('Permit', touristBusDetails.permitFiles, 'tourist-permit'),
           '</div>',
           '</div>'
         ].join('');
