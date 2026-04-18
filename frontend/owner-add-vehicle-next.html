@@ -659,6 +659,14 @@
         }
       }
 
+      function readStoredWhatsappNumber() {
+        return String(
+          sessionStorage.getItem('owner-whatsapp-number') ||
+          localStorage.getItem('owner-whatsapp-number') ||
+          ''
+        ).trim();
+      }
+
       function getApiUrl(pathName) {
         const safePath = String(pathName || '').trim();
 
@@ -1024,18 +1032,26 @@
             return;
           }
 
+          const whatsappNumber = readStoredWhatsappNumber();
+
+          if (!whatsappNumber) {
+            window.alert('Please complete the WhatsApp number step first, then come back and submit the bus details.');
+            window.location.href = 'owner-details-wait.html?review=owner-whatsapp-number&return=owner-add-vehicle-next.html?vehicleType=bus';
+            return;
+          }
+
           submitButton.disabled = true;
 
           const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
           const ownerName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || '').trim();
-          const whatsappNumber = String(sessionStorage.getItem('owner-whatsapp-number') || localStorage.getItem('owner-whatsapp-number') || '').trim();
           const payload = {
             whatsappNumber: whatsappNumber,
             fields: {
               'owner-company-name': companyName,
               'owner-name': ownerName,
               'owner-whatsapp-number': whatsappNumber,
-              'owner-categories': 'Tourist Bus',
+              'owner-categories': JSON.stringify(['Tourist Bus']),
+              'owner-vehicle-type': 'bus',
               'owner-bus-type': selectedType,
               'owner-bus-seats': selectedSeats,
               'owner-bus-tv': selectedTv,
@@ -1060,7 +1076,7 @@
                 return response.json().then(function (payload) {
                   throw new Error((payload && payload.error) || 'Unable to save submission.');
                 }).catch(function () {
-                  throw new Error('Unable to save submission.');
+                  throw new Error('Unable to save submission. Server returned HTTP ' + response.status + '.');
                 });
               }
 
