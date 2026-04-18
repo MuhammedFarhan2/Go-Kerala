@@ -1521,19 +1521,8 @@ async function handlePublicSubmissionCreate(request, response) {
     console.log('Parsed payload:', payload);
 
     const fields = normalizeSubmissionFields(payload.fields || payload);
-    const whatsappNumber = normalizePhoneNumber(payload.whatsappNumber || fields['owner-whatsapp-number'] || '');
-
-    if (!whatsappNumber) {
-      console.error('No WhatsApp number provided');
-      sendJson(response, 400, { success: false, error: 'WhatsApp number is required.' });
-      return;
-    }
-
-    if (!isPhoneNumber(whatsappNumber)) {
-      console.error('Invalid WhatsApp number format:', whatsappNumber);
-      sendJson(response, 400, { success: false, error: 'Please provide a valid WhatsApp number.' });
-      return;
-    }
+    const normalizedWhatsappNumber = normalizePhoneNumber(payload.whatsappNumber || fields['owner-whatsapp-number'] || '');
+    const whatsappNumber = normalizedWhatsappNumber && isPhoneNumber(normalizedWhatsappNumber) ? normalizedWhatsappNumber : '';
 
     const now = Date.now();
     const submission = {
