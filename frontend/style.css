@@ -5413,6 +5413,20 @@ h1 {
   color: #fff;
 }
 
+.vect-own-action.is-accept:hover,
+.vect-own-action.is-accept.is-selected:hover {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+
+.vect-own-action.is-reject:hover,
+.vect-own-action.is-reject.is-selected:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
 .vect-own-action:hover {
   background: #000;
   color: #fff;
