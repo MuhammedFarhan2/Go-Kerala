@@ -1712,7 +1712,6 @@
       function buildDisplayFields(submission) {
         const fields = Object.assign({}, submission && submission.fields ? submission.fields : {});
         const summary = submission && submission.summary ? submission.summary : {};
-        const busSummary = summary && summary.bus ? summary.bus : {};
         const nestedFields = submission && submission.data && submission.data.fields ? submission.data.fields : {};
         const payloadFields = submission && submission.payload && submission.payload.fields ? submission.payload.fields : {};
         const bodyFields = submission && submission.body && submission.body.fields ? submission.body.fields : {};
@@ -1771,42 +1770,6 @@
 
         if (images.companyLogoUrl && !fields['owner-company-logo-url']) {
           fields['owner-company-logo-url'] = images.companyLogoUrl;
-        }
-
-        if (busSummary.type && !fields['owner-bus-type']) {
-          fields['owner-bus-type'] = busSummary.type;
-        }
-
-        if (busSummary.seats && !fields['owner-bus-seats']) {
-          fields['owner-bus-seats'] = busSummary.seats;
-        }
-
-        if (busSummary.tvMusic && !fields['owner-bus-tv']) {
-          fields['owner-bus-tv'] = busSummary.tvMusic;
-        }
-
-        if (busSummary.place && !fields['owner-bus-place']) {
-          fields['owner-bus-place'] = busSummary.place;
-        }
-
-        if (busSummary.permitType && !fields['owner-bus-permit-type']) {
-          fields['owner-bus-permit-type'] = busSummary.permitType;
-        }
-
-        if (busSummary.photos && !fields['owner-bus-photos']) {
-          fields['owner-bus-photos'] = busSummary.photos;
-        }
-
-        if (busSummary.rc && !fields['owner-bus-rc']) {
-          fields['owner-bus-rc'] = busSummary.rc;
-        }
-
-        if (busSummary.insurance && !fields['owner-bus-insurance']) {
-          fields['owner-bus-insurance'] = busSummary.insurance;
-        }
-
-        if (busSummary.permit && !fields['owner-bus-permit']) {
-          fields['owner-bus-permit'] = busSummary.permit;
         }
 
         return fields;
