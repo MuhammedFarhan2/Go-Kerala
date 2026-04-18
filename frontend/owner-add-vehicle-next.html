@@ -7,6 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="style.css?v=20260417-1">
   <style>
     .owner-next-header {
@@ -545,6 +546,8 @@
       const backLink = document.querySelector('[data-owner-back-link]');
       const submitButton = document.getElementById('owner-upload-submit');
       const flowNode = document.getElementById('owner-bus-flow');
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://go-kerala-backend.onrender.com';
       const storagePrefix = 'owner-bus-page-';
       const fields = {
         type: document.querySelectorAll('[data-owner-bus-type]'),
@@ -654,6 +657,16 @@
         } else {
           sessionStorage.removeItem(storageKey('permitType'));
         }
+      }
+
+      function getApiUrl(pathName) {
+        const safePath = String(pathName || '').trim();
+
+        if (!safePath) {
+          return apiBaseUrl;
+        }
+
+        return apiBaseUrl.replace(/\/$/, '') + (safePath.charAt(0) === '/' ? safePath : '/' + safePath);
       }
 
       function setError(name, message) {
@@ -1008,7 +1021,60 @@
 
           if (firstError && typeof firstError.scrollIntoView === 'function') {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
           }
+
+          submitButton.disabled = true;
+
+          const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
+          const ownerName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || '').trim();
+          const whatsappNumber = String(sessionStorage.getItem('owner-whatsapp-number') || localStorage.getItem('owner-whatsapp-number') || '').trim();
+          const payload = {
+            whatsappNumber: whatsappNumber,
+            fields: {
+              'owner-company-name': companyName,
+              'owner-name': ownerName,
+              'owner-whatsapp-number': whatsappNumber,
+              'owner-categories': 'Tourist Bus',
+              'owner-bus-type': selectedType,
+              'owner-bus-seats': selectedSeats,
+              'owner-bus-tv': selectedTv,
+              'owner-bus-place': selectedPlace,
+              'owner-bus-permit-type': selectedPermitType,
+              'owner-bus-photos': photos,
+              'owner-bus-rc': rc,
+              'owner-bus-insurance': insurance,
+              'owner-bus-permit': permit
+            }
+          };
+
+          fetch(getApiUrl('/api/submissions'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          })
+            .then(function (response) {
+              if (!response.ok) {
+                return response.json().then(function (payload) {
+                  throw new Error((payload && payload.error) || 'Unable to save submission.');
+                }).catch(function () {
+                  throw new Error('Unable to save submission.');
+                });
+              }
+
+              return response.json();
+            })
+            .then(function () {
+              window.location.href = 'vect-own/dashboard.html?page=submission';
+            })
+            .catch(function (error) {
+              window.alert(error.message || 'Unable to save submission.');
+            })
+            .finally(function () {
+              submitButton.disabled = false;
+            });
         });
       }
 
