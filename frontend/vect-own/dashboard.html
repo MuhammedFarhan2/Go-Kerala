@@ -1277,7 +1277,18 @@
           }
 
           if (value && typeof value === 'string') {
-            const clean = extractImageSource(value);
+            const text = String(value || '').trim();
+
+            if ((text[0] === '[' || text[0] === '{') && text.length > 1) {
+              try {
+                const parsed = JSON.parse(text);
+                return toList(parsed);
+              } catch (error) {
+                // fall through to plain string handling
+              }
+            }
+
+            const clean = extractImageSource(text);
             return clean ? [clean] : [];
           }
 
@@ -1700,7 +1711,13 @@
       function buildDisplayFields(submission) {
         const fields = Object.assign({}, submission && submission.fields ? submission.fields : {});
         const summary = submission && submission.summary ? submission.summary : {};
+        const nestedFields = submission && submission.data && submission.data.fields ? submission.data.fields : {};
+        const payloadFields = submission && submission.payload && submission.payload.fields ? submission.payload.fields : {};
+        const bodyFields = submission && submission.body && submission.body.fields ? submission.body.fields : {};
+        const summaryFields = summary && summary.fields ? summary.fields : {};
         const images = summary && summary.images ? summary.images : {};
+
+        Object.assign(fields, summaryFields, nestedFields, payloadFields, bodyFields);
 
         if (summary.companyName && !fields['owner-company-name']) {
           fields['owner-company-name'] = summary.companyName;
@@ -1752,6 +1769,22 @@
 
         if (images.companyLogoUrl && !fields['owner-company-logo-url']) {
           fields['owner-company-logo-url'] = images.companyLogoUrl;
+        }
+
+        if (summary.photos && !fields['owner-bus-photos']) {
+          fields['owner-bus-photos'] = summary.photos;
+        }
+
+        if (summary.rc && !fields['owner-bus-rc']) {
+          fields['owner-bus-rc'] = summary.rc;
+        }
+
+        if (summary.insurance && !fields['owner-bus-insurance']) {
+          fields['owner-bus-insurance'] = summary.insurance;
+        }
+
+        if (summary.permit && !fields['owner-bus-permit']) {
+          fields['owner-bus-permit'] = summary.permit;
         }
 
         return fields;
