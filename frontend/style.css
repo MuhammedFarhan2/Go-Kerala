@@ -176,14 +176,14 @@ button.submit-demo-expand-btn.is-view {
 }
 
 .owner-profile-add-photo-btn {
-  width: min(420px, calc(50% - 18px));
-  height: 58px;
-  min-width: 180px;
-  font-size: 1.05rem;
-  text-transform: none;
-  background: #111111;
-  color: #ffffff;
-}
+    width: min(860px, calc(100% - 24px));
+    height: 58px;
+    min-width: 240px;
+    font-size: 1.05rem;
+    text-transform: none;
+    background: #111111;
+    color: #ffffff;
+  }
 
 .is-profile-menu-open,
 .is-profile-menu-open body {
@@ -548,7 +548,7 @@ button.submit-demo-expand-btn.is-view {
   }
 
   .owner-profile-add-photo-btn {
-    width: min(420px, calc(50% - 12px));
+    width: calc(100% - 16px);
   }
 
   .owner-profile-upload-menu {

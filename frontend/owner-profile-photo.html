@@ -60,18 +60,13 @@
     <input
       type="file"
       accept="image/*"
-      capture="environment"
+      capture="user"
       hidden
       data-owner-profile-camera-input
     >
 
-    <div class="owner-profile-upload-menu" hidden data-owner-profile-upload-menu>
-      <button type="button" class="owner-profile-upload-option" data-owner-profile-action="take-photo">Take Photo with Back Camera</button>
-      <button type="button" class="owner-profile-upload-option" data-owner-profile-action="upload-photo">Upload Photo</button>
-    </div>
-
     <button type="button" class="owner-next-btn owner-profile-add-photo-btn" data-owner-profile-action-btn>
-      Add photo
+      Take Photo with Camera
     </button>
   </div>
 
@@ -97,12 +92,6 @@
       const actionButton = document.querySelector('[data-owner-profile-action-btn]');
       const cameraInput = document.querySelector('[data-owner-profile-camera-input]');
       const uploadInput = document.querySelector('[data-owner-profile-upload-input]');
-      const cameraOverlay = document.querySelector('[data-owner-profile-camera]');
-      const uploadMenu = document.querySelector('[data-owner-profile-upload-menu]');
-      const actionButtons = Array.from(document.querySelectorAll('[data-owner-profile-action]'));
-      const videoNode = document.querySelector('[data-owner-profile-video]');
-      const captureButton = document.querySelector('[data-owner-profile-camera-capture]');
-      const ovalNode = document.querySelector('.owner-profile-camera-oval');
       const pageParams = new URLSearchParams(window.location.search);
       const reviewItem = String(pageParams.get('review') || '').trim();
       const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
@@ -113,9 +102,7 @@
       const isProfileReview = reviewItem === 'owner-profile-photo';
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
-      let activeStream = null;
-
-      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !uploadMenu || !videoNode || !captureButton || !ovalNode) {
+      if (!actionButton || !cameraInput || !uploadInput) {
         return;
       }
 
@@ -124,64 +111,6 @@
       }
 
       const isMobileDevice = window.matchMedia('(max-width: 680px)').matches || window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-
-      function stopCamera() {
-        if (activeStream) {
-          activeStream.getTracks().forEach(function (track) {
-            track.stop();
-          });
-          activeStream = null;
-        }
-
-        videoNode.srcObject = null;
-        cameraOverlay.hidden = true;
-        document.documentElement.classList.remove('is-camera-open');
-      }
-
-      function closeMenu() {
-        uploadMenu.classList.remove('is-open');
-        document.documentElement.classList.remove('is-profile-menu-open');
-
-        window.setTimeout(function () {
-          if (!uploadMenu.classList.contains('is-open')) {
-            uploadMenu.hidden = true;
-          }
-        }, 220);
-      }
-
-      function openMenu() {
-        uploadMenu.hidden = false;
-        document.documentElement.classList.add('is-profile-menu-open');
-
-        window.requestAnimationFrame(function () {
-          uploadMenu.classList.add('is-open');
-        });
-      }
-
-      async function openCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          cameraInput.click();
-          return;
-        }
-
-        try {
-          activeStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: {
-                ideal: 'environment'
-              }
-            },
-            audio: false
-          });
-
-          videoNode.srcObject = activeStream;
-          cameraOverlay.hidden = false;
-          document.documentElement.classList.add('is-camera-open');
-          await videoNode.play();
-        } catch (error) {
-          cameraInput.click();
-        }
-      }
 
       async function markProfileSessionComplete() {
         if (!profileSessionToken) {
@@ -222,83 +151,11 @@
       }
 
       function captureFromOval() {
-        if (!videoNode.videoWidth || !videoNode.videoHeight) {
-          return;
-        }
-
-        const videoRect = videoNode.getBoundingClientRect();
-        const ovalRect = ovalNode.getBoundingClientRect();
-        const scaleX = videoNode.videoWidth / videoRect.width;
-        const scaleY = videoNode.videoHeight / videoRect.height;
-        const cropX = Math.max(0, (ovalRect.left - videoRect.left) * scaleX);
-        const cropY = Math.max(0, (ovalRect.top - videoRect.top) * scaleY);
-        const cropWidth = Math.min(videoNode.videoWidth - cropX, ovalRect.width * scaleX);
-        const cropHeight = Math.min(videoNode.videoHeight - cropY, ovalRect.height * scaleY);
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-
-        canvas.width = Math.round(cropWidth);
-        canvas.height = Math.round(cropHeight);
-
-        if (!context) {
-          return;
-        }
-
-        context.save();
-        context.beginPath();
-        context.ellipse(canvas.width / 2, canvas.height / 2, canvas.width / 2, canvas.height / 2, 0, 0, Math.PI * 2);
-        context.clip();
-        context.drawImage(
-          videoNode,
-          cropX,
-          cropY,
-          cropWidth,
-          cropHeight,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-        context.restore();
-
-        stopCamera();
-        finishProfilePhotoCapture(canvas.toDataURL('image/png')).catch(function (error) {
-          window.alert(error.message || 'Unable to save profile photo.');
-        });
+        cameraInput.click();
       }
 
       actionButton.addEventListener('click', function () {
-        if (!isMobileDevice) {
-          uploadInput.click();
-          return;
-        }
-
-        const isOpen = uploadMenu.classList.contains('is-open');
-
-        if (isOpen) {
-          closeMenu();
-          return;
-        }
-
-        openMenu();
-      });
-
-      captureButton.addEventListener('click', captureFromOval);
-      actionButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-          const action = button.getAttribute('data-owner-profile-action');
-
-          closeMenu();
-
-          if (action === 'take-photo') {
-            openCamera();
-            return;
-          }
-
-          if (action === 'upload-photo') {
-            uploadInput.click();
-          }
-        });
+        captureFromOval();
       });
 
       cameraInput.addEventListener('change', function () {
@@ -337,17 +194,6 @@
         reader.readAsDataURL(file);
       });
 
-      document.addEventListener('click', function (event) {
-        if (!uploadMenu.classList.contains('is-open')) {
-          return;
-        }
-
-        if (uploadMenu.contains(event.target) || actionButton.contains(event.target)) {
-          return;
-        }
-
-        closeMenu();
-      });
     })();
   </script>
 </body>
