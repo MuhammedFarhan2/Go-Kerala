@@ -1219,6 +1219,27 @@
         return { className: 'is-pending', label: 'Pending' };
       }
 
+      function extractImageSource(value) {
+        if (Array.isArray(value)) {
+          return value.length ? extractImageSource(value[0]) : '';
+        }
+
+        if (value && typeof value === 'object') {
+          return String(
+            value.url ||
+            value.src ||
+            value.path ||
+            value.fileUrl ||
+            value.fileName ||
+            value.filename ||
+            value.name ||
+            ''
+          ).trim();
+        }
+
+        return String(value || '').trim();
+      }
+
       function renderTouristBusReview() {
         if (!touristSubmissionListNode || !touristSubmissionDetailNode) {
           return;
@@ -1347,27 +1368,6 @@
           }
 
           return [];
-        }
-
-        function extractImageSource(value) {
-          if (Array.isArray(value)) {
-            return value.length ? extractImageSource(value[0]) : '';
-          }
-
-          if (value && typeof value === 'object') {
-            return String(
-              value.url ||
-              value.src ||
-              value.path ||
-              value.fileUrl ||
-              value.fileName ||
-              value.filename ||
-              value.name ||
-              ''
-            ).trim();
-          }
-
-          return String(value || '').trim();
         }
 
         const sessionBusType = readBusStorageValue('type');
