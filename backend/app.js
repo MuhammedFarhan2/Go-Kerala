@@ -504,6 +504,24 @@ function sendUploadFile(response, rawFileName) {
   });
 }
 
+function sendFrontendPage(response, relativePagePath) {
+  const safeRelativePath = String(relativePagePath || '').trim();
+
+  if (!safeRelativePath) {
+    sendText(response, 404, 'Not found');
+    return;
+  }
+
+  const pagePath = path.normalize(path.join(FRONTEND_DIR, safeRelativePath));
+
+  if (!pagePath.startsWith(FRONTEND_DIR)) {
+    sendText(response, 403, 'Forbidden');
+    return;
+  }
+
+  sendFile(response, pagePath);
+}
+
 function readJsonFile(filePath, fallbackValue) {
   try {
     const fileContents = fs.readFileSync(filePath, 'utf8');
@@ -1951,6 +1969,21 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/submissions') {
     handlePublicSubmissionCreate(request, response);
+    return;
+  }
+
+  if (request.method === 'GET' && (requestUrl.pathname === '/' || requestUrl.pathname === '/index.html')) {
+    sendFrontendPage(response, 'index.html');
+    return;
+  }
+
+  if (request.method === 'GET' && (requestUrl.pathname === '/vect-own' || requestUrl.pathname === '/vect-own/')) {
+    sendFrontendPage(response, path.join('vect-own', 'index.html'));
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/vect-own/index.html') {
+    sendFrontendPage(response, path.join('vect-own', 'index.html'));
     return;
   }
 
