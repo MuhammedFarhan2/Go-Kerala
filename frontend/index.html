@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vect Own Login</title>
+  <title>MyMusics</title>
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
-  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
-  <link rel="stylesheet" href="../style.css?v=20260414-2">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
-<body class="vect-own-body">
+<body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
     <div class="page-loader-content">
       <div class="page-loader-spinner" aria-hidden="true">
@@ -22,249 +21,193 @@
       <p class="page-loader-text">Loading</p>
     </div>
   </div>
-
-  <header class="header vect-own-header">
-    <div class="brand-lockup">
-      <h1 class="logo">VECT</h1>
-      <p class="logo-sub">MOVERS</p>
-    </div>
-    <span class="vect-own-header-chip">Private</span>
+  <header class="header">
+    <h1 class="logo">Saath
+    </h1>
+    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip">
+            <circle cx="12" cy="12" r="11.75"/>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip)">
+          <circle cx="0" cy="0" r="0" fill="none" stroke="#0ff" stroke-width="1.0"/>
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10
+          10-4.48 10-10S17.52 2 12 2zm0 3
+          c1.66 0 3 1.34 3 3s-1.34 3-3 3
+          -3-1.34-3-3 1.34-3 3-3zm0 14.2
+          c-2.5 0-4.71-1.28-6-3.22
+          .03-1.99 4-3.08 6-3.08
+          1.99 0 5.97 1.09 6 3.08
+          -1.29 1.94-3.5 3.22-6 3.22z
+          " fill="#fff"/>
+        </g>
+      </svg>
+    </button>
+    <aside class="account-panel" id="account-panel" aria-hidden="true">
+      <nav class="account-panel-nav">
+        <a href="#" class="account-option">Account</a>
+        <a href="#" class="account-option">History</a>
+        <a href="#" class="account-option">About</a>
+        <a href="#" class="account-option">Feedback</a>
+      </nav>
+    </aside>
+    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
   </header>
+  <main class="main main-banner">
+    <div class="container">
+      <div class="swiper flip-banner" id="flipBanner" aria-label="Flipkart-style banner slider">
+        <div class="swiper-wrapper">
+          <!-- Slide 1 -->
+          <div class="swiper-slide">
+            <div class="banner-card">
+              <img
+                class="banner-img"
+                src="https://picsum.photos/id/1011/1400/700"
+                alt="Banner slide 1"
+                loading="lazy"
+              />
+            </div>
+          </div>
 
-  <main class="vect-own-login-main">
-    <section class="vect-own-login-card" aria-label="Vect Own login">
-      <p class="vect-own-eyebrow">Selected members only</p>
-      <h1 class="vect-own-title">Vect Own</h1>
-      <p class="vect-own-copy">Enter the owner password to open the review dashboard.</p>
+          <!-- Slide 2 -->
+          <div class="swiper-slide">
+            <div class="banner-card">
+              <img
+                class="banner-img"
+                src="https://picsum.photos/id/1025/1400/700"
+                alt="Banner slide 2"
+                loading="lazy"
+              />
+            </div>
+          </div>
 
-      <form class="vect-own-login-form" data-vect-own-login-form novalidate>
-        <label class="vect-own-field">
-          <span class="vect-own-field-label">Password</span>
-          <input
-            type="password"
-            class="vect-own-input"
-            placeholder="Enter password"
-            autocomplete="current-password"
-            data-vect-own-password
-          >
-        </label>
-
-        <p class="vect-own-error" data-vect-own-error hidden></p>
-
-        <button type="submit" class="vect-own-button">Enter Portal</button>
-      </form>
-
-      <div class="owner-auth-divider">
-        <span></span>
-        <p>Or log in with</p>
-        <span></span>
-      </div>
-
-      <div class="owner-auth-socials" aria-label="Vect Own Google login">
-        <div class="owner-auth-google-wrap">
-          <div class="owner-auth-google-button" data-vect-own-google-auth-btn></div>
+          <!-- Slide 3 -->
+          <div class="swiper-slide">
+            <div class="banner-card">
+              <img
+                class="banner-img"
+                src="https://picsum.photos/id/1035/1400/700"
+                alt="Banner slide 3"
+                loading="lazy"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <!-- Pagination dots (centered) -->
+        <div class="swiper-pagination" aria-label="Slider navigation dots"></div>
+      </div>
+      <h1 class="vehicle-prompt">Select a Vehicle you want</h1>
+      
+      <div class="product-container" aria-label="Vehicle categories">
+        <a href="route.html?scope=tourist" class="product-box product-box-featured">
+          <span class="product-icon" aria-hidden="true">
+            <img src="tour-bus.png" alt="Tour bus" class="product-icon-image-featured" />
+          </span>
+          <span class="product-copy">
+            <strong>TOURIST BUS</strong>
+            <span>Include all types of buses</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+        <a href="route.html?scope=truck" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="modern-white-box-truck.png" alt="White box truck" class="product-icon-image-vehicle" />
+          </span>
+          <span class="product-copy">
+            <strong>Closed Body Trucks</strong>
+            <span>Includes Closed Body Pickups, Lorries, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+        <a href="route.html?scope=open-truck" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="white-flatbed-truck.png" alt="White flatbed truck" class="product-icon-image-vehicle" />
+          </span>
+          <span class="product-copy">
+            <strong>Open Body Trucks</strong>
+            <span>Includes Open Body Pickups, Lorries, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+        <a href="route.html?scope=excavator" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="yellow-hydraulic-excavator.png" alt="Yellow hydraulic excavator" class="product-icon-image-vehicle product-icon-image-excavator" />
+          </span>
+          <span class="product-copy">
+            <strong>Excavators</strong>
+            <span>Includes all types of excavators like Hitachi, Komatsu, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+        <a href="route.html?scope=backhoe" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="yellow-backhoe-loader.png" alt="Yellow backhoe loader" class="product-icon-image-vehicle" />
+          </span>
+          <span class="product-copy">
+            <strong>Backhoe Loaders</strong>
+            <span>Includes all types of backhoe loaders like JCB, CAT, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
     (function () {
-      const form = document.querySelector('[data-vect-own-login-form]');
-      const passwordInput = document.querySelector('[data-vect-own-password]');
-      const errorNode = document.querySelector('[data-vect-own-error]');
-      const googleAuthButton = document.querySelector('[data-vect-own-google-auth-btn]');
-      const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
-      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
-      const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
-      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
-      const SESSION_KEY = 'vect-own-session-token';
-
-      if (!form || !passwordInput || !errorNode) {
-        return;
+      function markBannerReady() {
+        window.__homeBannerReady = true;
+        window.dispatchEvent(new Event('home-banner-ready'));
       }
 
-      function getApiUrl(pathName) {
-        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
-      }
-
-      function showError(message) {
-        errorNode.textContent = message;
-        errorNode.hidden = false;
-      }
-
-      function hideError() {
-        errorNode.hidden = true;
-        errorNode.textContent = '';
-      }
-
-      function getSessionHeaders() {
-        const token = String(localStorage.getItem(SESSION_KEY) || '').trim();
-        return token ? { 'X-Vect-Own-Session': token } : {};
-      }
-
-      function renderGoogleButton() {
-        if (!googleAuthButton || !googleClientId || googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
-          return;
-        }
-
-        if (!window.google || !window.google.accounts || !window.google.accounts.id) {
-          return;
-        }
-
-        const buttonWidth = Math.max(280, Math.floor(googleAuthButton.getBoundingClientRect().width || googleAuthButton.clientWidth || 280));
-        googleAuthButton.innerHTML = '';
-
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: function (response) {
-            if (!response || !response.credential) {
-              showError('Google sign-in did not return a valid credential.');
-              return;
-            }
-
-            fetch(getApiUrl('/api/vect-own/login-google'), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                credential: response.credential
-              })
-            })
-              .then(function (apiResponse) {
-                return apiResponse.text().then(function (text) {
-                  let data = {};
-
-                  try {
-                    data = text ? JSON.parse(text) : {};
-                  } catch (error) {
-                    data = {
-                      error: text || 'Unexpected server response.'
-                    };
-                  }
-
-                  return {
-                    ok: apiResponse.ok,
-                    data: data
-                  };
-                });
-              })
-              .then(function (result) {
-                if (!result.ok) {
-                  throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
-                }
-
-                if (result.data && result.data.token) {
-                  localStorage.setItem(SESSION_KEY, String(result.data.token));
-                }
-
-                window.location.href = 'dashboard.html';
-              })
-              .catch(function (error) {
-                showError(error.message || 'Google sign-in failed.');
-              });
-          }
-        });
-
-        window.google.accounts.id.renderButton(googleAuthButton, {
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with',
-          shape: 'rectangular',
-          width: buttonWidth
-        });
-      }
-
-      fetch(getApiUrl('/api/vect-own/me'), {
-        headers: getSessionHeaders()
-      })
-        .then(function (response) {
-          if (!response.ok) {
-            throw new Error('Not authenticated');
-          }
-
-          return response.json();
-        })
-        .then(function () {
-          window.location.replace('dashboard.html');
-        })
-        .catch(function () {
-          // Stay on the login page.
-        });
-
-      form.addEventListener('submit', function (event) {
-        event.preventDefault();
-        hideError();
-
-        const password = String(passwordInput.value || '').trim();
-
-        if (!password) {
-          showError('Please enter the password.');
-          passwordInput.focus();
-          return;
-        }
-
-        const submitButton = form.querySelector('.vect-own-button');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Checking...';
-
-        fetch(getApiUrl('/api/vect-own/login'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+      new Swiper("#flipBanner", {
+        loop: true,
+        speed: 700,
+        autoplay: {
+          delay: 3000,
+          disableOnInteraction: false
+        },
+        spaceBetween: 14,
+        centeredSlides: true,
+        slidesPerView: 1,
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: true
+        },
+        breakpoints: {
+          0: {
+            spaceBetween: 12,
+            centeredSlides: true,
+            slidesPerView: 1
           },
-          body: JSON.stringify({
-            password: password
-          })
-        })
-          .then(function (response) {
-            return response.text().then(function (text) {
-              let data = {};
-
-              try {
-                data = text ? JSON.parse(text) : {};
-              } catch (error) {
-                data = { error: text || 'Unexpected server response.' };
-              }
-
-              return {
-                ok: response.ok,
-                data: data
-              };
-            });
-          })
-          .then(function (result) {
-            if (!result.ok) {
-              throw new Error((result.data && result.data.error) || 'Login failed.');
-            }
-
-            if (result.data && result.data.token) {
-              localStorage.setItem(SESSION_KEY, String(result.data.token));
-            }
-
-            window.location.href = 'dashboard.html';
-          })
-          .catch(function (error) {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Enter Portal';
-            if (error && error.message === 'Failed to fetch') {
-              showError('Server not reachable. Check the backend URL in this page and make sure your backend is running.');
-              return;
-            }
-
-          showError(error.message || 'Login failed.');
-        });
+          768: {
+            spaceBetween: 14,
+            centeredSlides: true,
+            slidesPerView: 1
+          },
+          1024: {
+            spaceBetween: 14,
+            centeredSlides: true,
+            slidesPerView: 1
+          }
+        },
+        on: {
+          init: function () {
+            requestAnimationFrame(markBannerReady);
+          }
+        }
       });
-
-      if (window.google && window.google.accounts && window.google.accounts.id) {
-        renderGoogleButton();
-      } else {
-        window.addEventListener('load', renderGoogleButton);
-      }
     })();
   </script>
-  <script src="../script.js?v=20260414-2"></script>
+  <script src="script.js?v=20260406-2"></script>
 </body>
 </html>
