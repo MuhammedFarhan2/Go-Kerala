@@ -1499,6 +1499,19 @@
           return text;
         }
 
+        const staticAssetFiles = new Set([
+          'tour-bus.png',
+          'yellow-backhoe-loader.png',
+          'Aadhaar-Card.png',
+          'yellow-hydraulic-excavator.png',
+          'modern-white-box-truck.png',
+          'white-flatbed-truck.png'
+        ]);
+
+        if (staticAssetFiles.has(text)) {
+          return new URL('../' + text, window.location.href).toString();
+        }
+
         if (/^\//.test(text)) {
           return getApiUrl(text);
         }
