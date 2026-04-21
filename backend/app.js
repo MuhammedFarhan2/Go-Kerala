@@ -924,6 +924,7 @@ function tryParseJsonArray(value) {
 }
 
 function serializeSubmissionForList(submission) {
+  const summary = summarizeSubmissionFields(submission.fields || {}, submission.whatsappNumber);
   return {
     id: submission.id,
     createdAt: submission.createdAt,
@@ -932,7 +933,8 @@ function serializeSubmissionForList(submission) {
     reviewedAt: submission.reviewedAt || '',
     reviewedBy: submission.reviewedBy || '',
     reviewNote: submission.reviewNote || '',
-    summary: summarizeSubmissionFields(submission.fields || {}, submission.whatsappNumber)
+    summary: summary,
+    bus: summary.bus || {}
   };
 }
 
@@ -1743,6 +1745,7 @@ async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
   console.log('Sending submission details to frontend');
   
   const safeFields = submission.fields || {};
+  const summary = summarizeSubmissionFields(safeFields, submission.whatsappNumber);
   
   // Convert photo filenames to URLs for frontend compatibility
   const submissionWithUrls = Object.assign({}, submission, {
@@ -1755,7 +1758,8 @@ async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
       'owner-gst-photo-url': getUploadUrl(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
       'owner-company-logo-url': getUploadUrl(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name'])
     }),
-    summary: summarizeSubmissionFields(safeFields, submission.whatsappNumber)
+    summary: summary,
+    bus: summary.bus || {}
   });
   
   console.log('Summary created:', submissionWithUrls.summary);
