@@ -146,6 +146,14 @@
       const currentOrigin = /^https?:/i.test(window.location.origin || '') ? String(window.location.origin || '').trim().replace(/\/$/, '') : '';
       const isLocalHost = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(window.location.hostname || '');
       const apiBaseUrl = apiBaseFromMeta || 'https://mymusics.onrender.com';
+      const apiBaseCandidates = Array.from(new Set([
+        apiBaseUrl,
+        'https://mymusics.onrender.com',
+        'https://go-kerala-backend.onrender.com',
+        currentOrigin
+      ].map(function (value) {
+        return String(value || '').trim().replace(/\/$/, '');
+      }).filter(Boolean)));
       const titleText = document.querySelector('[data-owner-auth-title]');
       const subtitleText = document.querySelector('[data-owner-auth-subtitle]');
       const submitButton = form ? form.querySelector('.owner-auth-submit') : null;
@@ -262,6 +270,54 @@
         return apiBaseUrl + pathName;
       }
 
+      function getApiUrlForBase(baseUrl, pathName) {
+        const safeBase = String(baseUrl || '').trim().replace(/\/$/, '');
+        const safePath = String(pathName || '').trim();
+
+        if (!safeBase) {
+          return safePath;
+        }
+
+        if (!safePath) {
+          return safeBase;
+        }
+
+        return safeBase + (safePath.charAt(0) === '/' ? safePath : '/' + safePath);
+      }
+
+      function fetchJsonFromApi(pathName, options) {
+        const bases = apiBaseCandidates.slice();
+
+        function tryNext() {
+          const baseUrl = bases.shift();
+
+          if (!baseUrl) {
+            return Promise.reject(new Error('Failed to reach the API.'));
+          }
+
+          return fetchJsonWithRetry(getApiUrlForBase(baseUrl, pathName), options).then(function (result) {
+            if (
+              result &&
+              !result.ok &&
+              (result.status === 404 || result.status === 502 || result.status === 503 || result.status === 504) &&
+              bases.length
+            ) {
+              return tryNext();
+            }
+
+            return result;
+          }).catch(function (error) {
+            if (bases.length) {
+              return tryNext();
+            }
+
+            throw error;
+          });
+        }
+
+        return tryNext();
+      }
+
       function wait(ms) {
         return new Promise(function (resolve) {
           window.setTimeout(resolve, ms);
@@ -333,7 +389,7 @@
               return;
             }
 
-            fetchJsonWithRetry(getApiUrl('/api/auth/google'), {
+            fetchJsonFromApi('/api/auth/google', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -448,7 +504,7 @@
           return;
         }
 
-        fetchJsonWithRetry(getApiUrl('/api/auth/request-otp'), {
+        fetchJsonFromApi('/api/auth/request-otp', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
