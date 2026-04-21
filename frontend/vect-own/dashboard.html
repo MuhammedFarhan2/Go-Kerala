@@ -1027,6 +1027,7 @@
       let cachedSelectedSubmission = null;
       let draftReviewNotes = {};
       let reviewSelections = {};
+      const LOCAL_TOURIST_SUBMISSION_KEY = 'owner-latest-tourist-submission';
 
       if (!listNode || !detailNode || !emptyNode) {
         return;
@@ -1136,6 +1137,51 @@
         }
 
         return 'pending';
+      }
+
+      function getLocalTouristSubmission() {
+        try {
+          const raw = String(sessionStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) || '').trim();
+
+          if (!raw) {
+            return null;
+          }
+
+          const parsed = JSON.parse(raw);
+
+          if (!parsed || typeof parsed !== 'object' || !parsed.id) {
+            return null;
+          }
+
+          return parsed;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function mergeLocalTouristSubmission(submissions) {
+        const list = Array.isArray(submissions) ? submissions.slice() : [];
+        const localSubmission = getLocalTouristSubmission();
+
+        if (!localSubmission) {
+          return list;
+        }
+
+        const localId = String(localSubmission.id || '').trim();
+        const localIndex = list.findIndex(function (submission) {
+          return submission && String(submission.id || '').trim() === localId;
+        });
+
+        if (localIndex >= 0) {
+          list[localIndex] = Object.assign({}, list[localIndex], localSubmission, {
+            summary: Object.assign({}, list[localIndex].summary || {}, localSubmission.summary || {}),
+            bus: Object.assign({}, list[localIndex].bus || {}, localSubmission.bus || {})
+          });
+        } else {
+          list.unshift(localSubmission);
+        }
+
+        return list;
       }
 
       function setTouristBusReviewStatus(status) {
@@ -2727,14 +2773,23 @@
               return;
             }
 
-            allSubmissions = Array.isArray(payload.submissions) ? payload.submissions : [];
+            allSubmissions = mergeLocalTouristSubmission(Array.isArray(payload.submissions) ? payload.submissions : []);
             console.log('All submissions loaded:', allSubmissions.length);
             console.log('Submission IDs:', allSubmissions.map(s => s.id));
             
             updateMetrics();
             renderList();
 
-            if (selectFirst && allSubmissions.length) {
+            const latestSubmissionId = String(sessionStorage.getItem('owner-latest-submission-id') || '').trim();
+            const latestSubmission = latestSubmissionId ? allSubmissions.find(function (submission) {
+              return submission.id === latestSubmissionId;
+            }) : null;
+
+            if (latestSubmission) {
+              console.log('Auto-selecting latest submission:', latestSubmission.id);
+              sessionStorage.removeItem('owner-latest-submission-id');
+              openSubmission(latestSubmission.id);
+            } else if (selectFirst && allSubmissions.length) {
               console.log('Auto-selecting first submission:', allSubmissions[0].id);
               openSubmission(allSubmissions[0].id);
             } else if (selectedSubmissionId) {
@@ -2751,8 +2806,9 @@
                   renderDetail(stillSelected);
                 }
               } else {
-                console.log('Selected submission not found in list, trying direct fetch');
-                openSubmission(selectedSubmissionId);
+                console.log('Selected submission not found');
+                selectedSubmissionId = '';
+                renderDetail(null);
               }
             } else {
               console.log('No submissions to select');
