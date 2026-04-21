@@ -1,4 +1,4 @@
-const APP_CACHE = "pmq-app-v3";
+const APP_CACHE = "pmq-app-v4";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -34,6 +34,25 @@ self.addEventListener("fetch", (event) => {
       if (sharedUrl) target.searchParams.set("shared_url", String(sharedUrl));
 
       return Response.redirect(target.toString(), 303);
+    })());
+    return;
+  }
+
+  const isDocumentRequest =
+    event.request.mode === "navigate" ||
+    (event.request.headers.get("accept") || "").includes("text/html") ||
+    url.pathname.endsWith(".html");
+
+  if (isDocumentRequest) {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(event.request);
+        return fresh;
+      } catch {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        return caches.match("./index.html");
+      }
     })());
     return;
   }
