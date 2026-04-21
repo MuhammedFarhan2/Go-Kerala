@@ -1118,7 +1118,7 @@
           };
 
           const latestTouristSubmission = {
-            id: '',
+            id: 'local-' + Date.now() + '-' + Math.random().toString(16).slice(2),
             createdAt: Date.now(),
             updatedAt: Date.now(),
             status: 'pending',
@@ -1158,6 +1158,10 @@
             }
           };
 
+          sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
+          sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
+          sessionStorage.setItem('vect-own-tourist-bus-status', 'pending');
+          sessionStorage.setItem('owner-latest-submission-id', String(latestTouristSubmission.id));
           fetchWithApiFallback('/api/submissions', {
             method: 'POST',
             headers: {
@@ -1182,10 +1186,8 @@
                 latestTouristSubmission.createdAt = result.submission.createdAt || latestTouristSubmission.createdAt;
                 latestTouristSubmission.updatedAt = result.submission.updatedAt || latestTouristSubmission.updatedAt;
                 sessionStorage.setItem('owner-latest-submission-id', String(result.submission.id));
+                sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
               }
-              sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
-              sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
-              sessionStorage.setItem('vect-own-tourist-bus-status', 'pending');
               window.location.href = 'owner-blank-sheet.html?tab=add-bus';
             })
             .catch(function (error) {

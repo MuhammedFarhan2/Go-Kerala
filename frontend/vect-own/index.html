@@ -79,6 +79,13 @@
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
+      const apiBaseCandidates = Array.from(new Set([
+        apiBaseUrl,
+        'https://go-kerala-backend.onrender.com',
+        'https://mymusics.onrender.com'
+      ].map(function (value) {
+        return String(value || '').trim().replace(/\/$/, '');
+      }).filter(Boolean)));
       const SESSION_KEY = 'vect-own-session-token';
 
       if (!form || !passwordInput || !errorNode) {
@@ -87,6 +94,53 @@
 
       function getApiUrl(pathName) {
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+      }
+
+      function getApiUrlForBase(baseUrl, pathName) {
+        const safeBase = String(baseUrl || '').trim().replace(/\/$/, '');
+        const safePath = String(pathName || '').trim();
+
+        if (!safeBase) {
+          return safePath;
+        }
+
+        if (!safePath) {
+          return safeBase;
+        }
+
+        return safeBase + (safePath.charAt(0) === '/' ? safePath : '/' + safePath);
+      }
+
+      function fetchWithApiFallback(pathName, options) {
+        const bases = apiBaseCandidates.slice();
+
+        function tryNext() {
+          const baseUrl = bases.shift();
+
+          if (!baseUrl) {
+            return Promise.reject(new Error('Failed to reach the API.'));
+          }
+
+          return fetch(getApiUrlForBase(baseUrl, pathName), options).then(function (response) {
+            if (
+              !response.ok &&
+              (response.status === 404 || response.status === 502 || response.status === 503 || response.status === 504) &&
+              bases.length
+            ) {
+              return tryNext();
+            }
+
+            return response;
+          }).catch(function (error) {
+            if (bases.length) {
+              return tryNext();
+            }
+
+            throw error;
+          });
+        }
+
+        return tryNext();
       }
 
       function showError(message) {
@@ -124,7 +178,7 @@
               return;
             }
 
-            fetch(getApiUrl('/api/vect-own/login-google'), {
+            fetchWithApiFallback('/api/vect-own/login-google', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -177,7 +231,7 @@
         });
       }
 
-      fetch(getApiUrl('/api/vect-own/me'), {
+      fetchWithApiFallback('/api/vect-own/me', {
         headers: getSessionHeaders()
       })
         .then(function (response) {
@@ -210,7 +264,7 @@
         submitButton.disabled = true;
         submitButton.textContent = 'Checking...';
 
-        fetch(getApiUrl('/api/vect-own/login'), {
+        fetchWithApiFallback('/api/vect-own/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
