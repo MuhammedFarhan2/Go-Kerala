@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+  <meta name="api-base-url" content="https://mymusics.onrender.com">
   <link rel="stylesheet" href="style.css?v=20260417-1">
   <style>
     .owner-next-header {
@@ -547,7 +547,7 @@
       const submitButton = document.getElementById('owner-upload-submit');
       const flowNode = document.getElementById('owner-bus-flow');
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
-      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://go-kerala-backend.onrender.com';
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://mymusics.onrender.com';
       const storagePrefix = 'owner-bus-page-';
       const fields = {
         type: document.querySelectorAll('[data-owner-bus-type]'),
