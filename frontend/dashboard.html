@@ -962,6 +962,13 @@
       const actionButtons = Array.from(document.querySelectorAll('[data-vect-own-action]'));
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
+      const apiBaseCandidates = Array.from(new Set([
+        apiBaseUrl,
+        'https://go-kerala-backend.onrender.com',
+        'https://mymusics.onrender.com'
+      ].map(function (value) {
+        return String(value || '').trim().replace(/\/$/, '');
+      }).filter(Boolean)));
       const SESSION_KEY = 'vect-own-session-token';
       const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
       const ACCEPT_WHATSAPP_MESSAGE = 'Congratulation you have selected as a member of VECT Movers. Please open this link after accept: ' + new URL('../owner-blank-sheet.html', window.location.href).toString();
@@ -1877,6 +1884,53 @@
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
+      function getApiUrlForBase(baseUrl, pathName) {
+        const safeBase = String(baseUrl || '').trim().replace(/\/$/, '');
+        const safePath = String(pathName || '').trim();
+
+        if (!safeBase) {
+          return safePath;
+        }
+
+        if (!safePath) {
+          return safeBase;
+        }
+
+        return safeBase + (safePath.charAt(0) === '/' ? safePath : '/' + safePath);
+      }
+
+      function fetchWithApiFallback(pathName, options) {
+        const bases = apiBaseCandidates.slice();
+
+        function tryNext() {
+          const baseUrl = bases.shift();
+
+          if (!baseUrl) {
+            return Promise.reject(new Error('Failed to reach the API.'));
+          }
+
+          return fetch(getApiUrlForBase(baseUrl, pathName), options).then(function (response) {
+            if (
+              !response.ok &&
+              (response.status === 404 || response.status === 502 || response.status === 503 || response.status === 504) &&
+              bases.length
+            ) {
+              return tryNext();
+            }
+
+            return response;
+          }).catch(function (error) {
+            if (bases.length) {
+              return tryNext();
+            }
+
+            throw error;
+          });
+        }
+
+        return tryNext();
+      }
+
       function readDashboardLocationState() {
         try {
           const params = new URLSearchParams(window.location.search);
@@ -2177,7 +2231,7 @@
       function getApi(pathName, options) {
         const config = Object.assign({}, options || {});
         config.headers = Object.assign({}, getSessionHeaders(), config.headers || {});
-        return fetch(getApiUrl(pathName), config);
+        return fetchWithApiFallback(pathName, config);
       }
 
       function setActiveTab(tabName) {
