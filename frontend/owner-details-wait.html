@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document Evaluation</title>
-  <meta name="api-base-url" content="https://mymusics.onrender.com">
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
@@ -82,7 +82,7 @@
       const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim() : '';
       const apiBaseFromSession = String(sessionStorage.getItem('owner-api-base-url') || '').trim();
       const currentOrigin = /^https?:/i.test(window.location.origin || '') ? String(window.location.origin || '').trim() : '';
-      const apiBaseUrl = apiBaseFromMeta || 'https://mymusics.onrender.com';
+      const apiBaseUrl = apiBaseFromMeta || 'https://go-kerala-backend.onrender.com';
       
       // Debug: Log the API URL being used
       console.log('API Base URL:', apiBaseUrl);

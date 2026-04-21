@@ -8,7 +8,7 @@
     document.documentElement.classList.add('show-page-loader');
   </script>
   <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
-  <meta name="api-base-url" content="https://mymusics.onrender.com">
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
@@ -145,11 +145,11 @@
       const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const currentOrigin = /^https?:/i.test(window.location.origin || '') ? String(window.location.origin || '').trim().replace(/\/$/, '') : '';
       const isLocalHost = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(window.location.hostname || '');
-      const apiBaseUrl = apiBaseFromMeta || 'https://mymusics.onrender.com';
+      const apiBaseUrl = apiBaseFromMeta || 'https://go-kerala-backend.onrender.com';
       const apiBaseCandidates = Array.from(new Set([
         apiBaseUrl,
-        'https://mymusics.onrender.com',
         'https://go-kerala-backend.onrender.com',
+        'https://mymusics.onrender.com',
         currentOrigin
       ].map(function (value) {
         return String(value || '').trim().replace(/\/$/, '');
