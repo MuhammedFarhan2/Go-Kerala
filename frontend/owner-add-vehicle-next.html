@@ -1104,6 +1104,19 @@
             }
           };
 
+          const latestVehicleSummary = {
+            type: selectedType,
+            seats: selectedSeats,
+            tv: selectedTv,
+            place: selectedPlace,
+            permitType: selectedPermitType,
+            photoCount: photos.length,
+            rcCount: rc.length,
+            insuranceCount: insurance.length,
+            permitCount: permit.length,
+            savedAt: new Date().toISOString()
+          };
+
           fetchWithApiFallback('/api/submissions', {
             method: 'POST',
             headers: {
@@ -1123,7 +1136,8 @@
               return response.json();
             })
             .then(function () {
-              window.location.href = 'vect-own/dashboard.html?page=submission';
+              sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
+              window.location.href = 'owner-blank-sheet.html?tab=add-bus';
             })
             .catch(function (error) {
               window.alert(error.message || 'Unable to save submission.');

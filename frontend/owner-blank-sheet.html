@@ -125,6 +125,53 @@
       cursor: pointer;
     }
 
+    .owner-add-preview {
+      display: none;
+      gap: 6px;
+      padding: 14px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+    }
+
+    .owner-add-preview.is-visible {
+      display: grid;
+    }
+
+    .owner-add-preview-title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .owner-add-preview-copy {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: #475569;
+    }
+
+    .owner-add-preview-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .owner-add-preview-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #111827;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
     .owner-add-plus {
       width: 40px;
       height: 40px;
@@ -320,6 +367,11 @@
         </section>
 
         <section class="owner-page" data-owner-page="add-bus" aria-label="Add bus page">
+          <div class="owner-add-preview" id="owner-add-preview" aria-live="polite" hidden>
+            <p class="owner-add-preview-title">New vehicle added</p>
+            <p class="owner-add-preview-copy" id="owner-add-preview-copy">Your latest vehicle details will appear here.</p>
+            <div class="owner-add-preview-meta" id="owner-add-preview-meta"></div>
+          </div>
           <div class="owner-add-box" role="button" aria-label="Add bus" data-open-add-vehicle>
             <div class="owner-add-plus" aria-hidden="true">+</div>
           </div>
@@ -396,9 +448,13 @@
       const backdrop = document.getElementById('account-backdrop');
       const previewNode = document.getElementById('owner-calendar-preview');
       const previewDateNode = document.getElementById('owner-calendar-preview-date');
+      const addPreviewNode = document.getElementById('owner-add-preview');
+      const addPreviewCopyNode = document.getElementById('owner-add-preview-copy');
+      const addPreviewMetaNode = document.getElementById('owner-add-preview-meta');
       const tabs = Array.from(document.querySelectorAll('[data-owner-tab]'));
       const pages = Array.from(document.querySelectorAll('[data-owner-page]'));
       const addVehicleTrigger = document.querySelector('[data-open-add-vehicle]');
+      const latestVehicleKey = 'owner-latest-vehicle-summary';
 
       function setAvatar(text) {
         const value = String(text || 'VM').trim();
@@ -456,6 +512,59 @@
           const isActive = page.getAttribute('data-owner-page') === nextPage;
           page.classList.toggle('is-active', isActive);
         });
+
+        if (nextPage === 'add-bus') {
+          renderLatestVehiclePreview();
+        }
+      }
+
+      function clearNode(node) {
+        while (node && node.firstChild) {
+          node.removeChild(node.firstChild);
+        }
+      }
+
+      function renderLatestVehiclePreview() {
+        if (!addPreviewNode || !addPreviewCopyNode || !addPreviewMetaNode) {
+          return;
+        }
+
+        let previewData = null;
+
+        try {
+          previewData = JSON.parse(sessionStorage.getItem(latestVehicleKey) || 'null');
+        } catch (error) {
+          previewData = null;
+        }
+
+        if (!previewData) {
+          addPreviewNode.hidden = true;
+          addPreviewNode.classList.remove('is-visible');
+          clearNode(addPreviewMetaNode);
+          addPreviewCopyNode.textContent = 'Your latest vehicle details will appear here.';
+          return;
+        }
+
+        const metaItems = [
+          previewData.type ? 'Type: ' + previewData.type : '',
+          previewData.seats ? 'Seats: ' + previewData.seats : '',
+          previewData.place ? 'Place: ' + previewData.place : '',
+          previewData.permitType ? 'Permit: ' + previewData.permitType : '',
+          previewData.photoCount ? 'Photos: ' + previewData.photoCount : ''
+        ].filter(Boolean);
+
+        addPreviewCopyNode.textContent = 'Saved from the latest submit. Check the submission list in Vect Own for the full details.';
+        clearNode(addPreviewMetaNode);
+
+        metaItems.forEach(function (label) {
+          const chip = document.createElement('span');
+          chip.className = 'owner-add-preview-chip';
+          chip.textContent = label;
+          addPreviewMetaNode.appendChild(chip);
+        });
+
+        addPreviewNode.hidden = false;
+        addPreviewNode.classList.add('is-visible');
       }
 
       const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
@@ -541,7 +650,10 @@
         });
       }
 
-      setActiveOwnerPage('booking');
+      renderLatestVehiclePreview();
+
+      const pageParams = new URLSearchParams(window.location.search);
+      setActiveOwnerPage(pageParams.get('tab') || pageParams.get('page') || 'booking');
     })();
   </script>
 </body>
