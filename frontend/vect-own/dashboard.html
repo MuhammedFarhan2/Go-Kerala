@@ -501,6 +501,58 @@
       background: #dc2626 !important;
     }
 
+    .vect-own-review-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-self: start;
+    }
+
+    .vect-own-review-button {
+      appearance: none;
+      border: 0 !important;
+      border-radius: 999px;
+      min-width: 78px;
+      min-height: 34px;
+      padding: 0 14px;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      box-shadow: 0 10px 20px rgba(17, 24, 39, 0.08);
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+    }
+
+    .vect-own-review-button:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
+    }
+
+    .vect-own-review-button:active {
+      transform: translateY(0);
+      opacity: 0.92;
+    }
+
+    .vect-own-review-button.is-accept {
+      background: #16a34a !important;
+      color: #fff !important;
+    }
+
+    .vect-own-review-button.is-reject {
+      background: #dc2626 !important;
+      color: #fff !important;
+    }
+
+    .vect-own-review-button.is-active {
+      box-shadow: 0 12px 24px rgba(17, 24, 39, 0.12);
+    }
+
     .vect-own-inline-accept,
     .vect-own-document-accept {
       appearance: none;
@@ -526,6 +578,32 @@
     .vect-own-document-accept.is-deselected {
       background: #dc2626 !important;
       color: #fff !important;
+    }
+
+    .vect-own-field-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px 14px;
+      align-items: start;
+      padding: 12px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    .vect-own-field-row .vect-own-review-actions {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+
+    .vect-own-field-key {
+      grid-column: 2;
+      margin: 0;
+    }
+
+    .vect-own-field-value {
+      grid-column: 2;
+      margin: 0;
     }
 
     .vect-own-tourist-review-group {
@@ -1409,12 +1487,37 @@
         };
       }
 
+      function normalizeReviewState(value) {
+        const safeValue = String(value || '').trim().toLowerCase();
+
+        if (safeValue === 'accepted' || safeValue === 'rejected') {
+          return safeValue;
+        }
+
+        if (safeValue === 'deselected') {
+          return 'rejected';
+        }
+
+        return 'accepted';
+      }
+
+      function buildReviewActionButtons(itemKey, itemLabel, itemState) {
+        const safeState = normalizeReviewState(itemState);
+        const acceptActive = safeState === 'accepted' ? ' is-active' : '';
+        const rejectActive = safeState === 'rejected' ? ' is-active' : '';
+
+        return [
+          '<div class="vect-own-review-actions">',
+          '<button type="button" class="vect-own-review-button is-accept' + acceptActive + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-action="accepted" aria-pressed="' + (safeState === 'accepted' ? 'true' : 'false') + '">Accept</button>',
+          '<button type="button" class="vect-own-review-button is-reject' + rejectActive + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-action="rejected" aria-pressed="' + (safeState === 'rejected' ? 'true' : 'false') + '">Reject</button>',
+          '</div>'
+        ].join('');
+      }
+
       function buildTouristReviewRow(label, value, itemKey, imageUrl) {
         const hasValue = value !== null && value !== undefined && String(value).trim() !== '' && String(value).trim() !== '-';
         const safeValue = hasValue ? escapeHtml(valueToText(value)) : '-';
         const reviewState = getItemReviewState(selectedSubmissionId, itemKey);
-        const toggleLabel = reviewState === 'deselected' ? 'Accept' : 'Deselect';
-        const toggleClass = reviewState === 'deselected' ? ' is-deselected' : '';
         const imageBlock = imageUrl ? [
           '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(label) + '" class="vect-own-tourist-photo-preview">',
           '<p class="vect-own-tourist-upload-note">' + escapeHtml(valueToText(value)) + '</p>'
@@ -1426,7 +1529,7 @@
           '<p class="vect-own-tourist-label">' + escapeHtml(label) + '</p>',
           imageUrl ? imageBlock : '<div class="vect-own-tourist-value">' + safeValue + '</div>',
           '</div>',
-          '<button type="button" class="vect-own-inline-accept vect-own-tourist-review-toggle' + toggleClass + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(label) + '">' + escapeHtml(toggleLabel) + '</button>',
+          buildReviewActionButtons(itemKey, label, reviewState),
           '</div>'
         ].join('');
       }
@@ -2009,19 +2112,14 @@
         documents.forEach(function (item) {
           const itemState = getItemReviewState(selectedSubmissionId, item.key);
           const card = document.createElement('article');
-          const acceptButton = document.createElement('button');
+          const reviewActions = document.createElement('div');
           const labelNode = document.createElement('p');
           const imageNode = document.createElement('img');
           const viewButton = document.createElement('button');
           const fallbackNode = document.createElement('p');
 
           card.className = 'vect-own-document-card';
-
-          acceptButton.type = 'button';
-          acceptButton.className = 'vect-own-inline-accept vect-own-document-accept' + (itemState === 'deselected' ? ' is-deselected' : '');
-          acceptButton.setAttribute('data-vect-own-item-key', item.key);
-          acceptButton.setAttribute('data-vect-own-item-label', item.label);
-          acceptButton.textContent = getReviewToggleLabel(itemState);
+          reviewActions.innerHTML = buildReviewActionButtons(item.key, item.label, itemState);
 
           labelNode.className = 'vect-own-document-label';
           labelNode.textContent = item.label;
@@ -2040,7 +2138,7 @@
           fallbackNode.hidden = true;
           fallbackNode.textContent = 'Loading preview...';
 
-          card.appendChild(acceptButton);
+          card.appendChild(reviewActions);
           card.appendChild(labelNode);
           card.appendChild(imageNode);
           card.appendChild(viewButton);
@@ -2290,11 +2388,7 @@
 
       function getItemReviewState(submissionId, itemKey) {
         const submissionSelections = getSubmissionReviewSelections(submissionId);
-        return submissionSelections[itemKey] === 'deselected' ? 'deselected' : 'accepted';
-      }
-
-      function getReviewToggleLabel(itemState) {
-        return itemState === 'deselected' ? 'Accept' : 'Deselect';
+        return normalizeReviewState(submissionSelections[itemKey]);
       }
 
       function getStatusPresentation(status) {
@@ -2377,17 +2471,17 @@
       function buildRejectWhatsappMessage(submission) {
         const currentSubmission = submission || getSelectedSubmission();
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
-        const deselectedKeys = Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'deselected';
+        const rejectedKeys = Object.keys(submissionSelections).filter(function (key) {
+          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
         });
 
-        if (!deselectedKeys.length) {
+        if (!rejectedKeys.length) {
           return REJECT_INTRO_MESSAGE;
         }
 
         const lines = [REJECT_INTRO_MESSAGE, ''];
 
-        deselectedKeys.forEach(function (itemKey) {
+        rejectedKeys.forEach(function (itemKey) {
           const itemLabel = String(submissionSelections[itemKey + '__label'] || getFieldLabel(itemKey)).trim();
           lines.push(getRejectMessageText(itemKey, itemLabel));
           lines.push(getOwnerPageLink(itemKey, currentSubmission));
@@ -2691,7 +2785,7 @@
           const itemState = getItemReviewState(selectedSubmissionId, key);
           return [
             '<div class="vect-own-field-row">',
-            '<button type="button" class="vect-own-inline-accept' + (itemState === 'deselected' ? ' is-deselected' : '') + '" data-vect-own-item-key="' + escapeHtml(key) + '" data-vect-own-item-label="' + escapeHtml(getFieldLabel(key)) + '">' + getReviewToggleLabel(itemState) + '</button>',
+            buildReviewActionButtons(key, getFieldLabel(key), itemState),
             '<dt class="vect-own-field-key">' + escapeHtml(getFieldLabel(key)) + '</dt>',
             '<dd class="vect-own-field-value">' + renderFieldValue(key, value) + '</dd>',
             '</div>'
@@ -3093,21 +3187,21 @@
         });
 
       document.addEventListener('click', function (event) {
-        const acceptToggle = event.target.closest('.vect-own-inline-accept');
+        const reviewButton = event.target.closest('.vect-own-review-button');
 
-        if (acceptToggle) {
-          const itemKey = String(acceptToggle.getAttribute('data-vect-own-item-key') || '').trim();
-          const itemLabel = String(acceptToggle.getAttribute('data-vect-own-item-label') || '').trim();
+        if (reviewButton) {
+          const itemKey = String(reviewButton.getAttribute('data-vect-own-item-key') || '').trim();
+          const itemLabel = String(reviewButton.getAttribute('data-vect-own-item-label') || '').trim();
+          const reviewAction = String(reviewButton.getAttribute('data-vect-own-review-action') || 'accepted').trim();
           const submissionSelections = getSubmissionReviewSelections(selectedSubmissionId);
-          const isDeselected = acceptToggle.classList.toggle('is-deselected');
 
           if (itemKey) {
-            submissionSelections[itemKey] = isDeselected ? 'deselected' : 'accepted';
+            submissionSelections[itemKey] = reviewAction === 'rejected' ? 'rejected' : 'accepted';
             submissionSelections[itemKey + '__label'] = itemLabel;
             saveDashboardState();
           }
 
-          acceptToggle.textContent = getReviewToggleLabel(isDeselected ? 'deselected' : 'accepted');
+          renderDetail(cachedSelectedSubmission || getSelectedSubmission());
           return;
         }
 
