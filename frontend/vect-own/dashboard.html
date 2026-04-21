@@ -1432,7 +1432,29 @@
       }
 
       function buildTouristImageCard(title, value, itemKey) {
-          const safeValue = extractImageSource(value);
+          const normalizeImageSource = typeof extractImageSource === 'function'
+            ? extractImageSource
+            : function (fallbackValue) {
+                if (Array.isArray(fallbackValue)) {
+                  return fallbackValue.length ? normalizeImageSource(fallbackValue[0]) : '';
+                }
+
+                if (fallbackValue && typeof fallbackValue === 'object') {
+                  return String(
+                    fallbackValue.url ||
+                    fallbackValue.src ||
+                    fallbackValue.path ||
+                    fallbackValue.fileUrl ||
+                    fallbackValue.fileName ||
+                    fallbackValue.filename ||
+                    fallbackValue.name ||
+                    ''
+                  ).trim();
+                }
+
+                return String(fallbackValue || '').trim();
+              };
+          const safeValue = normalizeImageSource(value);
           const imageUrl = resolveStoredUploadUrl(safeValue, safeValue) || getImageUrl(safeValue);
 
           if (!safeValue) {
