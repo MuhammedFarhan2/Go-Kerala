@@ -1135,7 +1135,10 @@
 
               return response.json();
             })
-            .then(function () {
+            .then(function (result) {
+              if (result && result.submission && result.submission.id) {
+                sessionStorage.setItem('owner-latest-submission-id', String(result.submission.id));
+              }
               sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
               window.location.href = 'owner-blank-sheet.html?tab=add-bus';
             })
