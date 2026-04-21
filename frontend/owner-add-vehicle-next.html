@@ -1117,6 +1117,47 @@
             savedAt: new Date().toISOString()
           };
 
+          const latestTouristSubmission = {
+            id: '',
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            status: 'pending',
+            reviewNote: '',
+            reviewedBy: '',
+            reviewedAt: '',
+            whatsappNumber: whatsappNumber,
+            fields: Object.assign({}, payload.fields),
+            summary: {
+              companyName: companyName,
+              ownerName: ownerName,
+              phone: whatsappNumber,
+              whatsappNumber: whatsappNumber,
+              categories: ['Tourist Bus'],
+              bus: {
+                type: selectedType,
+                seats: selectedSeats,
+                tvMusic: selectedTv,
+                place: selectedPlace,
+                permitType: selectedPermitType,
+                photos: photos.slice(),
+                rc: rc.slice(),
+                insurance: insurance.slice(),
+                permit: permit.slice()
+              }
+            },
+            bus: {
+              type: selectedType,
+              seats: selectedSeats,
+              tvMusic: selectedTv,
+              place: selectedPlace,
+              permitType: selectedPermitType,
+              photos: photos.slice(),
+              rc: rc.slice(),
+              insurance: insurance.slice(),
+              permit: permit.slice()
+            }
+          };
+
           fetchWithApiFallback('/api/submissions', {
             method: 'POST',
             headers: {
@@ -1137,9 +1178,14 @@
             })
             .then(function (result) {
               if (result && result.submission && result.submission.id) {
+                latestTouristSubmission.id = String(result.submission.id);
+                latestTouristSubmission.createdAt = result.submission.createdAt || latestTouristSubmission.createdAt;
+                latestTouristSubmission.updatedAt = result.submission.updatedAt || latestTouristSubmission.updatedAt;
                 sessionStorage.setItem('owner-latest-submission-id', String(result.submission.id));
               }
+              sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
               sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
+              sessionStorage.setItem('vect-own-tourist-bus-status', 'pending');
               window.location.href = 'owner-blank-sheet.html?tab=add-bus';
             })
             .catch(function (error) {

@@ -162,18 +162,11 @@
       }
 
         .vect-own-tourist-pill {
-            height: 32px !important;
-            min-height: 32px !important;
-            border-radius: 16px;
-            padding: 0 8px !important;
-            font-size: 0.72rem;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-            overflow: hidden;
-          }
+          min-height: 42px;
+          border-radius: 18px;
+          padding: 8px 10px;
+          font-size: 0.9rem;
+        }
 
       .vect-own-tourist-submissions-layout {
         gap: 14px;
@@ -499,33 +492,6 @@
 
     .vect-own-tourist-review-toggle.is-deselected {
       background: #dc2626 !important;
-    }
-
-    .vect-own-inline-accept,
-    .vect-own-document-accept {
-      appearance: none;
-      border: 0 !important;
-      border-radius: 999px;
-      background: #111827 !important;
-      color: #fff !important;
-      min-width: 86px;
-      min-height: 34px;
-      padding: 0 14px;
-      font: inherit;
-      font-size: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-      box-shadow: 0 10px 20px rgba(17, 24, 39, 0.08);
-    }
-
-    .vect-own-inline-accept.is-deselected,
-    .vect-own-document-accept.is-deselected {
-      background: #dc2626 !important;
-      color: #fff !important;
     }
 
     .vect-own-tourist-review-group {
@@ -1246,7 +1212,6 @@
       function getTouristBusDetails(submission, fields) {
         const safeFields = fields || {};
         const summary = submission && submission.summary ? submission.summary : {};
-        const busSummary = submission && submission.bus ? submission.bus : (summary && summary.bus ? summary.bus : {});
         const images = summary && summary.images ? summary.images : {};
         const stringFields = Object.assign({}, safeFields);
 
@@ -1265,56 +1230,16 @@
 
         function toList(value) {
           if (Array.isArray(value)) {
-            return value.map(function (item) {
-              return extractImageSource(item);
-            }).filter(function (item) {
+            return value.filter(function (item) {
               return String(item || '').trim();
             });
           }
 
-          if (value && typeof value === 'object') {
-            const nested = extractImageSource(value);
-            return nested ? [nested] : [];
-          }
-
           if (value && typeof value === 'string') {
-            const text = String(value || '').trim();
-
-            if ((text[0] === '[' || text[0] === '{') && text.length > 1) {
-              try {
-                const parsed = JSON.parse(text);
-                return toList(parsed);
-              } catch (error) {
-                // fall through to plain string handling
-              }
-            }
-
-            const clean = extractImageSource(text);
-            return clean ? [clean] : [];
+            return [value];
           }
 
           return [];
-        }
-
-        function extractImageSource(value) {
-          if (Array.isArray(value)) {
-            return value.length ? extractImageSource(value[0]) : '';
-          }
-
-          if (value && typeof value === 'object') {
-            return String(
-              value.url ||
-              value.src ||
-              value.path ||
-              value.fileUrl ||
-              value.fileName ||
-              value.filename ||
-              value.name ||
-              ''
-            ).trim();
-          }
-
-          return String(value || '').trim();
         }
 
         const sessionBusType = readBusStorageValue('type');
@@ -1333,15 +1258,15 @@
           'vehicle-bus-type',
           'type',
           'owner-categories'
-        ]) || busSummary.type || sessionBusType || (Array.isArray(summary.categories) ? summary.categories[0] : '');
-        const seats = readValue(['owner-bus-seats', 'bus-seats', 'seats']) || busSummary.seats || sessionSeats;
-        const tvMusic = readValue(['owner-bus-tv', 'bus-tv', 'tv']) || busSummary.tvMusic || sessionTv;
-        const place = readValue(['owner-bus-place', 'bus-place', 'place']) || busSummary.place || sessionPlace || summary.place || summary.villageName || summary.location;
-        const permitType = readValue(['permitType', 'owner-permit', 'bus-permit']) || busSummary.permitType || sessionPermitType;
-        const photoValues = toList(images.photos || busSummary.photos || safeFields['owner-bus-photos'] || safeFields.photos || sessionPhotos);
-        const rcBookValues = toList(images.rc || busSummary.rc || safeFields['owner-bus-rc'] || safeFields.rc || sessionRc);
-        const insuranceValues = toList(images.insurance || busSummary.insurance || safeFields['owner-bus-insurance'] || safeFields.insurance || sessionInsurance);
-        const permitValues = toList(images.permit || busSummary.permit || safeFields['owner-bus-permit'] || safeFields.permit || sessionPermit);
+        ]) || sessionBusType || (Array.isArray(summary.categories) ? summary.categories[0] : '');
+        const seats = readValue(['owner-bus-seats', 'bus-seats', 'seats']) || sessionSeats;
+        const tvMusic = readValue(['owner-bus-tv', 'bus-tv', 'tv']) || sessionTv;
+        const place = readValue(['owner-bus-place', 'bus-place', 'place']) || sessionPlace || summary.place || summary.villageName || summary.location;
+        const permitType = readValue(['permitType', 'owner-permit', 'bus-permit']) || sessionPermitType;
+        const photoValues = toList(images.photos || safeFields['owner-bus-photos'] || safeFields.photos || sessionPhotos);
+        const rcBookValues = toList(images.rc || safeFields['owner-bus-rc'] || safeFields.rc || sessionRc);
+        const insuranceValues = toList(images.insurance || safeFields['owner-bus-insurance'] || safeFields.insurance || sessionInsurance);
+        const permitValues = toList(images.permit || safeFields['owner-bus-permit'] || safeFields.permit || sessionPermit);
 
         return {
           busType: busType,
@@ -1379,26 +1304,26 @@
       }
 
       function buildTouristImageCard(title, value, itemKey) {
-          const safeValue = extractImageSource(value);
-          const imageUrl = resolveStoredUploadUrl(safeValue, safeValue) || getImageUrl(safeValue);
+        const safeValue = String(value || '').trim();
+        const imageUrl = resolveStoredUploadUrl('', safeValue);
 
-          if (!safeValue) {
-            return [
-              '<div class="vect-own-tourist-image-card">',
+        if (!safeValue) {
+          return [
+            '<div class="vect-own-tourist-image-card">',
             '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
             '<p class="vect-own-tourist-file-empty">No file uploaded</p>',
             '</div>'
           ].join('');
         }
 
-          return [
-            '<div class="vect-own-tourist-image-card">',
-            '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
-            imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
-            imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
+        return [
+          '<div class="vect-own-tourist-image-card">',
+          '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
+          imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
+          imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
           '</div>'
-          ].join('');
-        }
+        ].join('');
+      }
 
       function buildTouristFileSection(title, values, itemKeyPrefix) {
         const safeValues = Array.isArray(values) ? values.filter(function (item) {
@@ -1712,13 +1637,7 @@
       function buildDisplayFields(submission) {
         const fields = Object.assign({}, submission && submission.fields ? submission.fields : {});
         const summary = submission && submission.summary ? submission.summary : {};
-        const nestedFields = submission && submission.data && submission.data.fields ? submission.data.fields : {};
-        const payloadFields = submission && submission.payload && submission.payload.fields ? submission.payload.fields : {};
-        const bodyFields = submission && submission.body && submission.body.fields ? submission.body.fields : {};
-        const summaryFields = summary && summary.fields ? summary.fields : {};
         const images = summary && summary.images ? summary.images : {};
-
-        Object.assign(fields, summaryFields, nestedFields, payloadFields, bodyFields);
 
         if (summary.companyName && !fields['owner-company-name']) {
           fields['owner-company-name'] = summary.companyName;
@@ -1770,44 +1689,6 @@
 
         if (images.companyLogoUrl && !fields['owner-company-logo-url']) {
           fields['owner-company-logo-url'] = images.companyLogoUrl;
-        }
-
-        if (summary.bus && typeof summary.bus === 'object') {
-          if (summary.bus.type && !fields['owner-bus-type']) {
-            fields['owner-bus-type'] = summary.bus.type;
-          }
-
-          if (summary.bus.seats && !fields['owner-bus-seats']) {
-            fields['owner-bus-seats'] = summary.bus.seats;
-          }
-
-          if (summary.bus.tvMusic && !fields['owner-bus-tv']) {
-            fields['owner-bus-tv'] = summary.bus.tvMusic;
-          }
-
-          if (summary.bus.place && !fields['owner-bus-place']) {
-            fields['owner-bus-place'] = summary.bus.place;
-          }
-
-          if (summary.bus.permitType && !fields['owner-bus-permit-type']) {
-            fields['owner-bus-permit-type'] = summary.bus.permitType;
-          }
-
-          if (Array.isArray(summary.bus.photos) && !fields['owner-bus-photos']) {
-            fields['owner-bus-photos'] = summary.bus.photos;
-          }
-
-          if (Array.isArray(summary.bus.rc) && !fields['owner-bus-rc']) {
-            fields['owner-bus-rc'] = summary.bus.rc;
-          }
-
-          if (Array.isArray(summary.bus.insurance) && !fields['owner-bus-insurance']) {
-            fields['owner-bus-insurance'] = summary.bus.insurance;
-          }
-
-          if (Array.isArray(summary.bus.permit) && !fields['owner-bus-permit']) {
-            fields['owner-bus-permit'] = summary.bus.permit;
-          }
         }
 
         return fields;
@@ -2159,7 +2040,7 @@
       }
 
       function getReviewToggleLabel(itemState) {
-        return itemState === 'deselected' ? 'Accept' : 'Deselect';
+        return itemState === 'deselected' ? 'Select' : 'Deselect';
       }
 
       function getStatusPresentation(status) {
@@ -2393,14 +2274,6 @@
           const card = document.createElement('button');
           const summary = submission.summary || {};
           const statusPresentation = getStatusPresentation(submission.status);
-          const busSummary = submission.bus || summary.bus || {};
-          const busMetaParts = [
-            busSummary.type || '',
-            busSummary.seats ? busSummary.seats + ' seats' : '',
-            busSummary.permitType ? busSummary.permitType : '',
-            busSummary.place ? busSummary.place : '',
-            Array.isArray(busSummary.photos) ? busSummary.photos.length + ' photos' : ''
-          ].filter(Boolean);
           let longPressTimer = null;
           let longPressTriggered = false;
 
@@ -2414,7 +2287,6 @@
             '</div>',
             '<p class="vect-own-list-item-meta">' + escapeHtml(summary.ownerName || 'Owner name not captured') + '</p>',
             '<p class="vect-own-list-item-meta">' + escapeHtml(summary.whatsappNumber || summary.phone || '-') + '</p>',
-            busMetaParts.length ? '<p class="vect-own-list-item-meta">' + escapeHtml(busMetaParts.join(' · ')) + '</p>' : '',
             '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>'
           ].join('');
 
@@ -2736,16 +2608,7 @@
             updateMetrics();
             renderList();
 
-            const latestSubmissionId = String(sessionStorage.getItem('owner-latest-submission-id') || '').trim();
-            const latestSubmission = latestSubmissionId ? allSubmissions.find(function (submission) {
-              return submission.id === latestSubmissionId;
-            }) : null;
-
-            if (latestSubmission) {
-              console.log('Auto-selecting latest submission:', latestSubmission.id);
-              sessionStorage.removeItem('owner-latest-submission-id');
-              openSubmission(latestSubmission.id);
-            } else if (selectFirst && allSubmissions.length) {
+            if (selectFirst && allSubmissions.length) {
               console.log('Auto-selecting first submission:', allSubmissions[0].id);
               openSubmission(allSubmissions[0].id);
             } else if (selectedSubmissionId) {
