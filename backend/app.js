@@ -656,7 +656,17 @@ function loadVectOwnSubmissions() {
   }
 
   const saved = readJsonFile(VECT_OWN_DB_PATH, []);
-  vectOwnSubmissions = Array.isArray(saved) ? saved : [];
+  let changed = false;
+  vectOwnSubmissions = Array.isArray(saved) ? saved.map(function (submission) {
+    const normalized = normalizeStoredSubmissionRecord(submission);
+    changed = changed || normalized.changed;
+    return normalized.submission;
+  }) : [];
+
+  if (changed) {
+    persistVectOwnSubmissions();
+  }
+
   return vectOwnSubmissions;
 }
 
@@ -870,6 +880,51 @@ function inferSubmissionSourceGroup(fields, sourcePage, sourceGroup) {
   }
 
   return 'owner';
+}
+
+function normalizeStoredSubmissionRecord(submission) {
+  if (!submission || typeof submission !== 'object') {
+    return { submission: submission, changed: false };
+  }
+
+  const nextSubmission = Object.assign({}, submission);
+  const nextFields = nextSubmission.fields && typeof nextSubmission.fields === 'object'
+    ? Object.assign({}, nextSubmission.fields)
+    : {};
+  const nextSourcePage = String(nextSubmission.sourcePage || '').trim();
+  const nextSourceGroup = inferSubmissionSourceGroup(
+    nextFields,
+    nextSourcePage,
+    nextSubmission.sourceGroup || nextFields.sourceGroup
+  );
+  let changed = false;
+
+  if (nextSubmission.sourceGroup !== nextSourceGroup) {
+    nextSubmission.sourceGroup = nextSourceGroup;
+    changed = true;
+  }
+
+  if (nextSubmission.sourcePage !== nextSourcePage) {
+    nextSubmission.sourcePage = nextSourcePage;
+    changed = true;
+  }
+
+  if (nextFields.sourceGroup !== undefined) {
+    delete nextFields.sourceGroup;
+    changed = true;
+  }
+
+  if (nextFields.sourcePage !== undefined) {
+    delete nextFields.sourcePage;
+    changed = true;
+  }
+
+  nextSubmission.fields = nextFields;
+
+  return {
+    submission: nextSubmission,
+    changed: changed
+  };
 }
 
 function normalizeSubmissionFields(fields) {
