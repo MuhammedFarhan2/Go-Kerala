@@ -805,6 +805,73 @@ function cleanSubmissionValue(value) {
   return String(value);
 }
 
+function normalizeSubmissionSourceGroup(value) {
+  const raw = String(value || '').trim().toLowerCase();
+
+  if (!raw) {
+    return '';
+  }
+
+  if (raw === 'owner' || raw.indexOf('owner-') === 0 || raw.indexOf('dashboard') > -1) {
+    return 'owner';
+  }
+
+  if (
+    raw === 'submission' ||
+    raw === 'blanksheet' ||
+    raw === 'blank-sheet' ||
+    raw.indexOf('submit') > -1 ||
+    raw.indexOf('vehicle') > -1
+  ) {
+    return 'submission';
+  }
+
+  return '';
+}
+
+function inferSubmissionSourceGroup(fields, sourcePage, sourceGroup) {
+  const directGroup = normalizeSubmissionSourceGroup(sourceGroup) || normalizeSubmissionSourceGroup(sourcePage);
+
+  if (directGroup) {
+    return directGroup;
+  }
+
+  const safeFields = fields && typeof fields === 'object' ? fields : {};
+  const submissionHints = [
+    'owner-bus-type',
+    'owner-bus-seats',
+    'owner-bus-tv',
+    'owner-bus-place',
+    'owner-bus-permit-type',
+    'owner-bus-photos',
+    'owner-bus-rc',
+    'owner-bus-insurance',
+    'owner-bus-permit',
+    'owner-vehicle-type'
+  ];
+  const ownerHints = [
+    'owner-company-name',
+    'owner-profile-photo-url',
+    'owner-aadhaar-photo-url',
+    'owner-heavy-licence-photo-name-1',
+    'owner-heavy-licence-photo-name-2'
+  ];
+
+  if (submissionHints.some(function (key) {
+    return String(safeFields[key] || '').trim() !== '';
+  })) {
+    return 'submission';
+  }
+
+  if (ownerHints.some(function (key) {
+    return String(safeFields[key] || '').trim() !== '';
+  })) {
+    return 'owner';
+  }
+
+  return 'owner';
+}
+
 function normalizeSubmissionFields(fields) {
   const safeFields = {};
   const inputFields = fields && typeof fields === 'object' ? fields : {};
@@ -817,7 +884,9 @@ function normalizeSubmissionFields(fields) {
     /owner-review-/i,
     /owner-final-submission-done-allowed/i,
     /owner-last-page/i,
-    /owner-form-backup/i
+    /owner-form-backup/i,
+    /^sourcePage$/i,
+    /^sourceGroup$/i
   ];
 
   Object.keys(inputFields).forEach(function (key) {
@@ -964,6 +1033,8 @@ function serializeSubmissionForList(submission) {
     reviewedAt: submission.reviewedAt || '',
     reviewedBy: submission.reviewedBy || '',
     reviewNote: submission.reviewNote || '',
+    sourcePage: submission.sourcePage || '',
+    sourceGroup: submission.sourceGroup || inferSubmissionSourceGroup(submission.fields || {}, submission.sourcePage, submission.sourceGroup),
     summary: summary,
     bus: summary.bus || {}
   };
@@ -1671,6 +1742,8 @@ async function handlePublicSubmissionCreate(request, response) {
     console.log('Parsed payload:', payload);
 
   const fields = normalizeSubmissionFields(payload.fields || payload);
+  const sourcePage = String(payload.sourcePage || fields.sourcePage || fields['sourcePage'] || '').trim();
+  const sourceGroup = inferSubmissionSourceGroup(fields, sourcePage, payload.sourceGroup || fields.sourceGroup);
   const profilePhotoSession = resolveProfilePhotoSessionData(payload.fields || payload);
 
   if (profilePhotoSession) {
@@ -1689,12 +1762,14 @@ async function handlePublicSubmissionCreate(request, response) {
       status: 'pending',
       reviewNote: '',
       reviewedBy: '',
-      reviewedAt: '',
-      whatsappNumber: whatsappNumber,
-      fields: Object.assign({}, fields, {
+    reviewedAt: '',
+    whatsappNumber: whatsappNumber,
+    sourcePage: sourcePage,
+    sourceGroup: sourceGroup,
+    fields: Object.assign({}, fields, {
         'owner-whatsapp-number': whatsappNumber
       })
-    };
+  };
 
     console.log('Created submission object:', submission);
 
@@ -1745,6 +1820,8 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
   }
 
   const fields = normalizeSubmissionFields(payload.fields || payload);
+  const sourcePage = String(payload.sourcePage || fields.sourcePage || fields['sourcePage'] || submission.sourcePage || '').trim();
+  const sourceGroup = inferSubmissionSourceGroup(fields, sourcePage, payload.sourceGroup || fields.sourceGroup || submission.sourceGroup);
   const profilePhotoSession = resolveProfilePhotoSessionData(payload.fields || payload);
 
   if (profilePhotoSession) {
@@ -1774,6 +1851,8 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
     'owner-whatsapp-number': nextWhatsappNumber
   });
   submission.whatsappNumber = nextWhatsappNumber;
+  submission.sourcePage = sourcePage || submission.sourcePage || '';
+  submission.sourceGroup = sourceGroup || submission.sourceGroup || inferSubmissionSourceGroup(submission.fields || {}, submission.sourcePage, submission.sourceGroup);
   submission.status = 'updated';
   submission.reviewNote = '';
   submission.reviewedBy = '';

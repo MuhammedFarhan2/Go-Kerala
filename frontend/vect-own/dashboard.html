@@ -820,19 +820,19 @@
   <main class="vect-own-main">
     <section class="vect-own-page is-active" data-vect-own-page="dashboard" aria-label="Submission overview">
       <section class="vect-own-overview" aria-label="Submission overview">
-        <article class="vect-own-metric-card">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
           <p class="vect-own-metric-label">Pending</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
         </article>
-        <article class="vect-own-metric-card">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
           <p class="vect-own-metric-label">Accepted</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="accepted">0</strong>
         </article>
-        <article class="vect-own-metric-card">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
           <p class="vect-own-metric-label">Rejected</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="rejected">0</strong>
         </article>
-        <article class="vect-own-metric-card">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
           <p class="vect-own-metric-label">Updated</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
         </article>
@@ -930,19 +930,19 @@
     <section class="vect-own-page" data-vect-own-page="submission" aria-label="Submission page">
       <div class="vect-own-product-page">
         <section class="vect-own-overview vect-own-submission-overview" aria-label="Submission status overview">
-          <article class="vect-own-metric-card">
+          <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
             <p class="vect-own-metric-label">Pending</p>
             <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
           </article>
-          <article class="vect-own-metric-card">
+          <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
             <p class="vect-own-metric-label">Accepted</p>
             <strong class="vect-own-metric-value" data-vect-own-metric="accepted">0</strong>
           </article>
-          <article class="vect-own-metric-card">
+          <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
             <p class="vect-own-metric-label">Rejected</p>
             <strong class="vect-own-metric-value" data-vect-own-metric="rejected">0</strong>
           </article>
-          <article class="vect-own-metric-card">
+          <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
             <p class="vect-own-metric-label">Updated</p>
             <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
           </article>
@@ -1156,7 +1156,50 @@
           tab.classList.toggle('is-active', isActive);
         });
 
+        updateMetrics();
         saveDashboardState({ pushHistory: shouldPushHistory });
+      }
+
+      function getSubmissionSourceGroup(submission) {
+        const safeSubmission = submission && typeof submission === 'object' ? submission : {};
+        const directGroup = String(safeSubmission.sourceGroup || safeSubmission.sourcePage || '').trim().toLowerCase();
+        const fields = safeSubmission.fields && typeof safeSubmission.fields === 'object' ? safeSubmission.fields : {};
+
+        if (directGroup === 'owner' || directGroup.indexOf('owner-') === 0 || directGroup.indexOf('dashboard') > -1) {
+          return 'owner';
+        }
+
+        if (
+          directGroup === 'submission' ||
+          directGroup === 'blanksheet' ||
+          directGroup === 'blank-sheet' ||
+          directGroup.indexOf('submit') > -1 ||
+          directGroup.indexOf('vehicle') > -1
+        ) {
+          return 'submission';
+        }
+
+        if (
+          fields['owner-bus-type'] ||
+          fields['owner-bus-seats'] ||
+          fields['owner-bus-tv'] ||
+          fields['owner-bus-place'] ||
+          fields['owner-bus-photos'] ||
+          fields['owner-bus-rc'] ||
+          fields['owner-bus-insurance'] ||
+          fields['owner-bus-permit']
+        ) {
+          return 'submission';
+        }
+
+        return 'owner';
+      }
+
+      function getSubmissionsForGroup(group) {
+        const targetGroup = String(group || '').trim().toLowerCase();
+        return allSubmissions.filter(function (submission) {
+          return getSubmissionSourceGroup(submission) === targetGroup;
+        });
       }
 
       function getVehicleDisplayName(category) {
@@ -1359,7 +1402,7 @@
         }
 
         renderTouristSubmissionList();
-        renderTouristSubmissionDetail(getSelectedSubmission());
+        renderTouristSubmissionDetail(getSelectedSubmission('submission'));
       }
 
       function openTouristBusReview() {
@@ -1373,7 +1416,7 @@
           return;
         }
 
-        const submissions = Array.isArray(allSubmissions) ? allSubmissions.slice() : [];
+        const submissions = getSubmissionsForGroup('submission');
         const reviewStatus = getTouristBusReviewStatus();
         const visible = submissions.filter(function (submission) {
           return reviewStatus === 'pending' || reviewStatus === 'accepted' || reviewStatus === 'rejected' || reviewStatus === 'updated'
@@ -2391,8 +2434,9 @@
         }
       }
 
-      function getSelectedSubmission() {
-        return allSubmissions.find(function (submission) {
+      function getSelectedSubmission(group) {
+        const submissions = group ? getSubmissionsForGroup(group) : allSubmissions;
+        return submissions.find(function (submission) {
           return submission.id === selectedSubmissionId;
         }) || null;
       }
@@ -2492,7 +2536,7 @@
       }
 
       function buildRejectWhatsappMessage(submission) {
-        const currentSubmission = submission || getSelectedSubmission();
+        const currentSubmission = submission || getSelectedSubmission('owner');
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
         const rejectedKeys = Object.keys(submissionSelections).filter(function (key) {
           return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
@@ -2561,26 +2605,45 @@
       }
 
       function updateMetrics() {
-        const counts = allSubmissions.reduce(function (accumulator, submission) {
-          accumulator.total += 1;
-          accumulator[submission.status] = (accumulator[submission.status] || 0) + 1;
-          return accumulator;
-        }, {
-          total: 0,
-          pending: 0,
-          accepted: 0,
-          rejected: 0,
-          updated: 0
+        const countsByGroup = {
+          owner: {
+            total: 0,
+            pending: 0,
+            accepted: 0,
+            rejected: 0,
+            updated: 0
+          },
+          submission: {
+            total: 0,
+            pending: 0,
+            accepted: 0,
+            rejected: 0,
+            updated: 0
+          }
+        };
+
+        allSubmissions.forEach(function (submission) {
+          const group = getSubmissionSourceGroup(submission);
+          const bucket = countsByGroup[group] || countsByGroup.owner;
+          const status = String(submission && submission.status || 'pending').trim().toLowerCase() || 'pending';
+
+          bucket.total += 1;
+          bucket[status] = (bucket[status] || 0) + 1;
         });
 
-        countNode.textContent = counts.total + ' submissions';
+        const activeGroup = activePage === 'submission' ? 'submission' : 'owner';
+        const activeCounts = countsByGroup[activeGroup] || countsByGroup.owner;
+
+        countNode.textContent = activeCounts.total + ' submissions';
         metricNodes.forEach(function (node) {
           const metric = node.getAttribute('data-vect-own-metric');
-          node.textContent = String(counts[metric] || 0);
+          const metricGroup = String(node.getAttribute('data-vect-own-metric-group') || 'owner').trim().toLowerCase();
+          const groupCounts = countsByGroup[metricGroup] || countsByGroup.owner;
+          node.textContent = String(groupCounts[metric] || 0);
         });
 
         if (updatedTab) {
-          updatedTab.hidden = (counts.updated || 0) === 0;
+          updatedTab.hidden = (activeCounts.updated || 0) === 0;
 
           if (updatedTab.hidden && activeFilter === 'updated') {
             setActiveTab('all');
@@ -2609,7 +2672,7 @@
       }
 
       function getFilteredSubmissions() {
-        return allSubmissions.filter(function (submission) {
+        return getSubmissionsForGroup('owner').filter(function (submission) {
           const matchesStatus = activeFilter === 'all' || submission.status === activeFilter;
           return matchesStatus && matchesSearch(submission);
         });
@@ -2987,27 +3050,51 @@
             renderList();
 
             const latestSubmissionId = String(sessionStorage.getItem('owner-latest-submission-id') || '').trim();
+            const targetGroup = activePage === 'submission' ? 'submission' : 'owner';
+            const visibleSubmissions = allSubmissions.filter(function (submission) {
+              return getSubmissionSourceGroup(submission) === targetGroup;
+            });
             const latestSubmission = latestSubmissionId ? allSubmissions.find(function (submission) {
-              return submission.id === latestSubmissionId;
+              return submission.id === latestSubmissionId && getSubmissionSourceGroup(submission) === targetGroup;
             }) : null;
 
             if (latestSubmission) {
               console.log('Auto-selecting latest submission:', latestSubmission.id);
               localStorage.setItem('owner-latest-submission-id', latestSubmission.id);
               sessionStorage.removeItem('owner-latest-submission-id');
-              openSubmission(latestSubmission.id);
-            } else if (selectFirst && allSubmissions.length) {
-              console.log('Auto-selecting first submission:', allSubmissions[0].id);
-              openSubmission(allSubmissions[0].id);
+              if (targetGroup === 'submission') {
+                selectedSubmissionId = latestSubmission.id;
+                noteSectionOpen = false;
+                cachedSelectedSubmission = latestSubmission;
+                saveDashboardState();
+                renderTouristBusReview();
+              } else {
+                openSubmission(latestSubmission.id);
+              }
+            } else if (selectFirst && visibleSubmissions.length) {
+              console.log('Auto-selecting first submission:', visibleSubmissions[0].id);
+              if (targetGroup === 'submission') {
+                selectedSubmissionId = visibleSubmissions[0].id;
+                noteSectionOpen = false;
+                cachedSelectedSubmission = visibleSubmissions[0];
+                saveDashboardState();
+                renderTouristBusReview();
+              } else {
+                openSubmission(visibleSubmissions[0].id);
+              }
             } else if (selectedSubmissionId) {
               console.log('Looking for selected submission:', selectedSubmissionId);
               const stillSelected = allSubmissions.find(function (submission) {
-                return submission.id === selectedSubmissionId;
+                return submission.id === selectedSubmissionId && getSubmissionSourceGroup(submission) === targetGroup;
               });
 
               if (stillSelected) {
                 console.log('Found selected submission:', stillSelected.id);
-                if (cachedSelectedSubmission && cachedSelectedSubmission.id === selectedSubmissionId) {
+                if (targetGroup === 'submission') {
+                  cachedSelectedSubmission = stillSelected;
+                  saveDashboardState();
+                  renderTouristBusReview();
+                } else if (cachedSelectedSubmission && cachedSelectedSubmission.id === selectedSubmissionId) {
                   renderDetail(cachedSelectedSubmission);
                 } else {
                   renderDetail(stillSelected);
@@ -3015,11 +3102,22 @@
               } else {
                 console.log('Selected submission not found');
                 selectedSubmissionId = '';
-                renderDetail(null);
+                cachedSelectedSubmission = null;
+                if (targetGroup === 'submission') {
+                  renderTouristBusReview();
+                } else {
+                  renderDetail(null);
+                }
               }
             } else {
               console.log('No submissions to select');
-              renderDetail(null);
+              if (targetGroup === 'submission') {
+                selectedSubmissionId = '';
+                cachedSelectedSubmission = null;
+                renderTouristBusReview();
+              } else {
+                renderDetail(null);
+              }
             }
 
             renderTouristBusReview();
@@ -3127,7 +3225,7 @@
       actionButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           const nextStatus = button.getAttribute('data-vect-own-action');
-          const currentSubmission = getSelectedSubmission();
+          const currentSubmission = getSelectedSubmission('owner');
           const targetSubmissionId = selectedSubmissionId;
 
           if (!selectedSubmissionId || !nextStatus) {
@@ -3225,7 +3323,7 @@
             saveDashboardState();
           }
 
-          renderDetail(cachedSelectedSubmission || getSelectedSubmission());
+          renderDetail(cachedSelectedSubmission || getSelectedSubmission('owner'));
           return;
         }
 
