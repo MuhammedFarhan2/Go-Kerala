@@ -1162,27 +1162,29 @@
 
       function getSubmissionSourceGroup(submission) {
         const safeSubmission = submission && typeof submission === 'object' ? submission : {};
-        const directPage = String(safeSubmission.sourcePage || '').trim().toLowerCase();
         const directGroup = String(safeSubmission.sourceGroup || '').trim().toLowerCase();
-
-        if (directPage === 'owner' || directPage.indexOf('owner-') === 0 || directPage.indexOf('dashboard') > -1) {
-          return 'owner';
-        }
-
-        if (directPage === 'submission' || directPage === 'blanksheet' || directPage === 'blank-sheet' || directPage.indexOf('submit') > -1 || directPage.indexOf('vehicle') > -1) {
-          return 'submission';
-        }
+        const directPage = String(safeSubmission.sourcePage || '').trim().toLowerCase();
 
         if (directGroup === 'owner' || directGroup.indexOf('owner-') === 0 || directGroup.indexOf('dashboard') > -1) {
           return 'owner';
         }
 
+        if (directGroup === 'submission' || directGroup === 'blanksheet' || directGroup === 'blank-sheet' || directGroup === 'owner-add-vehicle-next' || directGroup === 'owner-blank-sheet' || directGroup.indexOf('submit') > -1 || directGroup.indexOf('vehicle') > -1) {
+          return 'submission';
+        }
+
+        if (directPage === 'owner' || directPage.indexOf('owner-') === 0 || directPage.indexOf('dashboard') > -1) {
+          return 'owner';
+        }
+
         if (
-          directGroup === 'submission' ||
-          directGroup === 'blanksheet' ||
-          directGroup === 'blank-sheet' ||
-          directGroup.indexOf('submit') > -1 ||
-          directGroup.indexOf('vehicle') > -1
+          directPage === 'submission' ||
+          directPage === 'blanksheet' ||
+          directPage === 'blank-sheet' ||
+          directPage === 'owner-add-vehicle-next' ||
+          directPage === 'owner-blank-sheet' ||
+          directPage.indexOf('submit') > -1 ||
+          directPage.indexOf('vehicle') > -1
         ) {
           return 'submission';
         }
@@ -1192,9 +1194,15 @@
 
       function getSubmissionsForGroup(group) {
         const targetGroup = String(group || '').trim().toLowerCase();
-        return allSubmissions.filter(function (submission) {
+        const baseList = allSubmissions.filter(function (submission) {
           return getSubmissionSourceGroup(submission) === targetGroup;
         });
+
+        if (targetGroup === 'submission') {
+          return mergeLocalTouristSubmission(baseList);
+        }
+
+        return baseList;
       }
 
       function getVehicleDisplayName(category) {
@@ -2600,31 +2608,12 @@
       }
 
       function updateMetrics() {
+        const ownerSubmissions = getSubmissionsForGroup('owner');
+        const submissionSubmissions = getSubmissionsForGroup('submission');
         const countsByGroup = {
-          owner: {
-            total: 0,
-            pending: 0,
-            accepted: 0,
-            rejected: 0,
-            updated: 0
-          },
-          submission: {
-            total: 0,
-            pending: 0,
-            accepted: 0,
-            rejected: 0,
-            updated: 0
-          }
+          owner: countSubmissionStatuses(ownerSubmissions),
+          submission: countSubmissionStatuses(submissionSubmissions)
         };
-
-        allSubmissions.forEach(function (submission) {
-          const group = getSubmissionSourceGroup(submission);
-          const bucket = countsByGroup[group] || countsByGroup.owner;
-          const status = String(submission && submission.status || 'pending').trim().toLowerCase() || 'pending';
-
-          bucket.total += 1;
-          bucket[status] = (bucket[status] || 0) + 1;
-        });
 
         const activeGroup = activePage === 'submission' ? 'submission' : 'owner';
         const activeCounts = countsByGroup[activeGroup] || countsByGroup.owner;
@@ -2644,6 +2633,21 @@
             setActiveTab('all');
           }
         }
+      }
+
+      function countSubmissionStatuses(submissions) {
+        return (Array.isArray(submissions) ? submissions : []).reduce(function (accumulator, submission) {
+          const status = String(submission && submission.status || 'pending').trim().toLowerCase() || 'pending';
+          accumulator.total += 1;
+          accumulator[status] = (accumulator[status] || 0) + 1;
+          return accumulator;
+        }, {
+          total: 0,
+          pending: 0,
+          accepted: 0,
+          rejected: 0,
+          updated: 0
+        });
       }
 
       function matchesSearch(submission) {
@@ -3037,7 +3041,7 @@
               return;
             }
 
-            allSubmissions = mergeLocalTouristSubmission(Array.isArray(payload.submissions) ? payload.submissions : []);
+            allSubmissions = Array.isArray(payload.submissions) ? payload.submissions : [];
             console.log('All submissions loaded:', allSubmissions.length);
             console.log('Submission IDs:', allSubmissions.map(s => s.id));
             
@@ -3046,10 +3050,8 @@
 
             const latestSubmissionId = String(sessionStorage.getItem('owner-latest-submission-id') || '').trim();
             const targetGroup = activePage === 'submission' ? 'submission' : 'owner';
-            const visibleSubmissions = allSubmissions.filter(function (submission) {
-              return getSubmissionSourceGroup(submission) === targetGroup;
-            });
-            const latestSubmission = latestSubmissionId ? allSubmissions.find(function (submission) {
+            const visibleSubmissions = getSubmissionsForGroup(targetGroup);
+            const latestSubmission = latestSubmissionId ? visibleSubmissions.find(function (submission) {
               return submission.id === latestSubmissionId && getSubmissionSourceGroup(submission) === targetGroup;
             }) : null;
 
@@ -3079,7 +3081,7 @@
               }
             } else if (selectedSubmissionId) {
               console.log('Looking for selected submission:', selectedSubmissionId);
-              const stillSelected = allSubmissions.find(function (submission) {
+              const stillSelected = visibleSubmissions.find(function (submission) {
                 return submission.id === selectedSubmissionId && getSubmissionSourceGroup(submission) === targetGroup;
               });
 

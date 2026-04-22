@@ -830,6 +830,8 @@ function normalizeSubmissionSourceGroup(value) {
     raw === 'submission' ||
     raw === 'blanksheet' ||
     raw === 'blank-sheet' ||
+    raw === 'owner-add-vehicle-next' ||
+    raw === 'owner-blank-sheet' ||
     raw.indexOf('submit') > -1 ||
     raw.indexOf('vehicle') > -1
   ) {
@@ -840,7 +842,7 @@ function normalizeSubmissionSourceGroup(value) {
 }
 
 function inferSubmissionSourceGroup(fields, sourcePage, sourceGroup) {
-  const directGroup = normalizeSubmissionSourceGroup(sourcePage) || normalizeSubmissionSourceGroup(sourceGroup);
+  const directGroup = normalizeSubmissionSourceGroup(sourceGroup) || normalizeSubmissionSourceGroup(sourcePage);
 
   if (directGroup) {
     return directGroup;
