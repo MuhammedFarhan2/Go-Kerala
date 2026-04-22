@@ -183,7 +183,9 @@
           if (isProfileReview) {
             sessionStorage.setItem('owner-profile-photo-return-page', returnPage);
           }
-          window.location.href = 'owner-profile-photo-success.html';
+          qrImage.hidden = true;
+          statusNode.hidden = false;
+          statusNode.textContent = 'Profile photo received. Stay on this page until you close it.';
         } catch (error) {
           return;
         }

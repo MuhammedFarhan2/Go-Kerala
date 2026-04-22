@@ -97,6 +97,10 @@
     </div>
   </div>
 
+  <div class="owner-profile-result" hidden data-owner-profile-result>
+    <img src="" alt="Captured profile photo" class="owner-profile-result-image" data-owner-profile-result-image>
+  </div>
+
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
@@ -109,11 +113,14 @@
       const videoNode = document.querySelector('[data-owner-profile-video]');
       const captureButton = document.querySelector('[data-owner-profile-camera-capture]');
       const cameraOval = document.querySelector('.owner-profile-camera-oval');
+      const resultOverlay = document.querySelector('[data-owner-profile-result]');
+      const resultImage = document.querySelector('[data-owner-profile-result-image]');
       const uploadInput = document.querySelector('[data-owner-profile-upload-input]');
       const pageParams = new URLSearchParams(window.location.search);
       const reviewItem = String(pageParams.get('review') || '').trim();
       const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
       const profileSessionToken = String(pageParams.get('profileSession') || '').trim();
+      const isQrCaptureMode = String(pageParams.get('captureMode') || '').trim() === 'qr';
       const submissionId = String(pageParams.get('submissionId') || '').trim();
       const fallbackSubmissionId = String(
         submissionId ||
@@ -130,7 +137,7 @@
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       let activeStream = null;
 
-      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !cameraOval) {
+      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !cameraOval || !resultOverlay || !resultImage) {
         return;
       }
 
@@ -181,6 +188,15 @@
           sessionStorage.removeItem('owner-profile-photo-return-page');
         }
 
+        stopCamera();
+
+        if (isQrCaptureMode) {
+          resultImage.src = photoDataUrl;
+          resultOverlay.hidden = false;
+          document.documentElement.classList.add('is-profile-photo-preview');
+          return;
+        }
+
         window.location.href = 'owner-profile-photo-success.html';
       }
 
@@ -225,6 +241,8 @@
         if (profileSessionToken) {
           qrUrl.searchParams.set('profileSession', profileSessionToken);
         }
+
+        qrUrl.searchParams.set('captureMode', 'qr');
 
         if (activeSubmissionId) {
           qrUrl.searchParams.set('submissionId', activeSubmissionId);
