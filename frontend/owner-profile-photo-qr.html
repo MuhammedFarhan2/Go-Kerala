@@ -52,6 +52,7 @@
       const pageParams = new URLSearchParams(window.location.search);
       const reviewItem = String(pageParams.get('review') || '').trim();
       const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
+      const submissionId = String(pageParams.get('submissionId') || '').trim();
       const qrImage = document.querySelector('[data-owner-profile-qr-image]');
       const fallbackLink = document.querySelector('[data-owner-profile-qr-link]');
       const statusNode = document.querySelector('[data-owner-profile-qr-status]');
@@ -121,6 +122,10 @@
       if (isProfileReview) {
         profileUrl.searchParams.set('review', reviewItem);
         profileUrl.searchParams.set('return', returnPage);
+      }
+
+      if (submissionId) {
+        profileUrl.searchParams.set('submissionId', submissionId);
       }
 
       const targetUrl = profileUrl.toString();

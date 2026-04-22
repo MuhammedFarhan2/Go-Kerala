@@ -1672,6 +1672,29 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
   });
 }
 
+async function handlePublicSubmissionDetail(requestUrl, response) {
+  const pathParts = requestUrl.pathname.split('/').filter(Boolean);
+  const submissionId = String(pathParts[2] || '').trim();
+  let submission;
+
+  try {
+    submission = await getSubmissionByIdAsync(submissionId);
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Unable to load submission.' });
+    return;
+  }
+
+  if (!submission) {
+    sendJson(response, 404, { success: false, error: 'Submission not found.' });
+    return;
+  }
+
+  sendJson(response, 200, {
+    success: true,
+    submission: serializeSubmissionForList(submission)
+  });
+}
+
 async function handleVectOwnSubmissionList(requestUrl, request, response) {
   console.log('=== VECT OWN SUBMISSION LIST DEBUG ===');
   const session = requireVectOwnSession(request, response);
@@ -2004,6 +2027,11 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'PATCH' && /^\/api\/submissions\/[^/]+\/owner-update$/.test(requestUrl.pathname)) {
     handlePublicSubmissionOwnerUpdate(requestUrl, request, response);
+    return;
+  }
+
+  if (request.method === 'GET' && /^\/api\/submissions\/[^/]+$/.test(requestUrl.pathname)) {
+    handlePublicSubmissionDetail(requestUrl, response);
     return;
   }
 

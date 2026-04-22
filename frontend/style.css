@@ -171,6 +171,14 @@ button.submit-demo-expand-btn.is-view {
   height: auto;
 }
 
+.owner-profile-reference-caption {
+  padding: 14px 16px 16px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #4a4a4a;
+  text-align: center;
+}
+
 .owner-profile-bottom-bar {
   padding-top: 12px;
 }
