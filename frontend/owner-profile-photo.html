@@ -39,7 +39,7 @@
           <li>No photos of a photo, filters, or alterations</li>
         </ol>
 
-        <figure class="owner-profile-reference-frame">
+        <figure class="owner-profile-reference-frame" data-owner-profile-reference-frame>
           <img
             src="profile-photo-reference.avif"
             alt="Reference example for taking a profile photo"
@@ -115,6 +115,7 @@
       const cameraOval = document.querySelector('.owner-profile-camera-oval');
       const resultOverlay = document.querySelector('[data-owner-profile-result]');
       const resultImage = document.querySelector('[data-owner-profile-result-image]');
+      const referenceFrame = document.querySelector('[data-owner-profile-reference-frame]');
       const uploadInput = document.querySelector('[data-owner-profile-upload-input]');
       const pageParams = new URLSearchParams(window.location.search);
       const reviewItem = String(pageParams.get('review') || '').trim();
@@ -137,8 +138,12 @@
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       let activeStream = null;
 
-      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !cameraOval || !resultOverlay || !resultImage) {
+      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !cameraOval || !resultOverlay || !resultImage || !referenceFrame) {
         return;
+      }
+
+      if (isQrCaptureMode) {
+        referenceFrame.hidden = true;
       }
 
       function getApiUrl(pathName) {
