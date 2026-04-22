@@ -315,6 +315,7 @@
 
   if (submissionId) {
     sessionStorage.setItem('owner-review-submission-id', submissionId);
+    localStorage.setItem('owner-latest-submission-id', submissionId);
   }
 })();
 

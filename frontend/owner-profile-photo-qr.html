@@ -114,6 +114,13 @@
       }
 
       const profileUrl = new URL('owner-profile-photo.html', window.location.href);
+      const storedSubmissionId = String(
+        pageParams.get('submissionId') ||
+        sessionStorage.getItem('owner-review-submission-id') ||
+        localStorage.getItem('owner-latest-submission-id') ||
+        sessionStorage.getItem('owner-latest-submission-id') ||
+        ''
+      ).trim();
 
       if (token) {
         profileUrl.searchParams.set('profileSession', token);
@@ -124,8 +131,8 @@
         profileUrl.searchParams.set('return', returnPage);
       }
 
-      if (submissionId) {
-        profileUrl.searchParams.set('submissionId', submissionId);
+      if (storedSubmissionId) {
+        profileUrl.searchParams.set('submissionId', storedSubmissionId);
       }
 
       const targetUrl = profileUrl.toString();

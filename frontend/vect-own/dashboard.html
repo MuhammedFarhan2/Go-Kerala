@@ -2970,6 +2970,7 @@
 
             if (latestSubmission) {
               console.log('Auto-selecting latest submission:', latestSubmission.id);
+              localStorage.setItem('owner-latest-submission-id', latestSubmission.id);
               sessionStorage.removeItem('owner-latest-submission-id');
               openSubmission(latestSubmission.id);
             } else if (selectFirst && allSubmissions.length) {

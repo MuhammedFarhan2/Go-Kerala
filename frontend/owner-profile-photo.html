@@ -120,6 +120,13 @@
       const returnPage = String(pageParams.get('return') || '').trim() || 'owner-next.html';
       const profileSessionToken = String(pageParams.get('profileSession') || '').trim();
       const submissionId = String(pageParams.get('submissionId') || '').trim();
+      const fallbackSubmissionId = String(
+        submissionId ||
+        sessionStorage.getItem('owner-review-submission-id') ||
+        localStorage.getItem('owner-latest-submission-id') ||
+        sessionStorage.getItem('owner-latest-submission-id') ||
+        ''
+      ).trim();
       const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
       const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
       const PROFILE_IMAGE_KEY = 'owner-profile-photo';
@@ -205,9 +212,9 @@
         let imageUrl = '';
         let captionText = 'Uploaded photo not available yet.';
 
-        if (submissionId) {
+        if (fallbackSubmissionId) {
           try {
-            const response = await fetch(getApiUrl('/api/submissions/' + encodeURIComponent(submissionId)));
+            const response = await fetch(getApiUrl('/api/submissions/' + encodeURIComponent(fallbackSubmissionId)));
             const payload = await response.json();
 
             if (response.ok && payload && payload.success && payload.submission && payload.submission.summary && payload.submission.summary.images) {
@@ -261,6 +268,7 @@
 
       function buildQrPageUrl() {
         const qrUrl = new URL('owner-profile-photo-qr.html', window.location.href);
+        const activeSubmissionId = fallbackSubmissionId;
 
         if (reviewItem) {
           qrUrl.searchParams.set('review', reviewItem);
@@ -272,6 +280,10 @@
 
         if (profileSessionToken) {
           qrUrl.searchParams.set('profileSession', profileSessionToken);
+        }
+
+        if (activeSubmissionId) {
+          qrUrl.searchParams.set('submissionId', activeSubmissionId);
         }
 
         return qrUrl.toString();
