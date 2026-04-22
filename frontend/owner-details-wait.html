@@ -378,6 +378,16 @@
           mediaFields['owner-profile-photo-url'] = mediaFields['owner-profile-photo'];
         }
 
+        const profilePhotoSessionToken = String(
+          sessionStorage.getItem('owner-profile-photo-session-token') ||
+          localStorage.getItem('owner-profile-photo-session-token') ||
+          ''
+        ).trim();
+
+        if (profilePhotoSessionToken) {
+          mediaFields['owner-profile-photo-session-token'] = profilePhotoSessionToken;
+        }
+
         // Collect ALL stored data before submission
         const allStoredData = {};
         

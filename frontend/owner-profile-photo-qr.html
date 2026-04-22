@@ -113,6 +113,11 @@
         }
       }
 
+      if (token) {
+        sessionStorage.setItem('owner-profile-photo-session-token', token);
+        localStorage.setItem('owner-profile-photo-session-token', token);
+      }
+
       const profileUrl = new URL('owner-profile-photo.html', window.location.href);
       const storedSubmissionId = String(
         pageParams.get('submissionId') ||

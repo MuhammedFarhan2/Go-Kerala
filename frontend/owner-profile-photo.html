@@ -178,6 +178,31 @@
         }
       }
 
+      async function uploadProfileSessionPhoto(photoDataUrl) {
+        if (!profileSessionToken) {
+          return;
+        }
+
+        const response = await fetch(getApiUrl('/api/profile-photo-session/photo'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            token: profileSessionToken,
+            photoDataUrl: photoDataUrl
+          })
+        });
+
+        const payload = await response.json().catch(function () {
+          return {};
+        });
+
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.error || 'Unable to upload profile photo.');
+        }
+      }
+
       async function finishProfilePhotoCapture(photoDataUrl) {
         if (!window.ownerMediaStore) {
           throw new Error('Image storage is not available on this device.');
@@ -186,6 +211,13 @@
         await window.ownerMediaStore.setItem(PROFILE_IMAGE_KEY, photoDataUrl);
         sessionStorage.setItem(PROFILE_STATUS_KEY, 'completed');
         sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
+        if (profileSessionToken) {
+          sessionStorage.setItem('owner-profile-photo-session-token', profileSessionToken);
+          localStorage.setItem('owner-profile-photo-session-token', profileSessionToken);
+        }
+        if (isQrCaptureMode) {
+          await uploadProfileSessionPhoto(photoDataUrl);
+        }
         await markProfileSessionComplete();
         if (isProfileReview) {
           sessionStorage.setItem('owner-profile-photo-return-page', returnPage);

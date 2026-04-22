@@ -28,6 +28,7 @@ const DATA_DIR = PERSISTENT_ROOT
   : path.join(__dirname, 'data');
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 const LEGACY_UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
+const PROFILE_PHOTO_SESSION_DB_PATH = path.join(DATA_DIR, 'profile-photo-sessions.json');
 const VECT_OWN_DB_PATH = path.join(DATA_DIR, 'vect-own-submissions.json');
 const VECT_OWN_SESSION_COOKIE = 'vect_own_session';
 const VECT_OWN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -663,6 +664,36 @@ function persistVectOwnSubmissions() {
   writeJsonFile(VECT_OWN_DB_PATH, loadVectOwnSubmissions());
 }
 
+function loadProfilePhotoSessions() {
+  const saved = readJsonFile(PROFILE_PHOTO_SESSION_DB_PATH, {});
+
+  profilePhotoSessions.clear();
+
+  if (!saved || typeof saved !== 'object') {
+    return;
+  }
+
+  Object.keys(saved).forEach(function (token) {
+    const session = saved[token];
+
+    if (!session || typeof session !== 'object') {
+      return;
+    }
+
+    profilePhotoSessions.set(token, session);
+  });
+}
+
+function persistProfilePhotoSessions() {
+  const snapshot = {};
+
+  profilePhotoSessions.forEach(function (session, token) {
+    snapshot[token] = session;
+  });
+
+  writeJsonFile(PROFILE_PHOTO_SESSION_DB_PATH, snapshot);
+}
+
 function cleanupVectOwnSessions() {
   const now = Date.now();
 
@@ -947,13 +978,24 @@ function getSubmissionById(submissionId) {
 
 function cleanupProfilePhotoSessions() {
   const now = Date.now();
+  let changed = false;
 
   profilePhotoSessions.forEach(function (session, token) {
-    if (!session || now - session.createdAt > PROFILE_PHOTO_SESSION_TTL_MS) {
+    const createdAt = Number(session && session.createdAt) || 0;
+    const expiresAt = Number(session && session.expiresAt) || 0;
+
+    if (!session || (expiresAt && now > expiresAt) || (createdAt && now - createdAt > PROFILE_PHOTO_SESSION_TTL_MS)) {
       profilePhotoSessions.delete(token);
+      changed = true;
     }
   });
+
+  if (changed) {
+    persistProfilePhotoSessions();
+  }
 }
+
+loadProfilePhotoSessions();
 
 function readJsonBody(request) {
   return new Promise(function (resolve, reject) {
@@ -1297,16 +1339,63 @@ function handleCreateProfilePhotoSession(response) {
   cleanupProfilePhotoSessions();
 
   const token = crypto.randomBytes(18).toString('hex');
+  const now = Date.now();
 
   profilePhotoSessions.set(token, {
-    createdAt: Date.now(),
+    createdAt: now,
+    expiresAt: now + PROFILE_PHOTO_SESSION_TTL_MS,
     status: 'pending'
   });
+  persistProfilePhotoSessions();
 
   sendJson(response, 200, {
     success: true,
     token: token,
     status: 'pending'
+  });
+}
+
+async function handleUploadProfilePhotoSession(request, response) {
+  cleanupProfilePhotoSessions();
+
+  let payload;
+
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const token = String(payload.token || '').trim();
+  const photoDataUrl = String(payload.photoDataUrl || '').trim();
+
+  if (!token) {
+    sendJson(response, 400, { success: false, error: 'Missing token.' });
+    return;
+  }
+
+  if (!photoDataUrl) {
+    sendJson(response, 400, { success: false, error: 'Missing photo data.' });
+    return;
+  }
+
+  const session = profilePhotoSessions.get(token);
+
+  if (!session) {
+    sendJson(response, 404, { success: false, error: 'Session not found.' });
+    return;
+  }
+
+  session.photoDataUrl = photoDataUrl;
+  session.photoUploadedAt = Date.now();
+  profilePhotoSessions.set(token, session);
+  persistProfilePhotoSessions();
+
+  sendJson(response, 200, {
+    success: true,
+    token: token,
+    status: session.status || 'pending'
   });
 }
 
@@ -1363,12 +1452,33 @@ async function handleCompleteProfilePhotoSession(request, response) {
   session.status = 'completed';
   session.completedAt = Date.now();
   profilePhotoSessions.set(token, session);
+  persistProfilePhotoSessions();
 
   sendJson(response, 200, {
     success: true,
     token: token,
     status: session.status
   });
+}
+
+function resolveProfilePhotoSessionData(fields) {
+  const safeFields = fields && typeof fields === 'object' ? fields : {};
+  const token = String(safeFields['owner-profile-photo-session-token'] || '').trim();
+
+  if (!token) {
+    return null;
+  }
+
+  const session = profilePhotoSessions.get(token);
+
+  if (!session || !session.photoDataUrl) {
+    return null;
+  }
+
+  return {
+    token: token,
+    photoDataUrl: String(session.photoDataUrl || '').trim()
+  };
 }
 
 async function handleVectOwnLogin(request, response) {
@@ -1560,8 +1670,15 @@ async function handlePublicSubmissionCreate(request, response) {
 
     console.log('Parsed payload:', payload);
 
-    const fields = normalizeSubmissionFields(payload.fields || payload);
-    const normalizedWhatsappNumber = normalizePhoneNumber(payload.whatsappNumber || fields['owner-whatsapp-number'] || '');
+  const fields = normalizeSubmissionFields(payload.fields || payload);
+  const profilePhotoSession = resolveProfilePhotoSessionData(payload.fields || payload);
+
+  if (profilePhotoSession) {
+    fields['owner-profile-photo-url'] = profilePhotoSession.photoDataUrl;
+  }
+
+  delete fields['owner-profile-photo-session-token'];
+  const normalizedWhatsappNumber = normalizePhoneNumber(payload.whatsappNumber || fields['owner-whatsapp-number'] || '');
     const whatsappNumber = normalizedWhatsappNumber && isPhoneNumber(normalizedWhatsappNumber) ? normalizedWhatsappNumber : '';
 
     const now = Date.now();
@@ -1628,6 +1745,13 @@ async function handlePublicSubmissionOwnerUpdate(requestUrl, request, response) 
   }
 
   const fields = normalizeSubmissionFields(payload.fields || payload);
+  const profilePhotoSession = resolveProfilePhotoSessionData(payload.fields || payload);
+
+  if (profilePhotoSession) {
+    fields['owner-profile-photo-url'] = profilePhotoSession.photoDataUrl;
+  }
+
+  delete fields['owner-profile-photo-session-token'];
   const mergedFields = Object.assign({}, submission.fields || {}, fields);
   const nextWhatsappNumber = normalizePhoneNumber(
     payload.whatsappNumber ||
@@ -1941,6 +2065,11 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/profile-photo-session') {
     handleCreateProfilePhotoSession(response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/profile-photo-session/photo') {
+    handleUploadProfilePhotoSession(request, response);
     return;
   }
 
