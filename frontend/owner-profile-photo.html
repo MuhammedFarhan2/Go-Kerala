@@ -41,13 +41,10 @@
 
         <figure class="owner-profile-reference-frame">
           <img
-            src=""
-            alt="Uploaded profile photo preview"
+            src="profile-photo-reference.avif"
+            alt="Reference example for taking a profile photo"
             class="owner-profile-reference-image"
-            hidden
-            data-owner-profile-reference-image
           >
-          <figcaption class="owner-profile-reference-caption" data-owner-profile-reference-caption>Loading uploaded photo...</figcaption>
         </figure>
       </div>
     </section>
@@ -112,8 +109,6 @@
       const videoNode = document.querySelector('[data-owner-profile-video]');
       const captureButton = document.querySelector('[data-owner-profile-camera-capture]');
       const cameraOval = document.querySelector('.owner-profile-camera-oval');
-      const referenceImage = document.querySelector('[data-owner-profile-reference-image]');
-      const referenceCaption = document.querySelector('[data-owner-profile-reference-caption]');
       const uploadInput = document.querySelector('[data-owner-profile-upload-input]');
       const pageParams = new URLSearchParams(window.location.search);
       const reviewItem = String(pageParams.get('review') || '').trim();
@@ -135,15 +130,9 @@
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       let activeStream = null;
 
-      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !cameraOval || !referenceImage || !referenceCaption) {
+      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !cameraOval) {
         return;
       }
-
-      referenceImage.addEventListener('error', function () {
-        referenceImage.hidden = true;
-        referenceImage.removeAttribute('src');
-        referenceCaption.textContent = 'Uploaded photo not available yet.';
-      });
 
       function getApiUrl(pathName) {
         return apiBaseUrl ? apiBaseUrl + pathName : pathName;
@@ -193,51 +182,6 @@
         }
 
         window.location.href = 'owner-profile-photo-success.html';
-      }
-
-      function setReferenceImage(imageUrl, captionText) {
-        if (imageUrl) {
-          referenceImage.src = imageUrl;
-          referenceImage.hidden = false;
-          referenceCaption.textContent = captionText || 'Uploaded profile photo';
-          return;
-        }
-
-        referenceImage.hidden = true;
-        referenceImage.removeAttribute('src');
-        referenceCaption.textContent = captionText || 'Uploaded photo not available yet.';
-      }
-
-      async function loadReferenceImage() {
-        let imageUrl = '';
-        let captionText = 'Uploaded photo not available yet.';
-
-        if (fallbackSubmissionId) {
-          try {
-            const response = await fetch(getApiUrl('/api/submissions/' + encodeURIComponent(fallbackSubmissionId)));
-            const payload = await response.json();
-
-            if (response.ok && payload && payload.success && payload.submission && payload.submission.summary && payload.submission.summary.images) {
-              imageUrl = String(payload.submission.summary.images.profilePhotoUrl || '').trim();
-              captionText = imageUrl ? 'Uploaded profile photo from dashboard' : captionText;
-            }
-          } catch (error) {
-            imageUrl = '';
-          }
-        }
-
-        if (!imageUrl && window.ownerMediaStore) {
-          try {
-            imageUrl = String(await window.ownerMediaStore.getItem(PROFILE_IMAGE_KEY) || '').trim();
-            if (imageUrl) {
-              captionText = 'Profile photo captured on this device';
-            }
-          } catch (error) {
-            imageUrl = '';
-          }
-        }
-
-        setReferenceImage(imageUrl, captionText);
       }
 
       function stopCamera() {
@@ -415,10 +359,6 @@
 
       window.addEventListener('pagehide', stopCamera);
       window.addEventListener('beforeunload', stopCamera);
-
-      loadReferenceImage().catch(function () {
-        setReferenceImage('', 'Uploaded photo not available yet.');
-      });
 
     })();
   </script>
