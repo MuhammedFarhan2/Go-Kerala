@@ -42,6 +42,7 @@
       const PROFILE_STATUS_KEY = 'owner-profile-photo-status-v2';
       const PROFILE_SUBMITTED_KEY = 'owner-profile-photo-submitted-v2';
       const returnPage = String(sessionStorage.getItem('owner-profile-photo-return-page') || 'owner-next.html').trim() || 'owner-next.html';
+      const isQrCaptureMode = String(new URLSearchParams(window.location.search).get('captureMode') || '').trim() === 'qr';
 
       if (!okButton) {
         return;
@@ -49,6 +50,11 @@
 
       sessionStorage.setItem(PROFILE_STATUS_KEY, 'completed');
       sessionStorage.setItem(PROFILE_SUBMITTED_KEY, 'yes');
+
+      if (isQrCaptureMode) {
+        okButton.hidden = true;
+        return;
+      }
 
       okButton.addEventListener('click', function () {
         if (returnPage === 'owner-details-done.html') {

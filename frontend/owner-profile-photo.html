@@ -196,9 +196,7 @@
         stopCamera();
 
         if (isQrCaptureMode) {
-          resultImage.src = photoDataUrl;
-          resultOverlay.hidden = false;
-          document.documentElement.classList.add('is-profile-photo-preview');
+          window.location.href = 'owner-profile-photo-success.html?captureMode=qr';
           return;
         }
 
