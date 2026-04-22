@@ -1194,15 +1194,13 @@
 
       function getSubmissionsForGroup(group) {
         const targetGroup = String(group || '').trim().toLowerCase();
-        const baseList = allSubmissions.filter(function (submission) {
+        return allSubmissions.filter(function (submission) {
           return getSubmissionSourceGroup(submission) === targetGroup;
         });
+      }
 
-        if (targetGroup === 'submission') {
-          return mergeLocalTouristSubmission(baseList);
-        }
-
-        return baseList;
+      function getSubmissionDisplayRecords() {
+        return mergeLocalTouristSubmission(getSubmissionsForGroup('submission'));
       }
 
       function getVehicleDisplayName(category) {
@@ -1419,7 +1417,7 @@
           return;
         }
 
-        const submissions = getSubmissionsForGroup('submission');
+        const submissions = getSubmissionDisplayRecords();
         const reviewStatus = getTouristBusReviewStatus();
         const visible = submissions.filter(function (submission) {
           return reviewStatus === 'pending' || reviewStatus === 'accepted' || reviewStatus === 'rejected' || reviewStatus === 'updated'
@@ -3050,7 +3048,9 @@
 
             const latestSubmissionId = String(sessionStorage.getItem('owner-latest-submission-id') || '').trim();
             const targetGroup = activePage === 'submission' ? 'submission' : 'owner';
-            const visibleSubmissions = getSubmissionsForGroup(targetGroup);
+            const visibleSubmissions = targetGroup === 'submission'
+              ? getSubmissionDisplayRecords()
+              : getSubmissionsForGroup(targetGroup);
             const latestSubmission = latestSubmissionId ? visibleSubmissions.find(function (submission) {
               return submission.id === latestSubmissionId && getSubmissionSourceGroup(submission) === targetGroup;
             }) : null;
