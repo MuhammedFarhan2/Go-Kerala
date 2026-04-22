@@ -870,14 +870,14 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
     documents: {
       heavyLicence: Boolean(safeFields['owner-heavy-licence-photo-name-1'] || safeFields['owner-heavy-licence-photo-name-2']),
       aadhaar: Boolean(safeFields['owner-aadhaar-photo-name']),
-      profilePhoto: Boolean(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name']),
+      profilePhoto: Boolean(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name'] || safeFields['owner-profile-photo']),
       panPhoto: Boolean(safeFields['owner-pan-photo-url'] || safeFields['owner-pan-photo-name']),
       gstPhoto: Boolean(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
       companyLogo: Boolean(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name'])
     },
     // Add actual image URLs for frontend
     images: {
-      profilePhotoUrl: getUploadUrl(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name']),
+      profilePhotoUrl: getUploadUrl(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name'] || safeFields['owner-profile-photo']),
       aadhaarPhotoUrl: getUploadUrl(safeFields['owner-aadhaar-photo-url'] || safeFields['owner-aadhaar-photo-name']),
       panPhotoUrl: getUploadUrl(safeFields['owner-pan-photo-url'] || safeFields['owner-pan-photo-name']),
       gstPhotoUrl: getUploadUrl(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
@@ -1773,7 +1773,7 @@ async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
   // Convert photo filenames to URLs for frontend compatibility
   const submissionWithUrls = Object.assign({}, submission, {
     fields: Object.assign({}, safeFields, {
-      'owner-profile-photo-url': getUploadUrl(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name']),
+      'owner-profile-photo-url': getUploadUrl(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name'] || safeFields['owner-profile-photo']),
       'owner-aadhaar-photo-url': getUploadUrl(safeFields['owner-aadhaar-photo-url'] || safeFields['owner-aadhaar-photo-name']),
       'owner-heavy-licence-photo-url-1': getUploadUrl(safeFields['owner-heavy-licence-photo-url-1'] || safeFields['owner-heavy-licence-photo-name-1']),
       'owner-heavy-licence-photo-url-2': getUploadUrl(safeFields['owner-heavy-licence-photo-url-2'] || safeFields['owner-heavy-licence-photo-name-2']),

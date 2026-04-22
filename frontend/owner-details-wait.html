@@ -374,6 +374,10 @@
           }));
         }
 
+        if (mediaFields['owner-profile-photo']) {
+          mediaFields['owner-profile-photo-url'] = mediaFields['owner-profile-photo'];
+        }
+
         // Collect ALL stored data before submission
         const allStoredData = {};
         
