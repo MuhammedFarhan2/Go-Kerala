@@ -196,6 +196,17 @@ button.submit-demo-expand-btn.is-view {
   filter: blur(8px);
 }
 
+.is-profile-modal-open,
+.is-profile-modal-open body {
+  overflow: hidden;
+}
+
+.is-profile-modal-open .owner-main,
+.is-profile-modal-open .owner-heavy-bottom-bar,
+.is-profile-modal-open .owner-header {
+  filter: blur(8px);
+}
+
 .owner-profile-modal-backdrop {
   position: fixed;
   inset: 0;

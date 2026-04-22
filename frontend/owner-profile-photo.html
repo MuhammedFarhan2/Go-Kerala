@@ -70,6 +70,17 @@
     </button>
   </div>
 
+  <div class="owner-profile-modal-backdrop" hidden data-owner-profile-modal-backdrop>
+    <section class="owner-profile-modal" aria-label="Continue on mobile device">
+      <button type="button" class="owner-profile-modal-close" aria-label="Close dialog" data-owner-profile-modal-close>&times;</button>
+      <h2 class="owner-profile-modal-title">Continue on your mobile device</h2>
+      <p class="owner-profile-modal-text">
+        Open the QR code on your phone to take the profile photo there.
+      </p>
+      <button type="button" class="owner-next-btn owner-profile-modal-action" data-owner-profile-qr-btn>Use QR code</button>
+    </section>
+  </div>
+
   <div class="owner-profile-camera" hidden data-owner-profile-camera>
     <div class="owner-profile-camera-stage">
       <video class="owner-profile-camera-video" autoplay playsinline muted data-owner-profile-video></video>
@@ -91,6 +102,13 @@
     (function () {
       const actionButton = document.querySelector('[data-owner-profile-action-btn]');
       const cameraInput = document.querySelector('[data-owner-profile-camera-input]');
+      const cameraOverlay = document.querySelector('[data-owner-profile-camera]');
+      const modalBackdrop = document.querySelector('[data-owner-profile-modal-backdrop]');
+      const modalCloseButton = document.querySelector('[data-owner-profile-modal-close]');
+      const qrButton = document.querySelector('[data-owner-profile-qr-btn]');
+      const videoNode = document.querySelector('[data-owner-profile-video]');
+      const captureButton = document.querySelector('[data-owner-profile-camera-capture]');
+      const cameraOval = document.querySelector('.owner-profile-camera-oval');
       const uploadInput = document.querySelector('[data-owner-profile-upload-input]');
       const pageParams = new URLSearchParams(window.location.search);
       const reviewItem = String(pageParams.get('review') || '').trim();
@@ -102,7 +120,9 @@
       const isProfileReview = reviewItem === 'owner-profile-photo';
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
-      if (!actionButton || !cameraInput || !uploadInput) {
+      let activeStream = null;
+
+      if (!actionButton || !cameraInput || !uploadInput || !cameraOverlay || !modalBackdrop || !modalCloseButton || !qrButton || !videoNode || !captureButton || !cameraOval) {
         return;
       }
 
@@ -111,6 +131,12 @@
       }
 
       const isMobileDevice = window.matchMedia('(max-width: 680px)').matches || window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+      if (isMobileDevice) {
+        actionButton.textContent = 'Take Photo with Camera';
+      } else {
+        actionButton.textContent = 'Use my phone';
+      }
 
       async function markProfileSessionComplete() {
         if (!profileSessionToken) {
@@ -150,12 +176,136 @@
         window.location.href = 'owner-profile-photo-success.html';
       }
 
-      function captureFromOval() {
-        cameraInput.click();
+      function stopCamera() {
+        if (activeStream) {
+          activeStream.getTracks().forEach(function (track) {
+            track.stop();
+          });
+          activeStream = null;
+        }
+
+        if (videoNode) {
+          videoNode.srcObject = null;
+        }
+
+        cameraOverlay.hidden = true;
+        document.documentElement.classList.remove('is-camera-open');
+      }
+
+      function openDesktopModal() {
+        modalBackdrop.hidden = false;
+        document.documentElement.classList.add('is-profile-modal-open');
+      }
+
+      function closeDesktopModal() {
+        modalBackdrop.hidden = true;
+        document.documentElement.classList.remove('is-profile-modal-open');
+      }
+
+      function buildQrPageUrl() {
+        const qrUrl = new URL('owner-profile-photo-qr.html', window.location.href);
+
+        if (reviewItem) {
+          qrUrl.searchParams.set('review', reviewItem);
+        }
+
+        if (returnPage) {
+          qrUrl.searchParams.set('return', returnPage);
+        }
+
+        if (profileSessionToken) {
+          qrUrl.searchParams.set('profileSession', profileSessionToken);
+        }
+
+        return qrUrl.toString();
+      }
+
+      async function openCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          cameraInput.click();
+          return;
+        }
+
+        try {
+          activeStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: 'user'
+            },
+            audio: false
+          });
+
+          videoNode.srcObject = activeStream;
+          cameraOverlay.hidden = false;
+          document.documentElement.classList.add('is-camera-open');
+          await videoNode.play();
+        } catch (error) {
+          cameraInput.click();
+        }
+      }
+
+      async function captureFromCamera() {
+        if (!videoNode.videoWidth || !videoNode.videoHeight) {
+          return;
+        }
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        if (!context) {
+          return;
+        }
+
+        const videoRect = videoNode.getBoundingClientRect();
+        const ovalRect = cameraOval.getBoundingClientRect();
+        const scaleX = videoNode.videoWidth / videoRect.width;
+        const scaleY = videoNode.videoHeight / videoRect.height;
+        const cropX = Math.max(0, (ovalRect.left - videoRect.left) * scaleX);
+        const cropY = Math.max(0, (ovalRect.top - videoRect.top) * scaleY);
+        const cropWidth = Math.min(videoNode.videoWidth - cropX, ovalRect.width * scaleX);
+        const cropHeight = Math.min(videoNode.videoHeight - cropY, ovalRect.height * scaleY);
+
+        canvas.width = Math.max(1, Math.round(cropWidth));
+        canvas.height = Math.max(1, Math.round(cropHeight));
+        context.drawImage(
+          videoNode,
+          cropX,
+          cropY,
+          cropWidth,
+          cropHeight,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        stopCamera();
+        await finishProfilePhotoCapture(canvas.toDataURL('image/jpeg', 0.9));
       }
 
       actionButton.addEventListener('click', function () {
-        captureFromOval();
+        if (isMobileDevice) {
+          openCamera();
+          return;
+        }
+
+        openDesktopModal();
+      });
+
+      modalCloseButton.addEventListener('click', closeDesktopModal);
+      modalBackdrop.addEventListener('click', function (event) {
+        if (event.target === modalBackdrop) {
+          closeDesktopModal();
+        }
+      });
+
+      qrButton.addEventListener('click', function () {
+        window.location.href = buildQrPageUrl();
+      });
+
+      captureButton.addEventListener('click', function () {
+        captureFromCamera().catch(function (error) {
+          window.alert(error.message || 'Unable to save profile photo.');
+        });
       });
 
       cameraInput.addEventListener('change', function () {
@@ -193,6 +343,9 @@
 
         reader.readAsDataURL(file);
       });
+
+      window.addEventListener('pagehide', stopCamera);
+      window.addEventListener('beforeunload', stopCamera);
 
     })();
   </script>
