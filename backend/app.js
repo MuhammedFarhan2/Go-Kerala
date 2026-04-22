@@ -840,43 +840,10 @@ function normalizeSubmissionSourceGroup(value) {
 }
 
 function inferSubmissionSourceGroup(fields, sourcePage, sourceGroup) {
-  const directGroup = normalizeSubmissionSourceGroup(sourceGroup) || normalizeSubmissionSourceGroup(sourcePage);
+  const directGroup = normalizeSubmissionSourceGroup(sourcePage) || normalizeSubmissionSourceGroup(sourceGroup);
 
   if (directGroup) {
     return directGroup;
-  }
-
-  const safeFields = fields && typeof fields === 'object' ? fields : {};
-  const submissionHints = [
-    'owner-bus-type',
-    'owner-bus-seats',
-    'owner-bus-tv',
-    'owner-bus-place',
-    'owner-bus-permit-type',
-    'owner-bus-photos',
-    'owner-bus-rc',
-    'owner-bus-insurance',
-    'owner-bus-permit',
-    'owner-vehicle-type'
-  ];
-  const ownerHints = [
-    'owner-company-name',
-    'owner-profile-photo-url',
-    'owner-aadhaar-photo-url',
-    'owner-heavy-licence-photo-name-1',
-    'owner-heavy-licence-photo-name-2'
-  ];
-
-  if (submissionHints.some(function (key) {
-    return String(safeFields[key] || '').trim() !== '';
-  })) {
-    return 'submission';
-  }
-
-  if (ownerHints.some(function (key) {
-    return String(safeFields[key] || '').trim() !== '';
-  })) {
-    return 'owner';
   }
 
   return 'owner';

@@ -1162,8 +1162,16 @@
 
       function getSubmissionSourceGroup(submission) {
         const safeSubmission = submission && typeof submission === 'object' ? submission : {};
-        const directGroup = String(safeSubmission.sourceGroup || safeSubmission.sourcePage || '').trim().toLowerCase();
-        const fields = safeSubmission.fields && typeof safeSubmission.fields === 'object' ? safeSubmission.fields : {};
+        const directPage = String(safeSubmission.sourcePage || '').trim().toLowerCase();
+        const directGroup = String(safeSubmission.sourceGroup || '').trim().toLowerCase();
+
+        if (directPage === 'owner' || directPage.indexOf('owner-') === 0 || directPage.indexOf('dashboard') > -1) {
+          return 'owner';
+        }
+
+        if (directPage === 'submission' || directPage === 'blanksheet' || directPage === 'blank-sheet' || directPage.indexOf('submit') > -1 || directPage.indexOf('vehicle') > -1) {
+          return 'submission';
+        }
 
         if (directGroup === 'owner' || directGroup.indexOf('owner-') === 0 || directGroup.indexOf('dashboard') > -1) {
           return 'owner';
@@ -1175,19 +1183,6 @@
           directGroup === 'blank-sheet' ||
           directGroup.indexOf('submit') > -1 ||
           directGroup.indexOf('vehicle') > -1
-        ) {
-          return 'submission';
-        }
-
-        if (
-          fields['owner-bus-type'] ||
-          fields['owner-bus-seats'] ||
-          fields['owner-bus-tv'] ||
-          fields['owner-bus-place'] ||
-          fields['owner-bus-photos'] ||
-          fields['owner-bus-rc'] ||
-          fields['owner-bus-insurance'] ||
-          fields['owner-bus-permit']
         ) {
           return 'submission';
         }
