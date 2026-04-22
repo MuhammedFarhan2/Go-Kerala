@@ -2356,7 +2356,6 @@
           searchTerm: searchTerm,
           selectedSubmissionId: selectedSubmissionId,
           noteSectionOpen: noteSectionOpen,
-          allSubmissions: allSubmissions,
           cachedSelectedSubmission: cachedSelectedSubmission,
           draftReviewNotes: draftReviewNotes,
           reviewSelections: reviewSelections
@@ -2414,7 +2413,7 @@
         reviewSelections = savedState.reviewSelections && typeof savedState.reviewSelections === 'object'
           ? savedState.reviewSelections
           : {};
-        allSubmissions = Array.isArray(savedState.allSubmissions) ? savedState.allSubmissions : [];
+        allSubmissions = [];
 
         if (searchInput) {
           searchInput.value = searchTerm;
