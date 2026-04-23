@@ -2648,7 +2648,9 @@
         const activeGroup = activePage === 'submission' ? 'submission' : 'owner';
         const activeCounts = countsByGroup[activeGroup] || countsByGroup.owner;
 
-        countNode.textContent = activeCounts.total + (activeGroup === 'submission' ? ' vehicle uploads' : ' submissions');
+        countNode.textContent = activeGroup === 'submission'
+          ? String(activeCounts.pending || 0) + ' pending'
+          : activeCounts.total + ' submissions';
         metricNodes.forEach(function (node) {
           const metric = node.getAttribute('data-vect-own-metric');
           const metricGroup = String(node.getAttribute('data-vect-own-metric-group') || 'owner').trim().toLowerCase();
