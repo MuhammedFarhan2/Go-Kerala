@@ -1,4 +1,4 @@
-const APP_CACHE = "pmq-app-v6";
+const APP_CACHE = "pmq-app-v7";
 const APP_FILES = [
   "./",
   "./index.html",
