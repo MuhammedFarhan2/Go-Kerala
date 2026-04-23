@@ -700,19 +700,19 @@
       <p class="logo-sub">MOVERS</p>
     </div>
     <div class="vect-own-header-actions">
-      <span class="vect-own-header-chip" data-vect-own-count>0 vehicle uploads</span>
+      <span class="vect-own-header-chip" data-vect-own-count>0 submissions</span>
       <button type="button" class="vect-own-logout-btn" data-vect-own-logout>Sign out</button>
     </div>
   </header>
 
   <main class="vect-own-main">
     <section class="vect-own-page is-active" data-vect-own-page="dashboard" aria-label="Submission overview">
-      <section class="vect-own-overview vect-own-submission-overview" aria-label="Vehicle upload overview">
-        <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
+      <section class="vect-own-overview vect-own-submission-overview" aria-label="Owner submissions overview">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
           <p class="vect-own-metric-label">Pending</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
         </article>
-        <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
           <p class="vect-own-metric-label">Updated</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
         </article>
@@ -2315,9 +2315,9 @@
         return 'owner';
       }
 
-      function getSubmissionOverviewRecords() {
+      function getOwnerOverviewRecords() {
         return allSubmissions.filter(function (submission) {
-          return getSubmissionSourceGroup(submission) === 'submission';
+          return getSubmissionSourceGroup(submission) === 'owner';
         });
       }
 
@@ -2346,9 +2346,9 @@
       }
 
       function updateMetrics() {
-        const counts = countSubmissionStatuses(getSubmissionOverviewRecords());
+        const counts = countSubmissionStatuses(getOwnerOverviewRecords());
 
-        countNode.textContent = counts.total + ' vehicle uploads';
+        countNode.textContent = counts.total + ' submissions';
         metricNodes.forEach(function (node) {
           const metric = node.getAttribute('data-vect-own-metric');
           node.textContent = String(counts[metric] || 0);
