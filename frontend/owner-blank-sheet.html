@@ -440,6 +440,8 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
+      const reuploadSubmissionId = String(pageParams.get('submissionId') || sessionStorage.getItem('owner-reupload-submission-id') || '').trim();
       const companyNode = document.getElementById('accountCompanyName');
       const profileNode = document.getElementById('accountProfileName');
       const avatarNode = document.getElementById('accountAvatarLarge');
@@ -646,13 +648,19 @@
 
       if (addVehicleTrigger) {
         addVehicleTrigger.addEventListener('click', function () {
-          window.location.href = 'owner-add-vehicle.html';
+          const nextUrl = new URL('owner-add-vehicle.html', window.location.href);
+
+          if (reuploadSubmissionId) {
+            nextUrl.searchParams.set('submissionId', reuploadSubmissionId);
+            sessionStorage.setItem('owner-reupload-submission-id', reuploadSubmissionId);
+          }
+
+          window.location.href = nextUrl.toString();
         });
       }
 
       renderLatestVehiclePreview();
 
-      const pageParams = new URLSearchParams(window.location.search);
       setActiveOwnerPage(pageParams.get('tab') || pageParams.get('page') || 'booking');
     })();
   </script>

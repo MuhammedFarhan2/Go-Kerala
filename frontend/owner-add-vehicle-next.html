@@ -537,6 +537,7 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
       const companyNode = document.getElementById('accountCompanyName');
       const profileNode = document.getElementById('accountProfileName');
       const avatarNode = document.getElementById('accountAvatarLarge');
@@ -546,6 +547,7 @@
       const backLink = document.querySelector('[data-owner-back-link]');
       const submitButton = document.getElementById('owner-upload-submit');
       const flowNode = document.getElementById('owner-bus-flow');
+      const reuploadSubmissionId = String(pageParams.get('submissionId') || sessionStorage.getItem('owner-reupload-submission-id') || '').trim();
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://go-kerala-backend.onrender.com';
       const apiBaseCandidates = Array.from(new Set([
@@ -1166,13 +1168,23 @@
           sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
           sessionStorage.setItem('owner-latest-submission-id', String(latestTouristSubmission.id));
           sessionStorage.setItem('vect-own-tourist-bus-status', 'pending');
-          fetchWithApiFallback('/api/submissions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-          })
+          const requestPromise = reuploadSubmissionId
+            ? fetchWithApiFallback('/api/submissions/' + encodeURIComponent(reuploadSubmissionId) + '/owner-update', {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+              })
+            : fetchWithApiFallback('/api/submissions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+              });
+
+          requestPromise
             .then(function (response) {
               if (!response.ok) {
                 return response.json().then(function (payload) {
@@ -1185,12 +1197,18 @@
               return response.json();
             })
             .then(function (result) {
-              if (result && result.submission && result.submission.id) {
-                latestTouristSubmission.id = String(result.submission.id);
-                latestTouristSubmission.createdAt = result.submission.createdAt || latestTouristSubmission.createdAt;
-                latestTouristSubmission.updatedAt = result.submission.updatedAt || latestTouristSubmission.updatedAt;
-                sessionStorage.setItem('owner-latest-submission-id', String(result.submission.id));
+              const savedSubmission = result && result.submission ? result.submission : null;
+
+              if (savedSubmission && savedSubmission.id) {
+                latestTouristSubmission.id = String(savedSubmission.id);
+                latestTouristSubmission.createdAt = savedSubmission.createdAt || latestTouristSubmission.createdAt;
+                latestTouristSubmission.updatedAt = savedSubmission.updatedAt || latestTouristSubmission.updatedAt;
+                latestTouristSubmission.status = savedSubmission.status || latestTouristSubmission.status;
+                sessionStorage.setItem('owner-latest-submission-id', String(savedSubmission.id));
                 sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
+                if (reuploadSubmissionId) {
+                  sessionStorage.removeItem('owner-reupload-submission-id');
+                }
               }
               window.location.href = 'owner-blank-sheet.html?tab=add-bus';
             })
@@ -1207,7 +1225,13 @@
         backLink.addEventListener('click', function (event) {
           event.preventDefault();
           clearBusSelections();
-          window.location.href = backLink.getAttribute('href') || 'owner-add-vehicle.html';
+          const backUrl = new URL(backLink.getAttribute('href') || 'owner-add-vehicle.html', window.location.href);
+
+          if (reuploadSubmissionId) {
+            backUrl.searchParams.set('submissionId', reuploadSubmissionId);
+          }
+
+          window.location.href = backUrl.toString();
         });
       }
 
@@ -1215,7 +1239,13 @@
         window.history.pushState({ busPage: true }, '', window.location.href);
         window.addEventListener('popstate', function () {
           clearBusSelections();
-          window.location.href = 'owner-add-vehicle.html';
+          const backUrl = new URL('owner-add-vehicle.html', window.location.href);
+
+          if (reuploadSubmissionId) {
+            backUrl.searchParams.set('submissionId', reuploadSubmissionId);
+          }
+
+          window.location.href = backUrl.toString();
         });
       }
 

@@ -301,6 +301,7 @@
   <script src="script.js?v=20260413-1"></script>
     <script>
     (function () {
+      const pageParams = new URLSearchParams(window.location.search);
       const buttons = Array.from(document.querySelectorAll('[data-vehicle-type]'));
       const nextButton = document.querySelector('[data-add-vehicle-next]');
       const clearButton = document.querySelector('[data-add-vehicle-clear]');
@@ -310,6 +311,7 @@
       const closeButton = document.getElementById('account-close');
       const panel = document.getElementById('account-panel');
       const backdrop = document.getElementById('account-backdrop');
+      const reuploadSubmissionId = String(pageParams.get('submissionId') || sessionStorage.getItem('owner-reupload-submission-id') || '').trim();
       let selectedType = '';
 
       function setAvatar(text) {
@@ -343,7 +345,15 @@
         }
 
         nextButton.classList.remove('is-disabled');
-        nextButton.setAttribute('href', 'owner-add-vehicle-next.html?vehicleType=' + encodeURIComponent(selectedType));
+        const nextUrl = new URL('owner-add-vehicle-next.html', window.location.href);
+        nextUrl.searchParams.set('vehicleType', selectedType);
+
+        if (reuploadSubmissionId) {
+          nextUrl.searchParams.set('submissionId', reuploadSubmissionId);
+          sessionStorage.setItem('owner-reupload-submission-id', reuploadSubmissionId);
+        }
+
+        nextButton.setAttribute('href', nextUrl.toString());
         if (clearButton) {
           clearButton.classList.remove('is-disabled');
         }
