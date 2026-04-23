@@ -1503,8 +1503,26 @@
         function toList(value) {
           if (Array.isArray(value)) {
             return value.map(function (item) {
+              if (item && typeof item === 'object' && !Array.isArray(item)) {
+                const previewDataUrl = String(item.previewDataUrl || '').trim();
+                const mediaKey = String(item.mediaKey || '').trim();
+                const fileName = extractImageSource(item);
+
+                if (previewDataUrl || mediaKey || fileName) {
+                  return {
+                    previewDataUrl: previewDataUrl,
+                    mediaKey: mediaKey,
+                    fileName: fileName
+                  };
+                }
+              }
+
               return extractImageSource(item);
             }).filter(function (item) {
+              if (item && typeof item === 'object' && !Array.isArray(item)) {
+                return String(item.previewDataUrl || item.mediaKey || item.fileName || '').trim();
+              }
+
               return String(item || '').trim();
             });
           }
@@ -1650,6 +1668,7 @@
 
                 if (fallbackValue && typeof fallbackValue === 'object') {
                   return String(
+                    fallbackValue.previewDataUrl ||
                     fallbackValue.url ||
                     fallbackValue.src ||
                     fallbackValue.path ||

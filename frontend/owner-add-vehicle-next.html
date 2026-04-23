@@ -1224,6 +1224,9 @@
           const selectedPermitType = readPermitType();
           const photos = readUploadNames('photos');
           const photoEntries = readUploadEntries('photos');
+          const rcEntries = readUploadEntries('rc');
+          const insuranceEntries = readUploadEntries('insurance');
+          const permitEntries = readUploadEntries('permit');
           const rc = readUploadNames('rc');
           const insurance = readUploadNames('insurance');
           const permit = readUploadNames('permit');
@@ -1360,12 +1363,12 @@
                 tvMusic: selectedTv,
                 place: selectedPlace,
                 permitType: selectedPermitType,
-                photos: photos.slice(),
+                photos: photoEntries.slice(),
                 photoPreviewMediaKey: photoPreviewMediaKey,
                 photoPreviewUrl: photoPreviewUrl,
-                rc: rc.slice(),
-                insurance: insurance.slice(),
-                permit: permit.slice()
+                rc: rcEntries.slice(),
+                insurance: insuranceEntries.slice(),
+                permit: permitEntries.slice()
               }
             },
             bus: {
@@ -1375,12 +1378,12 @@
               tvMusic: selectedTv,
               place: selectedPlace,
               permitType: selectedPermitType,
-              photos: photos.slice(),
+              photos: photoEntries.slice(),
               photoPreviewMediaKey: photoPreviewMediaKey,
               photoPreviewUrl: photoPreviewUrl,
-              rc: rc.slice(),
-              insurance: insurance.slice(),
-              permit: permit.slice()
+              rc: rcEntries.slice(),
+              insurance: insuranceEntries.slice(),
+              permit: permitEntries.slice()
             }
           };
 
