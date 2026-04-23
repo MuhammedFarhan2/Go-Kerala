@@ -464,31 +464,12 @@
                 </svg>
               </div>
             </div>
-            <div class="owner-add-preview-body">
-              <h3 class="owner-add-preview-title" id="owner-add-preview-title">Latest vehicle</h3>
-              <p class="owner-add-preview-copy" id="owner-add-preview-copy">Saved from latest submit.</p>
-              <p class="owner-add-preview-status" id="owner-add-preview-status">Status: Valuation</p>
-              <div class="owner-add-preview-meta" id="owner-add-preview-meta"></div>
-            </div>
             <div class="owner-add-preview-content">
               <p class="owner-add-preview-eyebrow" id="owner-add-preview-eyebrow">Tourist Bus</p>
               <p class="owner-add-preview-title" id="owner-add-preview-title">New vehicle added</p>
               <p class="owner-add-preview-copy" id="owner-add-preview-copy">Your latest vehicle details will appear here.</p>
-              <p class="owner-add-preview-status" id="owner-add-preview-status">Status : Valuation</p>
+              <p class="owner-add-preview-status" id="owner-add-preview-status">Status : Pending</p>
               <div class="owner-add-preview-meta" id="owner-add-preview-meta" hidden></div>
-            </div>
-          </div>
-
-          <!-- VECT Own Submission Card -->
-          <div class="owner-vect-own-card" id="owner-vect-own-card" style="margin-top: 20px; padding: 16px; border: 2px solid #3498db; border-radius: 12px; background: #f0f8ff;">
-            <h3 style="margin: 0 0 12px 0; color: #3498db; font-size: 1.1rem; font-weight: 800;">📋 VECT Own Submission</h3>
-            <div id="vect-own-submission-details" style="font-size: 0.9rem; line-height: 1.4;">
-              <p style="margin: 0 0 8px 0; color: #666;">Loading submission details...</p>
-            </div>
-            <div style="margin-top: 12px; text-align: center;">
-              <a href="https://go-kerala-backend.onrender.com" target="_blank" style="display: inline-block; padding: 8px 16px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
-                Open VECT Own Dashboard →
-              </a>
             </div>
           </div>
 
@@ -642,90 +623,10 @@
           const isActive = page.getAttribute('data-owner-page') === nextPage;
           page.classList.toggle('is-active', isActive);
         });
-
         if (nextPage === 'add-bus') {
           renderLatestVehiclePreview();
-          loadVectOwnSubmission();
         }
       }
-
-      function loadVectOwnSubmission() {
-        const submissionId = sessionStorage.getItem('owner-latest-submission-id');
-        const detailsDiv = document.getElementById('vect-own-submission-details');
-        
-        if (!submissionId || !detailsDiv) {
-          return;
-        }
-
-        detailsDiv.innerHTML = '<p style="margin: 0 0 8px 0; color: #666;">Loading submission details...</p>';
-
-        // Try to get submission from VECT Own API
-        fetch('https://go-kerala-backend.onrender.com/api/debug/submissions?password=debug123')
-          .then(function(response) {
-            if (!response.ok) {
-              throw new Error('Failed to fetch submissions');
-            }
-            return response.json();
-          })
-          .then(function(data) {
-            const submissions = Array.isArray(data) ? data : (data.submissions || []);
-            const submission = submissions.find(function(sub) {
-              return sub.id === submissionId;
-            });
-
-            if (submission) {
-              displayVectOwnSubmission(submission);
-            } else {
-              detailsDiv.innerHTML = '<p style="margin: 0; color: #e74c3c;">Submission not found in VECT Own</p>';
-            }
-          })
-          .catch(function(error) {
-            console.error('Error loading VECT Own submission:', error);
-            detailsDiv.innerHTML = '<p style="margin: 0; color: #e74c3c;">Error loading submission details</p>';
-          });
-      }
-
-      function displayVectOwnSubmission(submission) {
-        const detailsDiv = document.getElementById('vect-own-submission-details');
-        if (!detailsDiv) return;
-
-        const fields = submission.fields || {};
-        const summary = submission.summary || {};
-        
-        const companyName = summary.companyName || fields['owner-company-name'] || fields['owner-name'] || 'Not specified';
-        const email = summary.email || fields['owner-email'] || 'Not specified';
-        const phone = summary.phone || summary.whatsappNumber || submission.whatsappNumber || 'Not specified';
-        const status = submission.status || 'pending';
-        const createdDate = submission.createdAt ? new Date(submission.createdAt).toLocaleDateString() : 'Not specified';
-        
-        detailsDiv.innerHTML = `
-          <div style="margin: 0 0 12px 0;">
-            <strong style="color: #2c3e50;">🏢 Company:</strong> <span style="color: #34495e;">${companyName}</span>
-          </div>
-          <div style="margin: 0 0 12px 0;">
-            <strong style="color: #2c3e50;">📧 Email:</strong> <span style="color: #34495e;">${email}</span>
-          </div>
-          <div style="margin: 0 0 12px 0;">
-            <strong style="color: #2c3e50;">📱 Phone:</strong> <span style="color: #34495e;">${phone}</span>
-          </div>
-          <div style="margin: 0 0 12px 0;">
-            <strong style="color: #2c3e50;">📅 Submitted:</strong> <span style="color: #34495e;">${createdDate}</span>
-          </div>
-          <div style="margin: 0 0 12px 0;">
-            <strong style="color: #2c3e50;">📋 Status:</strong> 
-            <span style="padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; 
-              ${status === 'pending' ? 'background: #fff3cd; color: #856404;' : 
-                status === 'accepted' ? 'background: #d4edda; color: #155724;' : 
-                'background: #f8d7da; color: #721c24;'}">
-              ${status.toUpperCase()}
-            </span>
-          </div>
-          <div style="margin: 0 0 12px 0;">
-            <strong style="color: #2c3e50;">🆔 ID:</strong> <span style="color: #7f8c8d; font-family: monospace; font-size: 0.8rem;">${submission.id}</span>
-          </div>
-        `;
-      }
-
       function clearNode(node) {
         while (node && node.firstChild) {
           node.removeChild(node.firstChild);
@@ -934,7 +835,7 @@
           }
           addPreviewCopyNode.textContent = 'Your latest vehicle details will appear here.';
           if (addPreviewStatusNode) {
-            addPreviewStatusNode.textContent = 'Status : Valuation';
+            addPreviewStatusNode.textContent = 'Status : Pending';
           }
           renderPreviewMeta([]);
           applyPreviewImage('', '');
@@ -966,7 +867,7 @@
         addPreviewTitleNode.textContent = modelVariant || 'Latest vehicle';
         addPreviewCopyNode.textContent = subtitleParts.join(' | ') || 'Saved from the latest submit.';
         if (addPreviewStatusNode) {
-          addPreviewStatusNode.textContent = 'Status : ' + (valueToText(previewData.statusLabel) || 'Valuation');
+          addPreviewStatusNode.textContent = 'Status : ' + (valueToText(previewData.statusLabel) || 'Pending');
         }
         renderPreviewMeta(metaValues);
         applyPreviewImage('', '');
@@ -1086,3 +987,4 @@
   </script>
 </body>
 </html>
+

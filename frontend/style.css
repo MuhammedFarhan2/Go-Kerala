@@ -5089,6 +5089,67 @@ h1 {
   color: #6b7280;
 }
 
+.vect-own-list-item-vehicle {
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.vect-own-list-item-media {
+  width: 100%;
+  min-height: 92px;
+  overflow: hidden;
+  border: 1px solid #dbe2ea;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.vect-own-list-item-image {
+  width: 100%;
+  height: 100%;
+  min-height: 92px;
+  display: block;
+  object-fit: cover;
+}
+
+.vect-own-list-item-placeholder {
+  min-height: 92px;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.vect-own-list-item-copy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.vect-own-list-item-kicker {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.vect-own-list-item-status-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #111827;
+}
+
+.vect-own-list-item-status-label {
+  color: #6b7280;
+}
+
 .vect-own-empty-state {
   padding: 20px;
   border: 1px dashed #cbd5e1;
@@ -5526,6 +5587,17 @@ h1 {
 
   .vect-own-metric-value {
     font-size: 1.7rem;
+  }
+
+  .vect-own-list-item-vehicle {
+    grid-template-columns: 88px minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .vect-own-list-item-media,
+  .vect-own-list-item-image,
+  .vect-own-list-item-placeholder {
+    min-height: 80px;
   }
 
   .vect-own-section-head {
