@@ -441,7 +441,7 @@
   <script>
     (function () {
       const pageParams = new URLSearchParams(window.location.search);
-      const reuploadSubmissionId = String(pageParams.get('submissionId') || sessionStorage.getItem('owner-reupload-submission-id') || '').trim();
+      const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
       const companyNode = document.getElementById('accountCompanyName');
       const profileNode = document.getElementById('accountProfileName');
       const avatarNode = document.getElementById('accountAvatarLarge');
@@ -567,6 +567,12 @@
 
         addPreviewNode.hidden = false;
         addPreviewNode.classList.add('is-visible');
+      }
+
+      if (!reuploadSubmissionId) {
+        sessionStorage.removeItem('owner-reupload-submission-id');
+      } else {
+        sessionStorage.setItem('owner-reupload-submission-id', reuploadSubmissionId);
       }
 
       const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();

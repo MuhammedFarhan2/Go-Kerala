@@ -547,7 +547,7 @@
       const backLink = document.querySelector('[data-owner-back-link]');
       const submitButton = document.getElementById('owner-upload-submit');
       const flowNode = document.getElementById('owner-bus-flow');
-      const reuploadSubmissionId = String(pageParams.get('submissionId') || sessionStorage.getItem('owner-reupload-submission-id') || '').trim();
+      const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://go-kerala-backend.onrender.com';
       const apiBaseCandidates = Array.from(new Set([

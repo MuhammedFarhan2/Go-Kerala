@@ -311,7 +311,7 @@
       const closeButton = document.getElementById('account-close');
       const panel = document.getElementById('account-panel');
       const backdrop = document.getElementById('account-backdrop');
-      const reuploadSubmissionId = String(pageParams.get('submissionId') || sessionStorage.getItem('owner-reupload-submission-id') || '').trim();
+      const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
       let selectedType = '';
 
       function setAvatar(text) {
