@@ -1489,6 +1489,12 @@
           ].join('');
 
           card.addEventListener('click', function () {
+            selectedSubmissionId = submission.id;
+            cachedSelectedSubmission = submission;
+            noteSectionOpen = false;
+            renderTouristSubmissionList();
+            renderTouristSubmissionDetail(submission);
+            saveDashboardState();
             openSubmission(submission.id);
           });
 
