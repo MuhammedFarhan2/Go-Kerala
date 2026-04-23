@@ -138,10 +138,14 @@
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(241, 245, 249, 0.64));
       box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
       backdrop-filter: blur(18px);
-      pointer-events: none;
+      pointer-events: auto;
       user-select: none;
       overflow: hidden;
       position: relative;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      appearance: none;
     }
 
     .owner-add-preview.is-visible {
@@ -453,7 +457,7 @@
         </section>
 
         <section class="owner-page" data-owner-page="add-bus" aria-label="Add bus page">
-          <div class="owner-add-preview" id="owner-add-preview" aria-live="polite" hidden>
+          <button type="button" class="owner-add-preview" id="owner-add-preview" aria-live="polite" hidden aria-label="Open latest vehicle details">
             <div class="owner-add-preview-media" aria-hidden="true">
               <img src="" alt="" class="owner-add-preview-image" id="owner-add-preview-image">
               <div class="owner-add-preview-placeholder" id="owner-add-preview-placeholder">
@@ -471,7 +475,7 @@
               <p class="owner-add-preview-status" id="owner-add-preview-status">Status : Pending</p>
               <div class="owner-add-preview-meta" id="owner-add-preview-meta" hidden></div>
             </div>
-          </div>
+          </button>
 
           <div class="owner-add-box" role="button" aria-label="Add bus" data-open-add-vehicle>
             <div class="owner-add-plus" aria-hidden="true">+</div>
@@ -884,6 +888,29 @@
         });
       }
 
+      function openLatestVehicleSubmission() {
+        let latestTouristSubmission = null;
+
+        try {
+          latestTouristSubmission = JSON.parse(sessionStorage.getItem(latestTouristSubmissionKey) || 'null');
+        } catch (error) {
+          latestTouristSubmission = null;
+        }
+
+        const latestSubmissionId = String(
+          sessionStorage.getItem('owner-latest-submission-id') ||
+          (latestTouristSubmission && latestTouristSubmission.id) ||
+          ''
+        ).trim();
+
+        if (!latestSubmissionId) {
+          return;
+        }
+
+        sessionStorage.setItem('owner-latest-submission-id', latestSubmissionId);
+        window.location.href = 'vect-own/dashboard.html?page=tourist-bus&vehicle=tourist&submissionId=' + encodeURIComponent(latestSubmissionId);
+      }
+
       if (!reuploadSubmissionId) {
         sessionStorage.removeItem('owner-reupload-submission-id');
       } else {
@@ -977,6 +1004,12 @@
           }
 
           window.location.href = nextUrl.toString();
+        });
+      }
+
+      if (addPreviewNode) {
+        addPreviewNode.addEventListener('click', function () {
+          openLatestVehicleSubmission();
         });
       }
 
