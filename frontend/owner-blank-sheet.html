@@ -143,14 +143,15 @@
     }
 
     .owner-add-preview-media {
-      width: 84px;
+      width: 92px;
       min-height: 72px;
-      flex: 0 0 84px;
+      flex: 0 0 92px;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      border-radius: 16px 0 0 16px;
+      margin-left: auto;
+      border-radius: 0 16px 16px 0;
       background: #f3f4f6;
     }
 
@@ -176,6 +177,7 @@
     }
 
     .owner-add-preview-content {
+      flex: 1 1 auto;
       min-width: 0;
       display: grid;
       gap: 3px;
@@ -410,13 +412,13 @@
 
         <section class="owner-page" data-owner-page="add-bus" aria-label="Add bus page">
           <div class="owner-add-preview" id="owner-add-preview" aria-live="polite" hidden>
-            <div class="owner-add-preview-media" aria-hidden="true">
-              <img src="" alt="" class="owner-add-preview-image" id="owner-add-preview-image">
-              <div class="owner-add-preview-placeholder" id="owner-add-preview-placeholder">No photo</div>
-            </div>
             <div class="owner-add-preview-content">
               <p class="owner-add-preview-title" id="owner-add-preview-title">New vehicle added</p>
               <p class="owner-add-preview-copy" id="owner-add-preview-copy">Your latest vehicle details will appear here.</p>
+            </div>
+            <div class="owner-add-preview-media" aria-hidden="true">
+              <img src="" alt="" class="owner-add-preview-image" id="owner-add-preview-image">
+              <div class="owner-add-preview-placeholder" id="owner-add-preview-placeholder">No photo</div>
             </div>
           </div>
           <div class="owner-add-box" role="button" aria-label="Add bus" data-open-add-vehicle>
