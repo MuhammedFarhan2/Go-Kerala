@@ -87,6 +87,10 @@
       margin: 0 auto;
     }
 
+    .vect-own-submission-overview {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .vect-own-bottom-nav {
       position: fixed;
       left: 0;
@@ -696,27 +700,19 @@
       <p class="logo-sub">MOVERS</p>
     </div>
     <div class="vect-own-header-actions">
-      <span class="vect-own-header-chip" data-vect-own-count>0 submissions</span>
+      <span class="vect-own-header-chip" data-vect-own-count>0 vehicle uploads</span>
       <button type="button" class="vect-own-logout-btn" data-vect-own-logout>Sign out</button>
     </div>
   </header>
 
   <main class="vect-own-main">
     <section class="vect-own-page is-active" data-vect-own-page="dashboard" aria-label="Submission overview">
-      <section class="vect-own-overview" aria-label="Submission overview">
-        <article class="vect-own-metric-card">
+      <section class="vect-own-overview vect-own-submission-overview" aria-label="Vehicle upload overview">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
           <p class="vect-own-metric-label">Pending</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
         </article>
-        <article class="vect-own-metric-card">
-          <p class="vect-own-metric-label">Accepted</p>
-          <strong class="vect-own-metric-value" data-vect-own-metric="accepted">0</strong>
-        </article>
-        <article class="vect-own-metric-card">
-          <p class="vect-own-metric-label">Rejected</p>
-          <strong class="vect-own-metric-value" data-vect-own-metric="rejected">0</strong>
-        </article>
-        <article class="vect-own-metric-card">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
           <p class="vect-own-metric-label">Updated</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
         </article>
@@ -2247,6 +2243,99 @@
         return fetchWithApiFallback(pathName, config);
       }
 
+      function getSubmissionSourceGroup(submission) {
+        const safeSubmission = submission && typeof submission === 'object' ? submission : {};
+        const directGroup = String(safeSubmission.sourceGroup || '').trim().toLowerCase();
+        const directPage = String(safeSubmission.sourcePage || '').trim().toLowerCase();
+        const normalizedGroup = directGroup.replace(/[?#].*$/, '').replace(/\/+$/, '');
+        const normalizedPage = directPage.replace(/[?#].*$/, '').replace(/\/+$/, '');
+        const groupKey = normalizedGroup.replace(/\.html?$/, '');
+        const pageKey = normalizedPage.replace(/\.html?$/, '');
+
+        if (
+          normalizedGroup === 'owner' ||
+          groupKey === 'owner' ||
+          normalizedGroup.indexOf('owner-') === 0 ||
+          groupKey.indexOf('owner-') === 0 ||
+          normalizedGroup.indexOf('dashboard') > -1 ||
+          groupKey.indexOf('dashboard') > -1
+        ) {
+          return 'owner';
+        }
+
+        if (
+          normalizedGroup === 'submission' ||
+          groupKey === 'submission' ||
+          normalizedGroup === 'blanksheet' ||
+          groupKey === 'blanksheet' ||
+          normalizedGroup === 'blank-sheet' ||
+          groupKey === 'blank-sheet' ||
+          normalizedGroup === 'owner-add-vehicle-next' ||
+          groupKey === 'owner-add-vehicle-next' ||
+          normalizedGroup === 'owner-blank-sheet' ||
+          groupKey === 'owner-blank-sheet' ||
+          normalizedGroup.indexOf('submit') > -1 ||
+          groupKey.indexOf('submit') > -1 ||
+          normalizedGroup.indexOf('vehicle') > -1 ||
+          groupKey.indexOf('vehicle') > -1
+        ) {
+          return 'submission';
+        }
+
+        if (
+          normalizedPage === 'owner' ||
+          pageKey === 'owner' ||
+          normalizedPage.indexOf('owner-') === 0 ||
+          pageKey.indexOf('owner-') === 0 ||
+          normalizedPage.indexOf('dashboard') > -1 ||
+          pageKey.indexOf('dashboard') > -1
+        ) {
+          return 'owner';
+        }
+
+        if (
+          normalizedPage === 'submission' ||
+          pageKey === 'submission' ||
+          normalizedPage === 'blanksheet' ||
+          pageKey === 'blanksheet' ||
+          normalizedPage === 'blank-sheet' ||
+          pageKey === 'blank-sheet' ||
+          normalizedPage === 'owner-add-vehicle-next' ||
+          pageKey === 'owner-add-vehicle-next' ||
+          normalizedPage === 'owner-blank-sheet' ||
+          pageKey === 'owner-blank-sheet' ||
+          normalizedPage.indexOf('submit') > -1 ||
+          pageKey.indexOf('submit') > -1 ||
+          normalizedPage.indexOf('vehicle') > -1 ||
+          pageKey.indexOf('vehicle') > -1
+        ) {
+          return 'submission';
+        }
+
+        return 'owner';
+      }
+
+      function getSubmissionOverviewRecords() {
+        return allSubmissions.filter(function (submission) {
+          return getSubmissionSourceGroup(submission) === 'submission';
+        });
+      }
+
+      function countSubmissionStatuses(submissions) {
+        return (Array.isArray(submissions) ? submissions : []).reduce(function (accumulator, submission) {
+          const status = String(submission && submission.status || 'pending').trim().toLowerCase() || 'pending';
+          accumulator.total += 1;
+          accumulator[status] = (accumulator[status] || 0) + 1;
+          return accumulator;
+        }, {
+          total: 0,
+          pending: 0,
+          accepted: 0,
+          rejected: 0,
+          updated: 0
+        });
+      }
+
       function setActiveTab(tabName) {
         activeFilter = tabName;
         highlightedFilter = '';
@@ -2257,19 +2346,9 @@
       }
 
       function updateMetrics() {
-        const counts = allSubmissions.reduce(function (accumulator, submission) {
-          accumulator.total += 1;
-          accumulator[submission.status] = (accumulator[submission.status] || 0) + 1;
-          return accumulator;
-        }, {
-          total: 0,
-          pending: 0,
-          accepted: 0,
-          rejected: 0,
-          updated: 0
-        });
+        const counts = countSubmissionStatuses(getSubmissionOverviewRecords());
 
-        countNode.textContent = counts.total + ' submissions';
+        countNode.textContent = counts.total + ' vehicle uploads';
         metricNodes.forEach(function (node) {
           const metric = node.getAttribute('data-vect-own-metric');
           node.textContent = String(counts[metric] || 0);

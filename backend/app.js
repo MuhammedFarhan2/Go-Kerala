@@ -817,23 +817,34 @@ function cleanSubmissionValue(value) {
 
 function normalizeSubmissionSourceGroup(value) {
   const raw = String(value || '').trim().toLowerCase();
+  const normalized = raw
+    .replace(/[?#].*$/, '')
+    .replace(/\/+$/, '');
+  const pageKey = normalized.replace(/\.html?$/, '');
 
-  if (!raw) {
+  if (!normalized) {
     return '';
   }
 
-  if (raw === 'owner' || raw.indexOf('owner-') === 0 || raw.indexOf('dashboard') > -1) {
+  if (normalized === 'owner' || pageKey === 'owner' || normalized.indexOf('owner-') === 0 || pageKey.indexOf('owner-') === 0 || normalized.indexOf('dashboard') > -1 || pageKey.indexOf('dashboard') > -1) {
     return 'owner';
   }
 
   if (
-    raw === 'submission' ||
-    raw === 'blanksheet' ||
-    raw === 'blank-sheet' ||
-    raw === 'owner-add-vehicle-next' ||
-    raw === 'owner-blank-sheet' ||
-    raw.indexOf('submit') > -1 ||
-    raw.indexOf('vehicle') > -1
+    normalized === 'submission' ||
+    pageKey === 'submission' ||
+    normalized === 'blanksheet' ||
+    pageKey === 'blanksheet' ||
+    normalized === 'blank-sheet' ||
+    pageKey === 'blank-sheet' ||
+    normalized === 'owner-add-vehicle-next' ||
+    pageKey === 'owner-add-vehicle-next' ||
+    normalized === 'owner-blank-sheet' ||
+    pageKey === 'owner-blank-sheet' ||
+    normalized.indexOf('submit') > -1 ||
+    pageKey.indexOf('submit') > -1 ||
+    normalized.indexOf('vehicle') > -1 ||
+    pageKey.indexOf('vehicle') > -1
   ) {
     return 'submission';
   }

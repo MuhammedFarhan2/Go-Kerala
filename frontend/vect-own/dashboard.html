@@ -89,6 +89,7 @@
 
     .vect-own-submission-overview {
       margin: 0 0 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .vect-own-bottom-nav {
@@ -819,20 +820,12 @@
 
   <main class="vect-own-main">
     <section class="vect-own-page is-active" data-vect-own-page="dashboard" aria-label="Submission overview">
-      <section class="vect-own-overview" aria-label="Submission overview">
-        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
+      <section class="vect-own-overview vect-own-submission-overview" aria-label="Vehicle upload overview">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
           <p class="vect-own-metric-label">Pending</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
         </article>
-        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
-          <p class="vect-own-metric-label">Accepted</p>
-          <strong class="vect-own-metric-value" data-vect-own-metric="accepted">0</strong>
-        </article>
-        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
-          <p class="vect-own-metric-label">Rejected</p>
-          <strong class="vect-own-metric-value" data-vect-own-metric="rejected">0</strong>
-        </article>
-        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
+        <article class="vect-own-metric-card" data-vect-own-metric-group="submission">
           <p class="vect-own-metric-label">Updated</p>
           <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
         </article>
@@ -1164,27 +1157,67 @@
         const safeSubmission = submission && typeof submission === 'object' ? submission : {};
         const directGroup = String(safeSubmission.sourceGroup || '').trim().toLowerCase();
         const directPage = String(safeSubmission.sourcePage || '').trim().toLowerCase();
+        const normalizedGroup = directGroup.replace(/[?#].*$/, '').replace(/\/+$/, '');
+        const normalizedPage = directPage.replace(/[?#].*$/, '').replace(/\/+$/, '');
+        const groupKey = normalizedGroup.replace(/\.html?$/, '');
+        const pageKey = normalizedPage.replace(/\.html?$/, '');
 
-        if (directGroup === 'owner' || directGroup.indexOf('owner-') === 0 || directGroup.indexOf('dashboard') > -1) {
-          return 'owner';
-        }
-
-        if (directGroup === 'submission' || directGroup === 'blanksheet' || directGroup === 'blank-sheet' || directGroup === 'owner-add-vehicle-next' || directGroup === 'owner-blank-sheet' || directGroup.indexOf('submit') > -1 || directGroup.indexOf('vehicle') > -1) {
-          return 'submission';
-        }
-
-        if (directPage === 'owner' || directPage.indexOf('owner-') === 0 || directPage.indexOf('dashboard') > -1) {
+        if (
+          normalizedGroup === 'owner' ||
+          groupKey === 'owner' ||
+          normalizedGroup.indexOf('owner-') === 0 ||
+          groupKey.indexOf('owner-') === 0 ||
+          normalizedGroup.indexOf('dashboard') > -1 ||
+          groupKey.indexOf('dashboard') > -1
+        ) {
           return 'owner';
         }
 
         if (
-          directPage === 'submission' ||
-          directPage === 'blanksheet' ||
-          directPage === 'blank-sheet' ||
-          directPage === 'owner-add-vehicle-next' ||
-          directPage === 'owner-blank-sheet' ||
-          directPage.indexOf('submit') > -1 ||
-          directPage.indexOf('vehicle') > -1
+          normalizedGroup === 'submission' ||
+          groupKey === 'submission' ||
+          normalizedGroup === 'blanksheet' ||
+          groupKey === 'blanksheet' ||
+          normalizedGroup === 'blank-sheet' ||
+          groupKey === 'blank-sheet' ||
+          normalizedGroup === 'owner-add-vehicle-next' ||
+          groupKey === 'owner-add-vehicle-next' ||
+          normalizedGroup === 'owner-blank-sheet' ||
+          groupKey === 'owner-blank-sheet' ||
+          normalizedGroup.indexOf('submit') > -1 ||
+          groupKey.indexOf('submit') > -1 ||
+          normalizedGroup.indexOf('vehicle') > -1 ||
+          groupKey.indexOf('vehicle') > -1
+        ) {
+          return 'submission';
+        }
+
+        if (
+          normalizedPage === 'owner' ||
+          pageKey === 'owner' ||
+          normalizedPage.indexOf('owner-') === 0 ||
+          pageKey.indexOf('owner-') === 0 ||
+          normalizedPage.indexOf('dashboard') > -1 ||
+          pageKey.indexOf('dashboard') > -1
+        ) {
+          return 'owner';
+        }
+
+        if (
+          normalizedPage === 'submission' ||
+          pageKey === 'submission' ||
+          normalizedPage === 'blanksheet' ||
+          pageKey === 'blanksheet' ||
+          normalizedPage === 'blank-sheet' ||
+          pageKey === 'blank-sheet' ||
+          normalizedPage === 'owner-add-vehicle-next' ||
+          pageKey === 'owner-add-vehicle-next' ||
+          normalizedPage === 'owner-blank-sheet' ||
+          pageKey === 'owner-blank-sheet' ||
+          normalizedPage.indexOf('submit') > -1 ||
+          pageKey.indexOf('submit') > -1 ||
+          normalizedPage.indexOf('vehicle') > -1 ||
+          pageKey.indexOf('vehicle') > -1
         ) {
           return 'submission';
         }
@@ -2615,7 +2648,7 @@
         const activeGroup = activePage === 'submission' ? 'submission' : 'owner';
         const activeCounts = countsByGroup[activeGroup] || countsByGroup.owner;
 
-        countNode.textContent = activeCounts.total + ' submissions';
+        countNode.textContent = activeCounts.total + (activeGroup === 'submission' ? ' vehicle uploads' : ' submissions');
         metricNodes.forEach(function (node) {
           const metric = node.getAttribute('data-vect-own-metric');
           const metricGroup = String(node.getAttribute('data-vect-own-metric-group') || 'owner').trim().toLowerCase();
