@@ -2720,7 +2720,7 @@
         const filtered = getFilteredSubmissions();
         listNode.innerHTML = '';
 
-        if (selectedSubmissionId) {
+        if (selectedSubmissionId && activePage === 'dashboard') {
           const stillVisible = filtered.some(function (submission) {
             return submission.id === selectedSubmissionId;
           });
