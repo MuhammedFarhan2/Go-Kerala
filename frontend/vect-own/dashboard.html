@@ -92,6 +92,82 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .vect-own-submitted-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 122px;
+      padding: 2px 16px 2px 2px;
+      border: 1.5px solid var(--line-soft);
+      border-radius: 18px;
+      background: var(--surface);
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .vect-own-submitted-card:hover {
+      transform: translateX(4px);
+      border-color: var(--line);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .vect-own-submitted-card.is-active {
+      border-color: #111827;
+      box-shadow: 0 10px 22px rgba(17, 24, 39, 0.12);
+    }
+
+    .vect-own-submitted-card-media {
+      width: 150px;
+      min-height: 118px;
+      align-self: stretch;
+      flex: 0 0 150px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 16px 0 0 16px;
+      background: var(--surface-2);
+    }
+
+    .vect-own-submitted-card-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: #fff;
+    }
+
+    .vect-own-submitted-card-placeholder {
+      padding: 12px;
+      text-align: center;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #6b7280;
+    }
+
+    .vect-own-submitted-card-copy {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .vect-own-submitted-card-title {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .vect-own-submitted-card-subtitle {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.3;
+      color: #4d4d4d;
+      word-break: break-word;
+    }
+
     .vect-own-bottom-nav {
       position: fixed;
       left: 0;
@@ -182,6 +258,25 @@
 
       .vect-own-tourist-submissions-layout {
         gap: 14px;
+      }
+
+      .vect-own-submitted-card {
+        min-height: 112px;
+        padding-right: 12px;
+      }
+
+      .vect-own-submitted-card-media {
+        width: 118px;
+        min-height: 108px;
+        flex-basis: 118px;
+      }
+
+      .vect-own-submitted-card-title {
+        font-size: 0.98rem;
+      }
+
+      .vect-own-submitted-card-subtitle {
+        font-size: 0.84rem;
       }
 
       .vect-own-list-panel,
@@ -1399,6 +1494,37 @@
         return String(value || '').trim();
       }
 
+      function getTouristSubmissionCardData(submission) {
+        const safeSubmission = submission && typeof submission === 'object' ? submission : {};
+        const summary = safeSubmission.summary || {};
+        const fields = buildDisplayFields(safeSubmission);
+        const touristBusDetails = getTouristBusDetails(safeSubmission, fields);
+        const title = String(
+          summary.companyName ||
+          fields['owner-company-name'] ||
+          summary.ownerName ||
+          fields['owner-name'] ||
+          'Unnamed submission'
+        ).trim() || 'Unnamed submission';
+        const subtitleParts = [];
+        const ownerName = String(summary.ownerName || fields['owner-name'] || '').trim();
+        const busType = String(touristBusDetails.busType || '').trim();
+
+        if (ownerName && ownerName.toLowerCase() !== title.toLowerCase()) {
+          subtitleParts.push(ownerName);
+        }
+
+        if (busType && subtitleParts.indexOf(busType) === -1) {
+          subtitleParts.push(busType);
+        }
+
+        return {
+          title: title,
+          subtitle: subtitleParts[0] || 'Submitted vehicle',
+          imageUrl: getImageUrl(touristBusDetails.photos[0] || '')
+        };
+      }
+
       function renderTouristBusReview() {
         if (!touristSubmissionListNode || !touristSubmissionDetailNode) {
           return;
@@ -1452,20 +1578,21 @@
 
         visible.forEach(function (submission) {
           const card = document.createElement('button');
-          const summary = submission.summary || {};
-          const statusPresentation = getStatusPresentation(submission.status);
+          const preview = getTouristSubmissionCardData(submission);
 
           card.type = 'button';
-          card.className = 'vect-own-list-item' + (submission.id === selectedSubmissionId ? ' is-active' : '');
-          card.setAttribute('aria-label', 'Open submission ' + (summary.companyName || 'Unnamed submission'));
+          card.className = 'vect-own-list-item vect-own-submitted-card' + (submission.id === selectedSubmissionId ? ' is-active' : '');
+          card.setAttribute('aria-label', 'Open submission ' + preview.title);
           card.innerHTML = [
-            '<div class="vect-own-list-item-top">',
-            '<strong class="vect-own-list-item-title">' + escapeHtml(summary.companyName || 'Unnamed submission') + '</strong>',
-            '<span class="vect-own-status-chip ' + escapeHtml(statusPresentation.className) + '">' + escapeHtml(statusPresentation.label) + '</span>',
-            '</div>',
-            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.ownerName || 'Owner name not captured') + '</p>',
-            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.whatsappNumber || summary.phone || '-') + '</p>',
-            '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>'
+            '<span class="vect-own-submitted-card-media" aria-hidden="true">',
+            preview.imageUrl
+              ? '<img src="' + escapeHtml(preview.imageUrl) + '" alt="' + escapeHtml(preview.title) + '" class="vect-own-submitted-card-image">'
+              : '<span class="vect-own-submitted-card-placeholder">No photo</span>',
+            '</span>',
+            '<span class="vect-own-submitted-card-copy">',
+            '<strong class="vect-own-submitted-card-title">' + escapeHtml(preview.title) + '</strong>',
+            '<span class="vect-own-submitted-card-subtitle">' + escapeHtml(preview.subtitle) + '</span>',
+            '</span>'
           ].join('');
 
           card.addEventListener('click', function () {
