@@ -988,6 +988,7 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
   const busRc = tryParseJsonArray(safeFields['owner-bus-rc'] || safeFields.rc || safeFields['owner-bus-rc-url']);
   const busInsurance = tryParseJsonArray(safeFields['owner-bus-insurance'] || safeFields.insurance || safeFields['owner-bus-insurance-url']);
   const busPermit = tryParseJsonArray(safeFields['owner-bus-permit'] || safeFields.permit || safeFields['owner-bus-permit-url']);
+  const busModelVariant = String(safeFields['owner-bus-model-variant'] || '').trim();
   const busType = String(safeFields['owner-bus-type'] || '').trim();
   const busSeats = String(safeFields['owner-bus-seats'] || '').trim();
   const busTv = String(safeFields['owner-bus-tv'] || '').trim();
@@ -1021,6 +1022,7 @@ function summarizeSubmissionFields(fields, whatsappNumber) {
       heavyLicencePhotoUrl2: getUploadUrl(safeFields['owner-heavy-licence-photo-url-2'] || safeFields['owner-heavy-licence-photo-name-2'])
     },
     bus: {
+      modelVariant: busModelVariant,
       type: busType,
       seats: busSeats,
       tvMusic: busTv,

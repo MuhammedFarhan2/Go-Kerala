@@ -1287,9 +1287,13 @@
         try {
           const raw = sessionStorage.getItem('owner-bus-page-' + key) || '[]';
           const parsed = JSON.parse(raw);
-          return Array.isArray(parsed) ? parsed.filter(function (item) {
+          return Array.isArray(parsed) ? parsed.map(function (item) {
+            if (item && typeof item === 'object' && !Array.isArray(item)) {
+              return String(item.name || item.fileName || '').trim();
+            }
+
             return String(item || '').trim();
-          }) : [];
+          }).filter(Boolean) : [];
         } catch (error) {
           return [];
         }
@@ -1534,11 +1538,13 @@
         const sessionTv = readBusStorageValue('tv');
         const sessionPlace = readBusStorageValue('place');
         const sessionPermitType = readBusStorageValue('permitType');
+        const sessionModelVariant = readBusStorageValue('modelVariant');
         const sessionPhotos = readBusStorageList('photos');
         const sessionRc = readBusStorageList('rc');
         const sessionInsurance = readBusStorageList('insurance');
         const sessionPermit = readBusStorageList('permit');
 
+        const modelVariant = readValue(['owner-bus-model-variant', 'bus-model-variant', 'modelVariant']) || busSummary.modelVariant || sessionModelVariant;
         const busType = readValue([
           'owner-bus-type',
           'bus-type',
@@ -1556,6 +1562,7 @@
         const permitValues = toList(images.permit || busSummary.permit || safeFields['owner-bus-permit'] || safeFields.permit || sessionPermit);
 
         return {
+          modelVariant: modelVariant,
           busType: busType,
           seats: seats,
           tvMusic: tvMusic,
@@ -1709,6 +1716,7 @@
           '<div class="vect-own-tourist-form-shell">',
           '<div><p class="vect-own-tourist-flow-title">Fill the Following</p></div>',
           '<div class="vect-own-tourist-form">',
+          buildTouristReviewRow('Bus Model / Variant', touristBusDetails.modelVariant || '-', 'tourist-model-variant'),
           buildTouristReviewRow('Bus Type', touristBusDetails.busType || '-', 'tourist-bus-type'),
           buildTouristReviewRow('Number of seats', touristBusDetails.seats || '-', 'tourist-seats'),
           buildTouristReviewRow('TV/Music Systems', touristBusDetails.tvMusic || '-', 'tourist-tv'),

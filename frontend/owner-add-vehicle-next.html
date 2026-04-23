@@ -410,6 +410,20 @@
 
         <div class="owner-bus-form">
           <div class="owner-bus-question">
+            <p class="owner-bus-label">Bus Model / Variant</p>
+            <div class="owner-bus-place-field">
+              <input
+                type="text"
+                class="owner-bus-place-input"
+                data-owner-bus-model
+                placeholder="Enter bus model or variant"
+                autocomplete="off"
+              >
+            </div>
+            <p class="owner-upload-error" data-owner-upload-error="modelVariant"></p>
+          </div>
+
+          <div class="owner-bus-question">
             <p class="owner-bus-label">Bus Type</p>
             <div class="owner-choice-stack" data-owner-bus-type-group>
               <button type="button" class="owner-choice-button" data-owner-bus-type="A/C">A/C</button>
@@ -559,6 +573,7 @@
       }).filter(Boolean)));
       const storagePrefix = 'owner-bus-page-';
       const fields = {
+        model: document.querySelector('[data-owner-bus-model]'),
         type: document.querySelectorAll('[data-owner-bus-type]'),
         seats: document.querySelector('[data-owner-bus-seats]'),
         tv: document.querySelectorAll('[data-owner-bus-tv]'),
@@ -580,7 +595,7 @@
       };
       const errorNodes = Array.from(document.querySelectorAll('[data-owner-upload-error]'));
       const uploadConfigs = {
-        photos: { input: 'photosInput', trigger: 'photosTrigger', list: 'photosList', maxCount: 5, multiple: true },
+        photos: { input: 'photosInput', trigger: 'photosTrigger', list: 'photosList', maxCount: 5, multiple: true, storePreview: true },
         rc: { input: 'rcInput', trigger: 'rcTrigger', list: 'rcList', maxCount: 1, multiple: false },
         insurance: { input: 'insuranceInput', trigger: 'insuranceTrigger', list: 'insuranceList', maxCount: 1, multiple: false },
         permit: { input: 'permitInput', trigger: 'permitTrigger', list: 'permitList', maxCount: 1, multiple: false }
@@ -601,6 +616,31 @@
         }
       }
 
+      function readFileAsDataUrl(file) {
+        if (window.ownerMediaTools && typeof window.ownerMediaTools.readOptimizedImage === 'function') {
+          return window.ownerMediaTools.readOptimizedImage(file, {
+            maxWidth: 1600,
+            maxHeight: 1600,
+            quality: 0.8,
+            mimeType: 'image/jpeg'
+          });
+        }
+
+        return new Promise(function (resolve, reject) {
+          const reader = new FileReader();
+
+          reader.onload = function () {
+            resolve(String(reader.result || ''));
+          };
+
+          reader.onerror = function () {
+            reject(new Error('Unable to read image file.'));
+          };
+
+          reader.readAsDataURL(file);
+        });
+      }
+
       function storageKey(name) {
         return storagePrefix + name;
       }
@@ -618,21 +658,67 @@
         }
       }
 
-      function readUploadNames(section) {
+      function readUploadEntries(section) {
         try {
           const raw = sessionStorage.getItem(storageKey(section)) || '[]';
           const parsed = JSON.parse(raw);
-          return Array.isArray(parsed) ? parsed.filter(function (item) {
-            return String(item || '').trim();
-          }) : [];
+
+          if (!Array.isArray(parsed)) {
+            return [];
+          }
+
+          return parsed.map(function (item) {
+            if (item && typeof item === 'object' && !Array.isArray(item)) {
+              const name = String(item.name || item.fileName || '').trim();
+
+              if (!name) {
+                return null;
+              }
+
+              return {
+                name: name,
+                mediaKey: String(item.mediaKey || '').trim(),
+                previewDataUrl: String(item.previewDataUrl || '').trim()
+              };
+            }
+
+            const name = String(item || '').trim();
+
+            if (!name) {
+              return null;
+            }
+
+            return {
+              name: name,
+              mediaKey: '',
+              previewDataUrl: ''
+            };
+          }).filter(Boolean);
         } catch (error) {
           return [];
         }
       }
 
-      function saveUploadNames(section, names) {
-        const clean = Array.isArray(names) ? names.map(function (name) {
-          return String(name || '').trim();
+      function saveUploadEntries(section, entries) {
+        const clean = Array.isArray(entries) ? entries.map(function (entry) {
+          if (!entry || typeof entry !== 'object') {
+            return null;
+          }
+
+          const name = String(entry.name || '').trim();
+
+          if (!name) {
+            return null;
+          }
+
+          const mediaKey = String(entry.mediaKey || '').trim();
+          const previewDataUrl = String(entry.previewDataUrl || '').trim();
+
+          return {
+            name: name,
+            mediaKey: mediaKey,
+            previewDataUrl: previewDataUrl
+          };
         }).filter(Boolean) : [];
 
         if (clean.length) {
@@ -640,6 +726,93 @@
         } else {
           sessionStorage.removeItem(storageKey(section));
         }
+      }
+
+      function readUploadNames(section) {
+        return readUploadEntries(section).map(function (entry) {
+          return entry.name;
+        });
+      }
+
+      function removeUploadEntryMedia(entry) {
+        const mediaKey = entry ? String(entry.mediaKey || '').trim() : '';
+
+        if (!mediaKey || !window.ownerMediaStore || typeof window.ownerMediaStore.removeItem !== 'function') {
+          return Promise.resolve();
+        }
+
+        return window.ownerMediaStore.removeItem(mediaKey).catch(function () {
+          return;
+        });
+      }
+
+      function createUploadEntries(section, files) {
+        const config = uploadConfigs[section] || {};
+        const safeFiles = Array.isArray(files) ? files : [];
+
+        if (!config.storePreview) {
+          return Promise.resolve(safeFiles.map(function (file) {
+            return {
+              name: String(file && file.name || '').trim(),
+              mediaKey: '',
+              previewDataUrl: ''
+            };
+          }).filter(function (entry) {
+            return entry.name;
+          }));
+        }
+
+        return Promise.all(safeFiles.map(function (file, index) {
+          const fileName = String(file && file.name || '').trim();
+
+          if (!fileName) {
+            return Promise.resolve(null);
+          }
+
+          return readFileAsDataUrl(file).then(function (previewDataUrl) {
+            const safePreviewDataUrl = String(previewDataUrl || '').trim();
+
+            if (!safePreviewDataUrl) {
+              return {
+                name: fileName,
+                mediaKey: '',
+                previewDataUrl: ''
+              };
+            }
+
+            if (!window.ownerMediaStore || typeof window.ownerMediaStore.setItem !== 'function') {
+              return {
+                name: fileName,
+                mediaKey: '',
+                previewDataUrl: safePreviewDataUrl
+              };
+            }
+
+            const mediaKey = storageKey(section + '-preview-' + Date.now() + '-' + index + '-' + Math.random().toString(16).slice(2));
+
+            return window.ownerMediaStore.setItem(mediaKey, safePreviewDataUrl).then(function () {
+              return {
+                name: fileName,
+                mediaKey: mediaKey,
+                previewDataUrl: ''
+              };
+            }).catch(function () {
+              return {
+                name: fileName,
+                mediaKey: '',
+                previewDataUrl: safePreviewDataUrl
+              };
+            });
+          }).catch(function () {
+            return {
+              name: fileName,
+              mediaKey: '',
+              previewDataUrl: ''
+            };
+          });
+        })).then(function (entries) {
+          return entries.filter(Boolean);
+        });
       }
 
       function readPlace() {
@@ -755,33 +928,36 @@
           return;
         }
 
-        const names = readUploadNames(section);
+        const entries = readUploadEntries(section);
         listNode.innerHTML = '';
 
-        if (!names.length) {
+        if (!entries.length) {
           listNode.hidden = true;
           return;
         }
 
         listNode.hidden = false;
-        names.forEach(function (name, index) {
+        entries.forEach(function (entry, index) {
           const row = document.createElement('div');
           row.className = 'owner-upload-list-row';
 
           const label = document.createElement('p');
           label.className = 'owner-upload-list-label';
-          label.textContent = name;
+          label.textContent = entry.name;
 
           const del = document.createElement('button');
           del.type = 'button';
           del.className = 'owner-upload-delete';
           del.textContent = 'Delete';
           del.addEventListener('click', function () {
-            const next = readUploadNames(section);
-            next.splice(index, 1);
-            saveUploadNames(section, next);
-            renderUploadSection(section);
-            setError(section, '');
+            const nextEntries = readUploadEntries(section);
+            const removedEntry = nextEntries.splice(index, 1)[0];
+
+            removeUploadEntryMedia(removedEntry).finally(function () {
+              saveUploadEntries(section, nextEntries);
+              renderUploadSection(section);
+              setError(section, '');
+            });
           });
 
           row.appendChild(label);
@@ -839,17 +1015,22 @@
       }
 
       function clearBusSelections() {
-        ['type', 'seats', 'tv', 'place', 'permitType'].forEach(function (name) {
+        ['modelVariant', 'type', 'seats', 'tv', 'place', 'permitType'].forEach(function (name) {
           sessionStorage.removeItem(storageKey(name));
         });
       }
 
       function restoreSelections() {
+        const savedModelVariant = readValue('modelVariant');
         const savedType = readValue('type');
         const savedSeats = readValue('seats');
         const savedTv = readValue('tv');
         const savedPlace = readPlace();
         const savedPermitType = readPermitType();
+
+        if (fields.model && savedModelVariant) {
+          fields.model.value = savedModelVariant;
+        }
 
         if (savedType) {
           setSelectedButton(fields.type, savedType, 'data-owner-bus-type');
@@ -894,6 +1075,13 @@
 
       if (flowNode) {
         flowNode.hidden = false;
+      }
+
+      if (fields.model) {
+        fields.model.addEventListener('input', function () {
+          saveValue('modelVariant', fields.model.value);
+          setError('modelVariant', '');
+        });
       }
 
       Array.from(fields.type).forEach(function (button) {
@@ -987,21 +1175,30 @@
             return;
           }
 
-          const existing = readUploadNames(section);
-          const next = existing.concat(files.map(function (file) {
-            return file.name;
-          }));
+          const existingEntries = readUploadEntries(section);
+          const nextCount = existingEntries.length + files.length;
 
-          if (next.length > config.maxCount) {
+          if (nextCount > config.maxCount) {
             window.alert('You can upload up to ' + config.maxCount + ' item only.');
             input.value = '';
             return;
           }
 
-          saveUploadNames(section, next);
-          renderUploadSection(section);
-          setError(section, '');
-          input.value = '';
+          trigger.disabled = true;
+
+          createUploadEntries(section, files)
+            .then(function (newEntries) {
+              saveUploadEntries(section, existingEntries.concat(newEntries));
+              renderUploadSection(section);
+              setError(section, '');
+            })
+            .catch(function () {
+              window.alert('Unable to save the selected image.');
+            })
+            .finally(function () {
+              trigger.disabled = false;
+              input.value = '';
+            });
         });
       }
 
@@ -1019,16 +1216,26 @@
         submitButton.addEventListener('click', function () {
           clearErrors();
 
+          const selectedModelVariant = readValue('modelVariant');
           const selectedType = readValue('type');
           const selectedSeats = readValue('seats');
           const selectedTv = readValue('tv');
           const selectedPlace = readPlace();
           const selectedPermitType = readPermitType();
           const photos = readUploadNames('photos');
+          const photoEntries = readUploadEntries('photos');
           const rc = readUploadNames('rc');
           const insurance = readUploadNames('insurance');
           const permit = readUploadNames('permit');
+          const primaryPhotoEntry = photoEntries[0] || null;
+          const photoPreviewMediaKey = primaryPhotoEntry ? String(primaryPhotoEntry.mediaKey || '').trim() : '';
+          const photoPreviewUrl = primaryPhotoEntry ? String(primaryPhotoEntry.previewDataUrl || '').trim() : '';
           let firstError = null;
+
+          if (!selectedModelVariant) {
+            setError('modelVariant', 'Enter the bus model or variant');
+            firstError = firstError || document.querySelector('[data-owner-upload-error="modelVariant"]');
+          }
 
           if (!selectedType) {
             setError('busType', 'Select anyone');
@@ -1096,6 +1303,7 @@
               'owner-whatsapp-number': whatsappNumber,
               'owner-categories': JSON.stringify(['Tourist Bus']),
               'owner-vehicle-type': 'bus',
+              'owner-bus-model-variant': selectedModelVariant,
               'owner-bus-type': selectedType,
               'owner-bus-seats': selectedSeats,
               'owner-bus-tv': selectedTv,
@@ -1109,16 +1317,21 @@
           };
 
           const latestVehicleSummary = {
+            vehicleLabel: 'Tourist Bus',
+            modelVariant: selectedModelVariant,
             type: selectedType,
             seats: selectedSeats,
             tv: selectedTv,
             place: selectedPlace,
             permitType: selectedPermitType,
             photos: photos.slice(),
+            photoPreviewMediaKey: photoPreviewMediaKey,
+            photoPreviewUrl: photoPreviewUrl,
             photoCount: photos.length,
             rcCount: rc.length,
             insuranceCount: insurance.length,
             permitCount: permit.length,
+            statusLabel: 'Valuation',
             savedAt: new Date().toISOString()
           };
 
@@ -1141,24 +1354,30 @@
               whatsappNumber: whatsappNumber,
               categories: ['Tourist Bus'],
               bus: {
+                modelVariant: selectedModelVariant,
                 type: selectedType,
                 seats: selectedSeats,
                 tvMusic: selectedTv,
                 place: selectedPlace,
                 permitType: selectedPermitType,
                 photos: photos.slice(),
+                photoPreviewMediaKey: photoPreviewMediaKey,
+                photoPreviewUrl: photoPreviewUrl,
                 rc: rc.slice(),
                 insurance: insurance.slice(),
                 permit: permit.slice()
               }
             },
             bus: {
+              modelVariant: selectedModelVariant,
               type: selectedType,
               seats: selectedSeats,
               tvMusic: selectedTv,
               place: selectedPlace,
               permitType: selectedPermitType,
               photos: photos.slice(),
+              photoPreviewMediaKey: photoPreviewMediaKey,
+              photoPreviewUrl: photoPreviewUrl,
               rc: rc.slice(),
               insurance: insurance.slice(),
               permit: permit.slice()

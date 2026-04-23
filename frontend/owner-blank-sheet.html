@@ -127,32 +127,38 @@
 
     .owner-add-preview {
       display: none;
-      align-items: center;
-      gap: 12px;
-      min-height: 76px;
+      grid-template-columns: 104px minmax(0, 1fr);
+      align-items: stretch;
+      gap: 14px;
+      min-height: 118px;
       margin-bottom: 14px;
-      padding: 2px 14px 2px 2px;
-      border: 2px solid #111111;
-      border-radius: 18px;
-      background: #ffffff;
-      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+      padding: 10px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(241, 245, 249, 0.64));
+      box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(18px);
+      pointer-events: none;
+      user-select: none;
+      overflow: hidden;
+      position: relative;
     }
 
     .owner-add-preview.is-visible {
-      display: flex;
+      display: grid;
     }
 
     .owner-add-preview-media {
-      width: 92px;
-      min-height: 72px;
-      flex: 0 0 92px;
+      width: 100%;
+      min-height: 98px;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      margin-left: auto;
-      border-radius: 0 16px 16px 0;
-      background: #f3f4f6;
+      margin-left: 0;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(255, 255, 255, 0.8);
     }
 
     .owner-add-preview-image {
@@ -180,28 +186,50 @@
       flex: 1 1 auto;
       min-width: 0;
       display: grid;
-      gap: 3px;
+      gap: 4px;
+      align-content: center;
+      padding: 12px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(255, 255, 255, 0.44);
+      backdrop-filter: blur(14px);
+    }
+
+    .owner-add-preview-eyebrow {
+      margin: 0;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #64748b;
     }
 
     .owner-add-preview-title {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 800;
-      color: #111827;
+      color: #0f172a;
     }
 
     .owner-add-preview-copy {
       margin: 0;
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       line-height: 1.35;
       color: #475569;
+    }
+
+    .owner-add-preview-status {
+      margin: 2px 0 0;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #111827;
     }
 
     .owner-add-preview-meta {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
     .owner-add-preview-chip {
@@ -210,10 +238,24 @@
       min-height: 28px;
       padding: 0 10px;
       border-radius: 999px;
-      background: #eef2f7;
-      color: #111827;
+      background: rgba(226, 232, 240, 0.76);
+      color: #0f172a;
       font-size: 0.8rem;
       font-weight: 700;
+    }
+
+    @media (max-width: 420px) {
+      .owner-add-preview {
+        grid-template-columns: 88px minmax(0, 1fr);
+      }
+
+      .owner-add-preview-media {
+        min-height: 92px;
+      }
+
+      .owner-add-preview-content {
+        padding: 11px 12px;
+      }
     }
 
     .owner-add-plus {
@@ -412,15 +454,37 @@
 
         <section class="owner-page" data-owner-page="add-bus" aria-label="Add bus page">
           <div class="owner-add-preview" id="owner-add-preview" aria-live="polite" hidden>
-            <div class="owner-add-preview-content">
-              <p class="owner-add-preview-title" id="owner-add-preview-title">New vehicle added</p>
-              <p class="owner-add-preview-copy" id="owner-add-preview-copy">Your latest vehicle details will appear here.</p>
-            </div>
             <div class="owner-add-preview-media" aria-hidden="true">
               <img src="" alt="" class="owner-add-preview-image" id="owner-add-preview-image">
-              <div class="owner-add-preview-placeholder" id="owner-add-preview-placeholder">No photo</div>
+              <div class="owner-add-preview-placeholder" id="owner-add-preview-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+                  <path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  <path d="M3 12h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="owner-add-preview-body">
+              <h3 class="owner-add-preview-title" id="owner-add-preview-title">Latest vehicle</h3>
+              <p class="owner-add-preview-copy" id="owner-add-preview-copy">Saved from latest submit.</p>
+              <p class="owner-add-preview-status" id="owner-add-preview-status">Status: Valuation</p>
+              <div class="owner-add-preview-meta" id="owner-add-preview-meta"></div>
             </div>
           </div>
+
+          <!-- VECT Own Submission Card -->
+          <div class="owner-vect-own-card" id="owner-vect-own-card" style="margin-top: 20px; padding: 16px; border: 2px solid #3498db; border-radius: 12px; background: #f0f8ff;">
+            <h3 style="margin: 0 0 12px 0; color: #3498db; font-size: 1.1rem; font-weight: 800;">📋 VECT Own Submission</h3>
+            <div id="vect-own-submission-details" style="font-size: 0.9rem; line-height: 1.4;">
+              <p style="margin: 0 0 8px 0; color: #666;">Loading submission details...</p>
+            </div>
+            <div style="margin-top: 12px; text-align: center;">
+              <a href="https://go-kerala-backend.onrender.com" target="_blank" style="display: inline-block; padding: 8px 16px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                Open VECT Own Dashboard →
+              </a>
+            </div>
+          </div>
+
           <div class="owner-add-box" role="button" aria-label="Add bus" data-open-add-vehicle>
             <div class="owner-add-plus" aria-hidden="true">+</div>
           </div>
@@ -500,8 +564,11 @@
       const previewNode = document.getElementById('owner-calendar-preview');
       const previewDateNode = document.getElementById('owner-calendar-preview-date');
       const addPreviewNode = document.getElementById('owner-add-preview');
+      const addPreviewEyebrowNode = document.getElementById('owner-add-preview-eyebrow');
       const addPreviewTitleNode = document.getElementById('owner-add-preview-title');
       const addPreviewCopyNode = document.getElementById('owner-add-preview-copy');
+      const addPreviewStatusNode = document.getElementById('owner-add-preview-status');
+      const addPreviewMetaNode = document.getElementById('owner-add-preview-meta');
       const addPreviewImageNode = document.getElementById('owner-add-preview-image');
       const addPreviewPlaceholderNode = document.getElementById('owner-add-preview-placeholder');
       const tabs = Array.from(document.querySelectorAll('[data-owner-tab]'));
@@ -510,6 +577,7 @@
       const latestVehicleKey = 'owner-latest-vehicle-summary';
       const latestTouristSubmissionKey = 'owner-latest-tourist-submission';
       const apiBaseUrl = 'https://go-kerala-backend.onrender.com';
+      let previewRenderToken = 0;
 
       function setAvatar(text) {
         const value = String(text || 'VM').trim();
@@ -570,13 +638,95 @@
 
         if (nextPage === 'add-bus') {
           renderLatestVehiclePreview();
+          loadVectOwnSubmission();
         }
+      }
+
+      function loadVectOwnSubmission() {
+        const submissionId = sessionStorage.getItem('owner-latest-submission-id');
+        const detailsDiv = document.getElementById('vect-own-submission-details');
+        
+        if (!submissionId || !detailsDiv) {
+          return;
+        }
+
+        detailsDiv.innerHTML = '<p style="margin: 0 0 8px 0; color: #666;">Loading submission details...</p>';
+
+        // Try to get submission from VECT Own API
+        fetch('https://go-kerala-backend.onrender.com/api/debug/submissions?password=debug123')
+          .then(function(response) {
+            if (!response.ok) {
+              throw new Error('Failed to fetch submissions');
+            }
+            return response.json();
+          })
+          .then(function(data) {
+            const submissions = Array.isArray(data) ? data : (data.submissions || []);
+            const submission = submissions.find(function(sub) {
+              return sub.id === submissionId;
+            });
+
+            if (submission) {
+              displayVectOwnSubmission(submission);
+            } else {
+              detailsDiv.innerHTML = '<p style="margin: 0; color: #e74c3c;">Submission not found in VECT Own</p>';
+            }
+          })
+          .catch(function(error) {
+            console.error('Error loading VECT Own submission:', error);
+            detailsDiv.innerHTML = '<p style="margin: 0; color: #e74c3c;">Error loading submission details</p>';
+          });
+      }
+
+      function displayVectOwnSubmission(submission) {
+        const detailsDiv = document.getElementById('vect-own-submission-details');
+        if (!detailsDiv) return;
+
+        const fields = submission.fields || {};
+        const summary = submission.summary || {};
+        
+        const companyName = summary.companyName || fields['owner-company-name'] || fields['owner-name'] || 'Not specified';
+        const email = summary.email || fields['owner-email'] || 'Not specified';
+        const phone = summary.phone || summary.whatsappNumber || submission.whatsappNumber || 'Not specified';
+        const status = submission.status || 'pending';
+        const createdDate = submission.createdAt ? new Date(submission.createdAt).toLocaleDateString() : 'Not specified';
+        
+        detailsDiv.innerHTML = `
+          <div style="margin: 0 0 12px 0;">
+            <strong style="color: #2c3e50;">🏢 Company:</strong> <span style="color: #34495e;">${companyName}</span>
+          </div>
+          <div style="margin: 0 0 12px 0;">
+            <strong style="color: #2c3e50;">📧 Email:</strong> <span style="color: #34495e;">${email}</span>
+          </div>
+          <div style="margin: 0 0 12px 0;">
+            <strong style="color: #2c3e50;">📱 Phone:</strong> <span style="color: #34495e;">${phone}</span>
+          </div>
+          <div style="margin: 0 0 12px 0;">
+            <strong style="color: #2c3e50;">📅 Submitted:</strong> <span style="color: #34495e;">${createdDate}</span>
+          </div>
+          <div style="margin: 0 0 12px 0;">
+            <strong style="color: #2c3e50;">📋 Status:</strong> 
+            <span style="padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; 
+              ${status === 'pending' ? 'background: #fff3cd; color: #856404;' : 
+                status === 'accepted' ? 'background: #d4edda; color: #155724;' : 
+                'background: #f8d7da; color: #721c24;'}">
+              ${status.toUpperCase()}
+            </span>
+          </div>
+          <div style="margin: 0 0 12px 0;">
+            <strong style="color: #2c3e50;">🆔 ID:</strong> <span style="color: #7f8c8d; font-family: monospace; font-size: 0.8rem;">${submission.id}</span>
+          </div>
+        `;
       }
 
       function clearNode(node) {
         while (node && node.firstChild) {
           node.removeChild(node.firstChild);
         }
+      }
+
+      function valueToText(value) {
+        return String(value || '').trim();
       }
 
       function getPreviewImageUrl(value) {
@@ -605,7 +755,78 @@
         return '';
       }
 
-      function renderLatestVehiclePreview() {
+      function renderPreviewMeta(values) {
+        if (!addPreviewMetaNode) {
+          return;
+        }
+
+        const safeValues = Array.isArray(values) ? values.filter(function (value) {
+          return String(value || '').trim();
+        }) : [];
+
+        clearNode(addPreviewMetaNode);
+        addPreviewMetaNode.hidden = !safeValues.length;
+
+        safeValues.slice(0, 3).forEach(function (value) {
+          const chip = document.createElement('span');
+          chip.className = 'owner-add-preview-chip';
+          chip.textContent = valueToText(value);
+          addPreviewMetaNode.appendChild(chip);
+        });
+      }
+
+      function applyPreviewImage(imageUrl, altText) {
+        const safeImageUrl = String(imageUrl || '').trim();
+        const safeAltText = String(altText || '').trim();
+
+        if (addPreviewImageNode) {
+          addPreviewImageNode.src = safeImageUrl;
+          addPreviewImageNode.alt = safeAltText;
+          addPreviewImageNode.classList.toggle('is-visible', Boolean(safeImageUrl));
+        }
+
+        if (addPreviewPlaceholderNode) {
+          addPreviewPlaceholderNode.hidden = Boolean(safeImageUrl);
+        }
+      }
+
+      function resolveStoredPreviewImage(previewData, latestTouristSubmission) {
+        const photoPreviewUrl = String(
+          (previewData && previewData.photoPreviewUrl) ||
+          (latestTouristSubmission && latestTouristSubmission.bus && latestTouristSubmission.bus.photoPreviewUrl) ||
+          (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && latestTouristSubmission.summary.bus.photoPreviewUrl) ||
+          ''
+        ).trim();
+        const photoPreviewMediaKey = String(
+          (previewData && previewData.photoPreviewMediaKey) ||
+          (latestTouristSubmission && latestTouristSubmission.bus && latestTouristSubmission.bus.photoPreviewMediaKey) ||
+          (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && latestTouristSubmission.summary.bus.photoPreviewMediaKey) ||
+          ''
+        ).trim();
+        const fallbackPhotos = latestTouristSubmission && latestTouristSubmission.bus && Array.isArray(latestTouristSubmission.bus.photos)
+          ? latestTouristSubmission.bus.photos
+          : [];
+        const previewPhotos = Array.isArray(previewData && previewData.photos) && previewData.photos.length
+          ? previewData.photos
+          : fallbackPhotos;
+        const fallbackImageUrl = getPreviewImageUrl(previewPhotos[0] || '');
+
+        if (photoPreviewUrl) {
+          return Promise.resolve(photoPreviewUrl);
+        }
+
+        if (photoPreviewMediaKey && window.ownerMediaStore && typeof window.ownerMediaStore.getItem === 'function') {
+          return window.ownerMediaStore.getItem(photoPreviewMediaKey).then(function (storedUrl) {
+            return String(storedUrl || '').trim() || fallbackImageUrl;
+          }).catch(function () {
+            return fallbackImageUrl;
+          });
+        }
+
+        return Promise.resolve(fallbackImageUrl);
+      }
+
+      function renderLatestVehiclePreviewLegacy() {
         if (!addPreviewNode || !addPreviewTitleNode || !addPreviewCopyNode) {
           return;
         }
@@ -671,6 +892,88 @@
 
         addPreviewNode.hidden = false;
         addPreviewNode.classList.add('is-visible');
+      }
+
+      function renderLatestVehiclePreview() {
+        if (!addPreviewNode || !addPreviewTitleNode || !addPreviewCopyNode) {
+          return;
+        }
+
+        let previewData = null;
+        let latestTouristSubmission = null;
+        const currentPreviewToken = previewRenderToken + 1;
+        previewRenderToken = currentPreviewToken;
+
+        try {
+          previewData = JSON.parse(sessionStorage.getItem(latestVehicleKey) || 'null');
+        } catch (error) {
+          previewData = null;
+        }
+
+        try {
+          latestTouristSubmission = JSON.parse(sessionStorage.getItem(latestTouristSubmissionKey) || 'null');
+        } catch (error) {
+          latestTouristSubmission = null;
+        }
+
+        if (!previewData) {
+          addPreviewNode.hidden = true;
+          addPreviewNode.classList.remove('is-visible');
+          if (addPreviewEyebrowNode) {
+            addPreviewEyebrowNode.textContent = 'Tourist Bus';
+          }
+          if (addPreviewTitleNode) {
+            addPreviewTitleNode.textContent = 'New vehicle added';
+          }
+          addPreviewCopyNode.textContent = 'Your latest vehicle details will appear here.';
+          if (addPreviewStatusNode) {
+            addPreviewStatusNode.textContent = 'Status : Valuation';
+          }
+          renderPreviewMeta([]);
+          applyPreviewImage('', '');
+          return;
+        }
+
+        const modelVariant = String(
+          previewData.modelVariant ||
+          (latestTouristSubmission && latestTouristSubmission.bus && latestTouristSubmission.bus.modelVariant) ||
+          (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && latestTouristSubmission.summary.bus.modelVariant) ||
+          ''
+        ).trim();
+        const vehicleLabel = String(previewData.vehicleLabel || 'Tourist Bus').trim() || 'Tourist Bus';
+        const busType = valueToText(previewData.type);
+        const subtitleParts = [
+          busType ? 'Bus Type: ' + busType : '',
+          previewData.place ? valueToText(previewData.place) : ''
+        ].filter(Boolean);
+        const metaValues = [
+          previewData.seats ? valueToText(previewData.seats) + ' seats' : '',
+          previewData.permitType ? valueToText(previewData.permitType) : '',
+          previewData.photoCount ? valueToText(previewData.photoCount) + ' photos' : ''
+        ].filter(Boolean);
+
+        if (addPreviewEyebrowNode) {
+          addPreviewEyebrowNode.textContent = vehicleLabel;
+        }
+
+        addPreviewTitleNode.textContent = modelVariant || 'Latest vehicle';
+        addPreviewCopyNode.textContent = subtitleParts.join(' | ') || 'Saved from the latest submit.';
+        if (addPreviewStatusNode) {
+          addPreviewStatusNode.textContent = 'Status : ' + (valueToText(previewData.statusLabel) || 'Valuation');
+        }
+        renderPreviewMeta(metaValues);
+        applyPreviewImage('', '');
+
+        addPreviewNode.hidden = false;
+        addPreviewNode.classList.add('is-visible');
+
+        resolveStoredPreviewImage(previewData, latestTouristSubmission).then(function (imageUrl) {
+          if (currentPreviewToken !== previewRenderToken) {
+            return;
+          }
+
+          applyPreviewImage(imageUrl, addPreviewTitleNode.textContent);
+        });
       }
 
       if (!reuploadSubmissionId) {
