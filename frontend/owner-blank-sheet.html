@@ -127,16 +127,58 @@
 
     .owner-add-preview {
       display: none;
-      gap: 6px;
-      padding: 14px 16px;
-      border: 1px solid #d1d5db;
+      align-items: center;
+      gap: 12px;
+      min-height: 76px;
+      margin-bottom: 14px;
+      padding: 2px 14px 2px 2px;
+      border: 2px solid #111111;
       border-radius: 18px;
-      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      background: #ffffff;
       box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
     }
 
     .owner-add-preview.is-visible {
+      display: flex;
+    }
+
+    .owner-add-preview-media {
+      width: 84px;
+      min-height: 72px;
+      flex: 0 0 84px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 16px 0 0 16px;
+      background: #f3f4f6;
+    }
+
+    .owner-add-preview-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      background: #ffffff;
+    }
+
+    .owner-add-preview-image.is-visible {
+      display: block;
+    }
+
+    .owner-add-preview-placeholder {
+      padding: 8px;
+      text-align: center;
+      font-size: 0.76rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #6b7280;
+    }
+
+    .owner-add-preview-content {
+      min-width: 0;
       display: grid;
+      gap: 3px;
     }
 
     .owner-add-preview-title {
@@ -148,8 +190,8 @@
 
     .owner-add-preview-copy {
       margin: 0;
-      font-size: 0.88rem;
-      line-height: 1.45;
+      font-size: 0.84rem;
+      line-height: 1.35;
       color: #475569;
     }
 
@@ -368,9 +410,14 @@
 
         <section class="owner-page" data-owner-page="add-bus" aria-label="Add bus page">
           <div class="owner-add-preview" id="owner-add-preview" aria-live="polite" hidden>
-            <p class="owner-add-preview-title">New vehicle added</p>
-            <p class="owner-add-preview-copy" id="owner-add-preview-copy">Your latest vehicle details will appear here.</p>
-            <div class="owner-add-preview-meta" id="owner-add-preview-meta"></div>
+            <div class="owner-add-preview-media" aria-hidden="true">
+              <img src="" alt="" class="owner-add-preview-image" id="owner-add-preview-image">
+              <div class="owner-add-preview-placeholder" id="owner-add-preview-placeholder">No photo</div>
+            </div>
+            <div class="owner-add-preview-content">
+              <p class="owner-add-preview-title" id="owner-add-preview-title">New vehicle added</p>
+              <p class="owner-add-preview-copy" id="owner-add-preview-copy">Your latest vehicle details will appear here.</p>
+            </div>
           </div>
           <div class="owner-add-box" role="button" aria-label="Add bus" data-open-add-vehicle>
             <div class="owner-add-plus" aria-hidden="true">+</div>
@@ -451,12 +498,16 @@
       const previewNode = document.getElementById('owner-calendar-preview');
       const previewDateNode = document.getElementById('owner-calendar-preview-date');
       const addPreviewNode = document.getElementById('owner-add-preview');
+      const addPreviewTitleNode = document.getElementById('owner-add-preview-title');
       const addPreviewCopyNode = document.getElementById('owner-add-preview-copy');
-      const addPreviewMetaNode = document.getElementById('owner-add-preview-meta');
+      const addPreviewImageNode = document.getElementById('owner-add-preview-image');
+      const addPreviewPlaceholderNode = document.getElementById('owner-add-preview-placeholder');
       const tabs = Array.from(document.querySelectorAll('[data-owner-tab]'));
       const pages = Array.from(document.querySelectorAll('[data-owner-page]'));
       const addVehicleTrigger = document.querySelector('[data-open-add-vehicle]');
       const latestVehicleKey = 'owner-latest-vehicle-summary';
+      const latestTouristSubmissionKey = 'owner-latest-tourist-submission';
+      const apiBaseUrl = 'https://go-kerala-backend.onrender.com';
 
       function setAvatar(text) {
         const value = String(text || 'VM').trim();
@@ -526,12 +577,39 @@
         }
       }
 
+      function getPreviewImageUrl(value) {
+        const text = String(value || '').trim();
+
+        if (!text) {
+          return '';
+        }
+
+        if (/^data:image\//i.test(text) || /^https?:\/\//i.test(text)) {
+          return text;
+        }
+
+        if (/^\//.test(text)) {
+          return apiBaseUrl + text;
+        }
+
+        if (/^(uploads\/).+/i.test(text)) {
+          return apiBaseUrl + '/' + text;
+        }
+
+        if (/\.(png|jpe?g|webp|gif|svg|heic|heif)$/i.test(text)) {
+          return apiBaseUrl + '/uploads/' + encodeURIComponent(text);
+        }
+
+        return '';
+      }
+
       function renderLatestVehiclePreview() {
-        if (!addPreviewNode || !addPreviewCopyNode || !addPreviewMetaNode) {
+        if (!addPreviewNode || !addPreviewTitleNode || !addPreviewCopyNode) {
           return;
         }
 
         let previewData = null;
+        let latestTouristSubmission = null;
 
         try {
           previewData = JSON.parse(sessionStorage.getItem(latestVehicleKey) || 'null');
@@ -539,31 +617,55 @@
           previewData = null;
         }
 
+        try {
+          latestTouristSubmission = JSON.parse(sessionStorage.getItem(latestTouristSubmissionKey) || 'null');
+        } catch (error) {
+          latestTouristSubmission = null;
+        }
+
         if (!previewData) {
           addPreviewNode.hidden = true;
           addPreviewNode.classList.remove('is-visible');
-          clearNode(addPreviewMetaNode);
+          if (addPreviewTitleNode) {
+            addPreviewTitleNode.textContent = 'New vehicle added';
+          }
           addPreviewCopyNode.textContent = 'Your latest vehicle details will appear here.';
+          if (addPreviewImageNode) {
+            addPreviewImageNode.src = '';
+            addPreviewImageNode.alt = '';
+            addPreviewImageNode.classList.remove('is-visible');
+          }
+          if (addPreviewPlaceholderNode) {
+            addPreviewPlaceholderNode.hidden = false;
+          }
           return;
         }
 
-        const metaItems = [
-          previewData.type ? 'Type: ' + previewData.type : '',
-          previewData.seats ? 'Seats: ' + previewData.seats : '',
-          previewData.place ? 'Place: ' + previewData.place : '',
-          previewData.permitType ? 'Permit: ' + previewData.permitType : '',
-          previewData.photoCount ? 'Photos: ' + previewData.photoCount : ''
+        const fallbackPhotos = latestTouristSubmission && latestTouristSubmission.bus && Array.isArray(latestTouristSubmission.bus.photos)
+          ? latestTouristSubmission.bus.photos
+          : [];
+        const previewPhotos = Array.isArray(previewData.photos) && previewData.photos.length
+          ? previewData.photos
+          : fallbackPhotos;
+        const imageUrl = getPreviewImageUrl(previewPhotos[0] || '');
+        const subtitleParts = [
+          previewData.place ? String(previewData.place).trim() : '',
+          previewData.seats ? String(previewData.seats).trim() + ' seats' : '',
+          previewData.permitType ? String(previewData.permitType).trim() : ''
         ].filter(Boolean);
 
-        addPreviewCopyNode.textContent = 'Saved from the latest submit. Your bus details are shown here.';
-        clearNode(addPreviewMetaNode);
+        addPreviewTitleNode.textContent = String(previewData.type || 'Latest vehicle').trim() || 'Latest vehicle';
+        addPreviewCopyNode.textContent = subtitleParts.join(' · ') || 'Saved from the latest submit.';
 
-        metaItems.forEach(function (label) {
-          const chip = document.createElement('span');
-          chip.className = 'owner-add-preview-chip';
-          chip.textContent = label;
-          addPreviewMetaNode.appendChild(chip);
-        });
+        if (addPreviewImageNode) {
+          addPreviewImageNode.src = imageUrl;
+          addPreviewImageNode.alt = addPreviewTitleNode.textContent;
+          addPreviewImageNode.classList.toggle('is-visible', Boolean(imageUrl));
+        }
+
+        if (addPreviewPlaceholderNode) {
+          addPreviewPlaceholderNode.hidden = Boolean(imageUrl);
+        }
 
         addPreviewNode.hidden = false;
         addPreviewNode.classList.add('is-visible');
