@@ -2639,7 +2639,7 @@
 
       function updateMetrics() {
         const ownerSubmissions = getSubmissionsForGroup('owner');
-        const submissionSubmissions = getSubmissionsForGroup('submission');
+        const submissionSubmissions = getSubmissionDisplayRecords();
         const countsByGroup = {
           owner: countSubmissionStatuses(ownerSubmissions),
           submission: countSubmissionStatuses(submissionSubmissions)
