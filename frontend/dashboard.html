@@ -515,6 +515,12 @@
       align-self: start;
     }
 
+    .vect-own-review-actions.is-bottom {
+      width: 100%;
+      justify-content: flex-start;
+      margin-top: 10px;
+    }
+
     .vect-own-review-button {
       appearance: none;
       border: 0 !important;
@@ -1625,15 +1631,15 @@
         return 'accepted';
       }
 
-      function buildReviewActionButtons(itemKey, itemLabel, itemState) {
+      function buildReviewActionButtons(itemKey, itemLabel, itemState, options) {
         const safeState = normalizeReviewState(itemState);
-        const acceptActive = safeState === 'accepted' ? ' is-active' : '';
-        const rejectActive = safeState === 'rejected' ? ' is-active' : '';
+        const placementClass = options && options.position === 'bottom' ? ' is-bottom' : '';
+        const buttonLabel = safeState === 'rejected' ? 'Reject' : 'Accept';
+        const buttonClass = safeState === 'rejected' ? ' is-reject is-active' : ' is-accept is-active';
 
         return [
-          '<div class="vect-own-review-actions">',
-          '<button type="button" class="vect-own-review-button is-accept' + acceptActive + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-action="accepted" aria-pressed="' + (safeState === 'accepted' ? 'true' : 'false') + '">Accept</button>',
-          '<button type="button" class="vect-own-review-button is-reject' + rejectActive + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-action="rejected" aria-pressed="' + (safeState === 'rejected' ? 'true' : 'false') + '">Reject</button>',
+          '<div class="vect-own-review-actions' + placementClass + '">',
+          '<button type="button" class="vect-own-review-button' + buttonClass + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" aria-pressed="' + (safeState === 'accepted' ? 'true' : 'false') + '">' + buttonLabel + '</button>',
           '</div>'
         ].join('');
       }
@@ -1653,7 +1659,7 @@
           '<p class="vect-own-tourist-label">' + escapeHtml(label) + '</p>',
           imageUrl ? imageBlock : '<div class="vect-own-tourist-value">' + safeValue + '</div>',
           '</div>',
-          buildReviewActionButtons(itemKey, label, reviewState),
+          buildReviewActionButtons(itemKey, label, reviewState, { position: 'bottom' }),
           '</div>'
         ].join('');
       }
@@ -1699,6 +1705,7 @@
             '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
             imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
             imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
+            buildReviewActionButtons(itemKey, title, getItemReviewState(selectedSubmissionId, itemKey), { position: 'bottom' }),
           '</div>'
           ].join('');
         }
@@ -3028,6 +3035,40 @@
         saveDashboardState();
       }
 
+      function syncBlankSheetStatus(submissionId, status) {
+        const safeStatus = String(status || '').trim().toLowerCase();
+        const statusLabel = safeStatus === 'accepted'
+          ? 'Active'
+          : safeStatus === 'rejected'
+            ? 'Rejected'
+            : safeStatus === 'updated'
+              ? 'Updated'
+              : 'Pending';
+
+        try {
+          const latestSubmission = JSON.parse(sessionStorage.getItem('owner-latest-tourist-submission') || 'null');
+          if (latestSubmission && String(latestSubmission.id || '').trim() === String(submissionId || '').trim()) {
+            latestSubmission.status = safeStatus || latestSubmission.status;
+            if (!latestSubmission.summary) {
+              latestSubmission.summary = {};
+            }
+            sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestSubmission));
+          }
+        } catch (error) {
+          // Ignore session sync errors.
+        }
+
+        try {
+          const latestSummary = JSON.parse(sessionStorage.getItem('owner-latest-vehicle-summary') || 'null');
+          if (latestSummary && typeof latestSummary === 'object') {
+            latestSummary.statusLabel = statusLabel;
+            sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestSummary));
+          }
+        } catch (error) {
+          // Ignore session sync errors.
+        }
+      }
+
       function openSubmission(submissionId) {
         console.log('=== OPEN SUBMISSION DEBUG ===');
         console.log('Opening submission:', submissionId);
@@ -3314,6 +3355,7 @@
               return response.json();
             })
             .then(function () {
+              syncBlankSheetStatus(targetSubmissionId, nextStatus);
               return refreshSubmissions(false);
             })
             .then(function () {
@@ -3371,11 +3413,11 @@
         if (reviewButton) {
           const itemKey = String(reviewButton.getAttribute('data-vect-own-item-key') || '').trim();
           const itemLabel = String(reviewButton.getAttribute('data-vect-own-item-label') || '').trim();
-          const reviewAction = String(reviewButton.getAttribute('data-vect-own-review-action') || 'accepted').trim();
+          const currentState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-state') || 'accepted').trim());
           const submissionSelections = getSubmissionReviewSelections(selectedSubmissionId);
 
           if (itemKey) {
-            submissionSelections[itemKey] = reviewAction === 'rejected' ? 'rejected' : 'accepted';
+            submissionSelections[itemKey] = currentState === 'accepted' ? 'rejected' : 'accepted';
             submissionSelections[itemKey + '__label'] = itemLabel;
             saveDashboardState();
           }
