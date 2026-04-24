@@ -2215,10 +2215,125 @@
         if (!node) {
           return;
         }
+
+        const safeFields = fields || {};
+        const documents = [
+          {
+            key: 'owner-profile-photo-url',
+            label: 'Profile',
+            value: resolveStoredUploadUrl(
+              safeFields['owner-profile-photo-url'],
+              safeFields['owner-profile-photo-name']
+            ) || safeFields['owner-profile-photo']
+          },
+          {
+            key: 'owner-aadhaar-photo-url',
+            label: 'Aadhaar',
+            value: resolveStoredUploadUrl(
+              safeFields['owner-aadhaar-photo-url'],
+              safeFields['owner-aadhaar-photo-name']
+            )
+          },
+          {
+            key: 'owner-heavy-licence-photo-url-1',
+            label: 'Licence Front',
+            value: resolveStoredUploadUrl(
+              safeFields['owner-heavy-licence-photo-url-1'],
+              safeFields['owner-heavy-licence-photo-name-1']
+            )
+          },
+          {
+            key: 'owner-heavy-licence-photo-url-2',
+            label: 'Licence Back',
+            value: resolveStoredUploadUrl(
+              safeFields['owner-heavy-licence-photo-url-2'],
+              safeFields['owner-heavy-licence-photo-name-2']
+            )
+          }
+        ].filter(function (item) {
+          return isImageValue(item.value, item.label);
+        });
+
         node.innerHTML = '';
-        if (documentsSection) {
-          documentsSection.hidden = true;
+
+        if (!documents.length) {
+          if (documentsSection) {
+            documentsSection.hidden = true;
+          }
+          return;
         }
+
+        if (documentsSection) {
+          documentsSection.hidden = false;
+        }
+
+        documents.forEach(function (item) {
+          const itemState = getItemReviewState(selectedSubmissionId, item.key);
+          const card = document.createElement('article');
+          const reviewActions = document.createElement('div');
+          const labelNode = document.createElement('p');
+          const imageNode = document.createElement('img');
+          const viewButton = document.createElement('button');
+          const fallbackNode = document.createElement('p');
+
+          card.className = 'vect-own-document-card';
+          reviewActions.innerHTML = buildReviewActionButtons(item.key, item.label, itemState);
+
+          labelNode.className = 'vect-own-document-label';
+          labelNode.textContent = item.label;
+
+          imageNode.className = 'vect-own-image-preview';
+          imageNode.alt = item.label;
+          imageNode.loading = 'lazy';
+          imageNode.decoding = 'async';
+
+          viewButton.type = 'button';
+          viewButton.className = 'vect-own-image-link';
+          viewButton.textContent = 'View full image';
+          viewButton.disabled = true;
+
+          fallbackNode.className = 'vect-own-empty-state';
+          fallbackNode.hidden = true;
+          fallbackNode.textContent = 'Loading preview...';
+
+          card.appendChild(reviewActions);
+          card.appendChild(labelNode);
+          card.appendChild(imageNode);
+          card.appendChild(viewButton);
+          card.appendChild(fallbackNode);
+          node.appendChild(card);
+
+          resolveRenderableImageUrl(item.value)
+            .then(function (imageUrl) {
+              if (!imageUrl) {
+                imageNode.hidden = true;
+                fallbackNode.hidden = false;
+                fallbackNode.textContent = 'No preview available.';
+                return;
+              }
+
+              imageNode.src = imageUrl;
+              viewButton.disabled = false;
+              viewButton.setAttribute('data-vect-own-image-url', imageUrl);
+              viewButton.setAttribute('data-vect-own-image-label', item.label);
+
+              imageNode.addEventListener('error', function () {
+                imageNode.hidden = true;
+                fallbackNode.hidden = false;
+                fallbackNode.textContent = 'Unable to load preview. Use View full image.';
+              }, { once: true });
+
+              imageNode.addEventListener('load', function () {
+                imageNode.hidden = false;
+                fallbackNode.hidden = true;
+              }, { once: true });
+            })
+            .catch(function () {
+              imageNode.hidden = true;
+              fallbackNode.hidden = false;
+              fallbackNode.textContent = 'Unable to load preview. Use View full image.';
+            });
+        });
       }
 
       function getApiUrl(pathName) {
