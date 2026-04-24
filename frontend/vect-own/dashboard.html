@@ -1081,6 +1081,7 @@
       const idNode = document.querySelector('[data-vect-own-id]');
       const fieldsNode = document.querySelector('[data-vect-own-fields]');
       const documentsNode = document.querySelector('[data-vect-own-documents]');
+      const documentsSection = documentsNode ? documentsNode.closest('.vect-own-detail-section') : null;
       const lightboxNode = document.querySelector('[data-vect-own-lightbox]');
       const lightboxImageNode = document.querySelector('[data-vect-own-lightbox-image]');
       const tabs = Array.from(document.querySelectorAll('[data-vect-own-tab]'));
@@ -1969,6 +1970,20 @@
 
       function getHiddenFieldKeys() {
         return getDocumentFieldKeys().concat([
+          'owner-note',
+          'owner-review-note',
+          'owner-optional-review-note',
+          'owner-bus-type',
+          'owner-bus-seats',
+          'owner-bus-tv',
+          'owner-bus-place',
+          'owner-bus-permit-type',
+          'owner-bus-photos',
+          'owner-bus-rc',
+          'owner-bus-insurance',
+          'owner-bus-permit',
+          'latest-tourist-submission',
+          'latest-vehicle-summary',
           'owner-last-name',
           'owner-heavy-licence-photo-name-1',
           'owner-heavy-licence-photo-name-2',
@@ -1983,39 +1998,26 @@
           'owner-aadhaar-submitted',
           'owner-aadhaar-submitted-v2',
           'owner-profile-photo-status-v2',
-          'owner-profile-photo-submitted-v2'
+          'owner-profile-photo-submitted-v2',
+          'owner-note-input',
+          'owner-review-note-box'
         ]);
       }
 
       function getPreferredFieldOrder() {
         return [
-          'owner-company-name',
-          'owner-name',
-          'owner-first-name',
           'owner-email',
-          'owner-whatsapp-number',
-          'owner-categories',
-          'owner-districts',
-          'owner-address',
-          'owner-city',
-          'owner-state',
-          'owner-pincode'
+          'owner-company-name',
+          'owner-profile-photo-url'
         ];
       }
 
       function getFieldLabel(key) {
         const labels = {
+          'owner-profile-photo-url': 'Last Photo',
+          'owner-profile-photo': 'Last Photo',
           'owner-company-name': 'Company Name',
-          'owner-name': 'Name',
-          'owner-first-name': 'First Name',
-          'owner-email': 'Email',
-          'owner-whatsapp-number': 'WhatsApp Number',
-          'owner-categories': 'Categories',
-          'owner-districts': 'Districts',
-          'owner-address': 'Address',
-          'owner-city': 'City',
-          'owner-state': 'State',
-          'owner-pincode': 'Pincode'
+          'owner-email': 'Email'
         };
 
         if (labels[key]) {
@@ -2204,127 +2206,10 @@
         if (!node) {
           return;
         }
-
-        const safeFields = fields || {};
-        const documents = [
-          {
-            key: 'owner-company-logo-url',
-            label: 'Company Logo',
-            value: resolveStoredUploadUrl(
-              safeFields['owner-company-logo-url'],
-              safeFields['owner-company-logo-name']
-            )
-          },
-          {
-            key: 'owner-heavy-licence-photo-url-1',
-            label: 'Heavy Driving Licence Front',
-            value: resolveStoredUploadUrl(
-              safeFields['owner-heavy-licence-photo-url-1'],
-              safeFields['owner-heavy-licence-photo-name-1']
-            )
-          },
-          {
-            key: 'owner-heavy-licence-photo-url-2',
-            label: 'Heavy Driving Licence Back',
-            value: resolveStoredUploadUrl(
-              safeFields['owner-heavy-licence-photo-url-2'],
-              safeFields['owner-heavy-licence-photo-name-2']
-            )
-          },
-          {
-            key: 'owner-aadhaar-photo-url',
-            label: 'Aadhaar Card',
-            value: resolveStoredUploadUrl(
-              safeFields['owner-aadhaar-photo-url'],
-              safeFields['owner-aadhaar-photo-name']
-            )
-          },
-          {
-            key: 'owner-profile-photo-url',
-            label: 'Profile Photo',
-            value: resolveStoredUploadUrl(
-              safeFields['owner-profile-photo-url'],
-              safeFields['owner-profile-photo-name']
-            ) || safeFields['owner-profile-photo']
-          }
-        ].filter(function (item) {
-          return isImageValue(item.value, item.label);
-        });
-
-        if (!documents.length) {
-          node.innerHTML = '<div class="vect-own-empty-state">No uploaded document images available yet.</div>';
-          return;
-        }
-
         node.innerHTML = '';
-
-        documents.forEach(function (item) {
-          const itemState = getItemReviewState(selectedSubmissionId, item.key);
-          const card = document.createElement('article');
-          const reviewActions = document.createElement('div');
-          const labelNode = document.createElement('p');
-          const imageNode = document.createElement('img');
-          const viewButton = document.createElement('button');
-          const fallbackNode = document.createElement('p');
-
-          card.className = 'vect-own-document-card';
-          reviewActions.innerHTML = buildReviewActionButtons(item.key, item.label, itemState);
-
-          labelNode.className = 'vect-own-document-label';
-          labelNode.textContent = item.label;
-
-          imageNode.className = 'vect-own-image-preview';
-          imageNode.alt = item.label;
-          imageNode.loading = 'lazy';
-          imageNode.decoding = 'async';
-
-          viewButton.type = 'button';
-          viewButton.className = 'vect-own-image-link';
-          viewButton.textContent = 'View full image';
-          viewButton.disabled = true;
-
-          fallbackNode.className = 'vect-own-empty-state';
-          fallbackNode.hidden = true;
-          fallbackNode.textContent = 'Loading preview...';
-
-          card.appendChild(reviewActions);
-          card.appendChild(labelNode);
-          card.appendChild(imageNode);
-          card.appendChild(viewButton);
-          card.appendChild(fallbackNode);
-          node.appendChild(card);
-
-          resolveRenderableImageUrl(item.value)
-            .then(function (imageUrl) {
-              if (!imageUrl) {
-                imageNode.hidden = true;
-                fallbackNode.hidden = false;
-                fallbackNode.textContent = 'No preview available.';
-                return;
-              }
-
-              imageNode.src = imageUrl;
-              viewButton.disabled = false;
-              viewButton.setAttribute('data-vect-own-image-url', imageUrl);
-              viewButton.setAttribute('data-vect-own-image-label', item.label);
-
-              imageNode.addEventListener('error', function () {
-                imageNode.hidden = true;
-                fallbackNode.hidden = false;
-                fallbackNode.textContent = 'Unable to load preview. Use View full image.';
-              }, { once: true });
-
-              imageNode.addEventListener('load', function () {
-                imageNode.hidden = false;
-                fallbackNode.hidden = true;
-              }, { once: true });
-            })
-            .catch(function () {
-              imageNode.hidden = true;
-              fallbackNode.hidden = false;
-              fallbackNode.textContent = 'Unable to load preview. Use View full image.';
-            });
-        });
+        if (documentsSection) {
+          documentsSection.hidden = true;
+        }
       }
 
       function getApiUrl(pathName) {
@@ -2917,8 +2802,22 @@
         const node = targetNode || fieldsNode;
         const hiddenFieldKeys = getHiddenFieldKeys();
         const preferredOrder = getPreferredFieldOrder();
+        const allowedKeys = new Set([
+          'owner-email',
+          'owner-company-name',
+          'owner-profile-photo-url',
+          'owner-profile-photo'
+        ]);
         const entries = Object.entries(fields || {}).filter(function (entry) {
-          return hiddenFieldKeys.indexOf(entry[0]) === -1;
+          if (!allowedKeys.has(entry[0]) || hiddenFieldKeys.indexOf(entry[0]) !== -1) {
+            return false;
+          }
+
+          if (entry[0] === 'owner-profile-photo' && fields && fields['owner-profile-photo-url']) {
+            return false;
+          }
+
+          return true;
         }).sort(function (left, right) {
           const leftIndex = preferredOrder.indexOf(left[0]);
           const rightIndex = preferredOrder.indexOf(right[0]);
@@ -2969,6 +2868,9 @@
           syncSubmissionActionButtons('');
           emptyNode.hidden = false;
           detailNode.hidden = true;
+          if (documentsSection) {
+            documentsSection.hidden = true;
+          }
           if (noteSection) {
             noteSection.hidden = true;
           }
@@ -2995,6 +2897,9 @@
         cachedSelectedSubmission = submission;
         emptyNode.hidden = true;
         detailNode.hidden = false;
+        if (documentsSection) {
+          documentsSection.hidden = true;
+        }
 
         if (detailSubtitle) {
           detailSubtitle.textContent = statusPresentation.label.toUpperCase();
