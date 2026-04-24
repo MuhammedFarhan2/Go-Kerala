@@ -8,7 +8,7 @@
     document.documentElement.classList.add('show-page-loader');
   </script>
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
-  <link rel="stylesheet" href="../style.css?v=20260423-1">
+  <link rel="stylesheet" href="../style.css?v=20260414-2">
   <style>
     .vect-own-main {
       padding-bottom: 92px;
@@ -594,19 +594,21 @@
     .vect-own-field-row {
       position: relative;
       display: grid;
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px 14px;
       align-items: start;
-      padding: 12px 96px 12px 14px;
+      padding: 12px 14px;
       border: 1px solid #e5e7eb;
       border-radius: 16px;
       background: #fff;
     }
 
     .vect-own-field-row .vect-own-review-actions {
-      position: absolute;
-      top: 12px;
-      right: 12px;
+      position: static;
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: start;
+      justify-self: end;
       margin: 0;
     }
 
@@ -618,12 +620,12 @@
     }
 
     .vect-own-field-key {
-      grid-column: 2;
+      grid-column: 1;
       margin: 0;
     }
 
     .vect-own-field-value {
-      grid-column: 2;
+      grid-column: 1;
       margin: 0;
     }
 
@@ -1460,7 +1462,7 @@
         });
 
         if (touristSubmissionListSubtitleNode) {
-          touristSubmissionListSubtitleNode.textContent = visible.length + (visible.length === 1 ? ' vehicle' : ' vehicles');
+          touristSubmissionListSubtitleNode.textContent = visible.length + ' visible';
         }
 
         touristSubmissionListNode.innerHTML = '';
@@ -1473,44 +1475,22 @@
         visible.forEach(function (submission) {
           const card = document.createElement('button');
           const summary = submission.summary || {};
-          const fields = buildDisplayFields(submission);
-          const touristBusDetails = getTouristBusDetails(submission, fields);
-          const firstPhoto = extractImageSource((touristBusDetails.photos || [])[0] || '');
-          const photoUrl = resolveStoredUploadUrl(firstPhoto, firstPhoto) || getImageUrl(firstPhoto);
-          const statusLabel = getTouristBusStatusPresentation(submission.status).label;
-          const title = touristBusDetails.modelVariant || summary.companyName || 'Unnamed vehicle';
-          const kicker = summary.companyName || summary.ownerName || 'Vehicle submission';
-          const metaParts = [
-            touristBusDetails.busType || '',
-            touristBusDetails.seats ? touristBusDetails.seats + ' seats' : '',
-            touristBusDetails.place || ''
-          ].filter(Boolean);
+          const statusPresentation = getStatusPresentation(submission.status);
 
           card.type = 'button';
-          card.className = 'vect-own-list-item vect-own-list-item-vehicle' + (submission.id === selectedSubmissionId ? ' is-active' : '');
-          card.setAttribute('aria-label', 'Open vehicle ' + title);
+          card.className = 'vect-own-list-item' + (submission.id === selectedSubmissionId ? ' is-active' : '');
+          card.setAttribute('aria-label', 'Open submission ' + (summary.companyName || 'Unnamed submission'));
           card.innerHTML = [
-            '<div class="vect-own-list-item-media">',
-            photoUrl
-              ? '<img src="' + escapeHtml(photoUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-list-item-image">'
-              : '<div class="vect-own-list-item-placeholder">No photo</div>',
+            '<div class="vect-own-list-item-top">',
+            '<strong class="vect-own-list-item-title">' + escapeHtml(summary.companyName || 'Unnamed submission') + '</strong>',
+            '<span class="vect-own-status-chip ' + escapeHtml(statusPresentation.className) + '">' + escapeHtml(statusPresentation.label) + '</span>',
             '</div>',
-            '<div class="vect-own-list-item-copy">',
-            '<p class="vect-own-list-item-kicker">' + escapeHtml(kicker) + '</p>',
-            '<strong class="vect-own-list-item-title">' + escapeHtml(title) + '</strong>',
-            (metaParts.length ? '<p class="vect-own-list-item-meta">' + escapeHtml(metaParts.join(' | ')) + '</p>' : ''),
-            '<p class="vect-own-list-item-status-text"><span class="vect-own-list-item-status-label">Status :</span> ' + escapeHtml(statusLabel) + '</p>',
-            '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>',
-            '</div>'
+            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.ownerName || 'Owner name not captured') + '</p>',
+            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.whatsappNumber || summary.phone || '-') + '</p>',
+            '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>'
           ].join('');
 
           card.addEventListener('click', function () {
-            selectedSubmissionId = submission.id;
-            cachedSelectedSubmission = submission;
-            noteSectionOpen = false;
-            renderTouristSubmissionList();
-            renderTouristSubmissionDetail(submission);
-            saveDashboardState();
             openSubmission(submission.id);
           });
 
@@ -1600,11 +1580,28 @@
         const sessionInsurance = readBusStorageList('insurance');
         const sessionPermit = readBusStorageList('permit');
 
+<<<<<<< HEAD
+        const modelVariant = readValue(['owner-bus-model-variant', 'bus-model-variant', 'modelVariant']) || sessionModelVariant;
+=======
         const modelVariant = readValue(['owner-bus-model-variant', 'bus-model-variant', 'modelVariant']) || busSummary.modelVariant || sessionModelVariant;
+>>>>>>> 57cef132657fc198554fd7999a2478a8ad1547b1
         const busType = readValue([
           'owner-bus-type',
           'bus-type',
           'vehicle-bus-type',
+<<<<<<< HEAD
+          'type',
+          'owner-categories'
+        ]) || sessionBusType || (Array.isArray(summary.categories) ? summary.categories[0] : '');
+        const seats = readValue(['owner-bus-seats', 'bus-seats', 'seats']) || sessionSeats;
+        const tvMusic = readValue(['owner-bus-tv', 'bus-tv', 'tv']) || sessionTv;
+        const place = readValue(['owner-bus-place', 'bus-place', 'place']) || sessionPlace || summary.place || summary.villageName || summary.location;
+        const permitType = readValue(['permitType', 'owner-permit', 'bus-permit']) || sessionPermitType;
+        const photoValues = toList(images.photos || safeFields['owner-bus-photos'] || safeFields.photos || sessionPhotos);
+        const rcBookValues = toList(images.rc || safeFields['owner-bus-rc'] || safeFields.rc || sessionRc);
+        const insuranceValues = toList(images.insurance || safeFields['owner-bus-insurance'] || safeFields.insurance || sessionInsurance);
+        const permitValues = toList(images.permit || safeFields['owner-bus-permit'] || safeFields.permit || sessionPermit);
+=======
           'type',
           'owner-categories'
         ]) || busSummary.type || sessionBusType || (Array.isArray(summary.categories) ? summary.categories[0] : '');
@@ -1616,6 +1613,7 @@
         const rcBookValues = toList(images.rc || busSummary.rc || safeFields['owner-bus-rc'] || safeFields.rc || sessionRc);
         const insuranceValues = toList(images.insurance || busSummary.insurance || safeFields['owner-bus-insurance'] || safeFields.insurance || sessionInsurance);
         const permitValues = toList(images.permit || busSummary.permit || safeFields['owner-bus-permit'] || safeFields.permit || sessionPermit);
+>>>>>>> 57cef132657fc198554fd7999a2478a8ad1547b1
 
         return {
           modelVariant: modelVariant,
@@ -2515,9 +2513,7 @@
       }
 
       function getSelectedSubmission(group) {
-        const submissions = group === 'submission'
-          ? getSubmissionDisplayRecords()
-          : (group ? getSubmissionsForGroup(group) : allSubmissions);
+        const submissions = group ? getSubmissionsForGroup(group) : allSubmissions;
         return submissions.find(function (submission) {
           return submission.id === selectedSubmissionId;
         }) || null;
@@ -3088,9 +3084,7 @@
       function openSubmission(submissionId) {
         console.log('=== OPEN SUBMISSION DEBUG ===');
         console.log('Opening submission:', submissionId);
-        const selected = getSubmissionDisplayRecords().find(function (submission) {
-          return submission.id === submissionId;
-        }) || allSubmissions.find(function (submission) {
+        const selected = allSubmissions.find(function (submission) {
           return submission.id === submissionId;
         }) || null;
 
@@ -3166,7 +3160,7 @@
             renderList();
 
             const latestSubmissionId = String(sessionStorage.getItem('owner-latest-submission-id') || '').trim();
-            const targetGroup = activePage === 'submission' || activePage === 'tourist-bus' ? 'submission' : 'owner';
+            const targetGroup = activePage === 'submission' ? 'submission' : 'owner';
             const visibleSubmissions = targetGroup === 'submission'
               ? getSubmissionDisplayRecords()
               : getSubmissionsForGroup(targetGroup);
@@ -3252,10 +3246,6 @@
         tab.addEventListener('click', function () {
           const targetPage = tab.getAttribute('data-vect-own-page-tab') || 'dashboard';
           if (targetPage === 'navigation3') {
-            return;
-          }
-          if (targetPage === 'submission' && getSubmissionDisplayRecords().length) {
-            openTouristBusReview();
             return;
           }
           setActivePage(targetPage, { pushHistory: true });

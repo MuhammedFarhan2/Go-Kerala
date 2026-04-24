@@ -592,8 +592,9 @@
     }
 
     .vect-own-field-row {
+      position: relative;
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px 14px;
       align-items: start;
       padding: 12px 14px;
@@ -603,17 +604,28 @@
     }
 
     .vect-own-field-row .vect-own-review-actions {
-      grid-column: 1;
+      position: static;
+      grid-column: 2;
       grid-row: 1 / span 2;
+      align-self: start;
+      justify-self: end;
+      margin: 0;
+    }
+
+    .vect-own-field-row .vect-own-review-button {
+      min-width: 74px;
+      min-height: 30px;
+      padding: 0 12px;
+      font-size: 0.76rem;
     }
 
     .vect-own-field-key {
-      grid-column: 2;
+      grid-column: 1;
       margin: 0;
     }
 
     .vect-own-field-value {
-      grid-column: 2;
+      grid-column: 1;
       margin: 0;
     }
 
