@@ -8,7 +8,7 @@
     document.documentElement.classList.add('show-page-loader');
   </script>
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
-  <link rel="stylesheet" href="../style.css?v=20260414-2">
+  <link rel="stylesheet" href="../style.css?v=20260423-1">
   <style>
     .vect-own-main {
       padding-bottom: 92px;
@@ -404,10 +404,9 @@
     }
 
     .vect-own-tourist-image-card {
-      position: relative;
       display: grid;
       gap: 8px;
-      padding: 14px 108px 14px 14px;
+      padding: 14px;
       border: 1px solid #e5e7eb;
       border-radius: 18px;
       background: #fff;
@@ -424,27 +423,20 @@
 
     .vect-own-tourist-image-link {
       appearance: none;
-      position: absolute;
-      top: 50%;
-      right: 14px;
-      transform: translateY(-50%);
+      align-self: start;
       border: 0;
-      min-width: 84px;
-      min-height: 34px;
-      padding: 0 12px;
-      border-radius: 999px;
-      background: #111827;
-      color: #fff;
+      background: transparent;
+      color: #0f4aa3;
       font: inherit;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       font-weight: 700;
       text-decoration: none;
       cursor: pointer;
-      box-shadow: 0 10px 20px rgba(17, 24, 39, 0.1);
+      padding: 0;
     }
 
     .vect-own-tourist-image-link:hover {
-      filter: brightness(0.98);
+      text-decoration: underline;
     }
 
     .vect-own-tourist-file-name {
@@ -531,7 +523,7 @@
 
     .vect-own-review-button {
       appearance: none;
-      border: 0 !important;
+      border: 1px solid #d1d5db !important;
       border-radius: 999px;
       min-width: 78px;
       min-height: 34px;
@@ -539,12 +531,14 @@
       font: inherit;
       font-size: 0.8rem;
       font-weight: 700;
+      background: #fff !important;
+      color: #475569 !important;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      box-shadow: 0 10px 20px rgba(17, 24, 39, 0.08);
+      box-shadow: none;
       transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
     }
 
@@ -558,13 +552,21 @@
       opacity: 0.92;
     }
 
-    .vect-own-review-button.is-accept {
-      background: #16a34a !important;
+    .vect-own-review-button.is-pending.is-active {
+      background: #111827 !important;
+      border-color: #111827 !important;
       color: #fff !important;
     }
 
-    .vect-own-review-button.is-reject {
-      background: #dc2626 !important;
+    .vect-own-review-button.is-accept.is-active {
+      background: #16a34a !important;
+      border-color: #16a34a !important;
+      color: #fff !important;
+    }
+
+    .vect-own-review-button.is-update.is-active {
+      background: #ea580c !important;
+      border-color: #ea580c !important;
       color: #fff !important;
     }
 
@@ -930,7 +932,13 @@
               <div class="vect-own-document-grid" data-vect-own-documents></div>
             </div>
 
+            <div class="vect-own-detail-section vect-own-note-section" hidden data-vect-own-note-section>
+              <h3 class="vect-own-detail-section-title">Owner note</h3>
+              <textarea class="vect-own-note-input" rows="4" placeholder="Optional review note" data-vect-own-note></textarea>
+            </div>
+
             <div class="vect-own-detail-actions">
+              <button type="button" class="vect-own-action is-note" data-vect-own-note-toggle>Review note</button>
               <button type="button" class="vect-own-action is-accept" data-vect-own-action="accepted">Accept</button>
               <button type="button" class="vect-own-action is-reject" data-vect-own-action="rejected">Reject</button>
             </div>
@@ -1071,6 +1079,9 @@
       const searchInput = document.querySelector('[data-vect-own-search]');
       const logoutButtons = Array.from(document.querySelectorAll('[data-vect-own-logout]'));
       const logoutButton = logoutButtons[0] || null;
+      const noteInput = document.querySelector('[data-vect-own-note]');
+      const noteSection = document.querySelector('[data-vect-own-note-section]');
+      const noteToggleButton = document.querySelector('[data-vect-own-note-toggle]');
       const statusChip = document.querySelector('[data-vect-own-status]');
       const companyNode = document.querySelector('[data-vect-own-company]');
       const ownerNode = document.querySelector('[data-vect-own-owner]');
@@ -1123,7 +1134,9 @@
       let activePage = 'dashboard';
       let currentVehicleCategory = 'tourist';
       let searchTerm = '';
+      let noteSectionOpen = false;
       let cachedSelectedSubmission = null;
+      let draftReviewNotes = {};
       let reviewSelections = {};
       const LOCAL_TOURIST_SUBMISSION_KEY = 'owner-latest-tourist-submission';
 
@@ -1464,7 +1477,7 @@
         });
 
         if (touristSubmissionListSubtitleNode) {
-          touristSubmissionListSubtitleNode.textContent = visible.length + ' visible';
+          touristSubmissionListSubtitleNode.textContent = visible.length + (visible.length === 1 ? ' vehicle' : ' vehicles');
         }
 
         touristSubmissionListNode.innerHTML = '';
@@ -1477,22 +1490,44 @@
         visible.forEach(function (submission) {
           const card = document.createElement('button');
           const summary = submission.summary || {};
-          const statusPresentation = getStatusPresentation(submission.status);
+          const fields = buildDisplayFields(submission);
+          const touristBusDetails = getTouristBusDetails(submission, fields);
+          const firstPhoto = extractImageSource((touristBusDetails.photos || [])[0] || '');
+          const photoUrl = resolveStoredUploadUrl(firstPhoto, firstPhoto) || getImageUrl(firstPhoto);
+          const statusLabel = getTouristBusStatusPresentation(submission.status).label;
+          const title = touristBusDetails.modelVariant || summary.companyName || 'Unnamed vehicle';
+          const kicker = summary.companyName || summary.ownerName || 'Vehicle submission';
+          const metaParts = [
+            touristBusDetails.busType || '',
+            touristBusDetails.seats ? touristBusDetails.seats + ' seats' : '',
+            touristBusDetails.place || ''
+          ].filter(Boolean);
 
           card.type = 'button';
-          card.className = 'vect-own-list-item' + (submission.id === selectedSubmissionId ? ' is-active' : '');
-          card.setAttribute('aria-label', 'Open submission ' + (summary.companyName || 'Unnamed submission'));
+          card.className = 'vect-own-list-item vect-own-list-item-vehicle' + (submission.id === selectedSubmissionId ? ' is-active' : '');
+          card.setAttribute('aria-label', 'Open vehicle ' + title);
           card.innerHTML = [
-            '<div class="vect-own-list-item-top">',
-            '<strong class="vect-own-list-item-title">' + escapeHtml(summary.companyName || 'Unnamed submission') + '</strong>',
-            '<span class="vect-own-status-chip ' + escapeHtml(statusPresentation.className) + '">' + escapeHtml(statusPresentation.label) + '</span>',
+            '<div class="vect-own-list-item-media">',
+            photoUrl
+              ? '<img src="' + escapeHtml(photoUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-list-item-image">'
+              : '<div class="vect-own-list-item-placeholder">No photo</div>',
             '</div>',
-            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.ownerName || 'Owner name not captured') + '</p>',
-            '<p class="vect-own-list-item-meta">' + escapeHtml(summary.whatsappNumber || summary.phone || '-') + '</p>',
-            '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>'
+            '<div class="vect-own-list-item-copy">',
+            '<p class="vect-own-list-item-kicker">' + escapeHtml(kicker) + '</p>',
+            '<strong class="vect-own-list-item-title">' + escapeHtml(title) + '</strong>',
+            (metaParts.length ? '<p class="vect-own-list-item-meta">' + escapeHtml(metaParts.join(' | ')) + '</p>' : ''),
+            '<p class="vect-own-list-item-status-text"><span class="vect-own-list-item-status-label">Status :</span> ' + escapeHtml(statusLabel) + '</p>',
+            '<p class="vect-own-list-item-foot">' + escapeHtml(formatDate(submission.createdAt)) + '</p>',
+            '</div>'
           ].join('');
 
           card.addEventListener('click', function () {
+            selectedSubmissionId = submission.id;
+            cachedSelectedSubmission = submission;
+            noteSectionOpen = false;
+            renderTouristSubmissionList();
+            renderTouristSubmissionDetail(submission);
+            saveDashboardState();
             openSubmission(submission.id);
           });
 
@@ -1616,26 +1651,32 @@
       function normalizeReviewState(value) {
         const safeValue = String(value || '').trim().toLowerCase();
 
-        if (safeValue === 'accepted' || safeValue === 'rejected') {
+        if (safeValue === 'pending' || safeValue === 'accepted' || safeValue === 'updated') {
           return safeValue;
         }
 
-        if (safeValue === 'deselected') {
-          return 'rejected';
+        if (safeValue === 'rejected' || safeValue === 'deselected') {
+          return 'updated';
         }
 
-        return 'accepted';
+        return 'pending';
       }
 
       function buildReviewActionButtons(itemKey, itemLabel, itemState, options) {
         const safeState = normalizeReviewState(itemState);
         const placementClass = options && options.position === 'bottom' ? ' is-bottom' : '';
-        const buttonLabel = safeState === 'rejected' ? 'Reject' : 'Accept';
-        const buttonClass = safeState === 'rejected' ? ' is-reject is-active' : ' is-accept is-active';
+        const reviewOptions = [
+          { state: 'pending', label: 'Pending', className: ' is-pending' },
+          { state: 'accepted', label: 'Accept', className: ' is-accept' },
+          { state: 'updated', label: 'Update', className: ' is-update' }
+        ];
 
         return [
           '<div class="vect-own-review-actions' + placementClass + '">',
-          '<button type="button" class="vect-own-review-button' + buttonClass + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" aria-pressed="' + (safeState === 'accepted' ? 'true' : 'false') + '">' + buttonLabel + '</button>',
+          reviewOptions.map(function (reviewOption) {
+            const isActive = safeState === reviewOption.state;
+            return '<button type="button" class="vect-own-review-button' + reviewOption.className + (isActive ? ' is-active' : '') + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" data-vect-own-review-next-state="' + escapeHtml(reviewOption.state) + '" aria-pressed="' + (isActive ? 'true' : 'false') + '">' + reviewOption.label + '</button>';
+          }).join(''),
           '</div>'
         ].join('');
       }
@@ -1949,7 +1990,6 @@
 
       function getHiddenFieldKeys() {
         return getDocumentFieldKeys().concat([
-          'owner-last-name',
           'owner-note',
           'owner-review-note',
           'owner-optional-review-note',
@@ -1964,6 +2004,7 @@
           'owner-bus-permit',
           'latest-tourist-submission',
           'latest-vehicle-summary',
+          'owner-last-name',
           'owner-heavy-licence-photo-name-1',
           'owner-heavy-licence-photo-name-2',
           'owner-aadhaar-photo-name',
@@ -2421,7 +2462,9 @@
           currentVehicleCategory: currentVehicleCategory,
           searchTerm: searchTerm,
           selectedSubmissionId: selectedSubmissionId,
+          noteSectionOpen: noteSectionOpen,
           cachedSelectedSubmission: cachedSelectedSubmission,
+          draftReviewNotes: draftReviewNotes,
           reviewSelections: reviewSelections
         };
 
@@ -2467,9 +2510,13 @@
         searchTerm = String(savedState.searchTerm || '').trim().toLowerCase();
         selectedSubmissionId = locationState.selectedSubmissionId || String(savedState.selectedSubmissionId || '').trim();
         currentVehicleCategory = locationState.vehicleCategory || String(savedState.currentVehicleCategory || 'tourist').trim() || 'tourist';
+        noteSectionOpen = Boolean(savedState.noteSectionOpen);
         cachedSelectedSubmission = savedState.cachedSelectedSubmission && typeof savedState.cachedSelectedSubmission === 'object'
           ? savedState.cachedSelectedSubmission
           : null;
+        draftReviewNotes = savedState.draftReviewNotes && typeof savedState.draftReviewNotes === 'object'
+          ? savedState.draftReviewNotes
+          : {};
         reviewSelections = savedState.reviewSelections && typeof savedState.reviewSelections === 'object'
           ? savedState.reviewSelections
           : {};
@@ -2495,7 +2542,9 @@
       }
 
       function getSelectedSubmission(group) {
-        const submissions = group ? getSubmissionsForGroup(group) : allSubmissions;
+        const submissions = group === 'submission'
+          ? getSubmissionDisplayRecords()
+          : (group ? getSubmissionsForGroup(group) : allSubmissions);
         return submissions.find(function (submission) {
           return submission.id === selectedSubmissionId;
         }) || null;
@@ -2599,7 +2648,7 @@
         const currentSubmission = submission || getSelectedSubmission('owner');
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
         const rejectedKeys = Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
+          return submissionSelections[key] === 'updated' || submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
         });
 
         if (!rejectedKeys.length) {
@@ -2747,6 +2796,7 @@
 
           if (!stillVisible) {
             selectedSubmissionId = '';
+            noteSectionOpen = false;
             cachedSelectedSubmission = null;
             renderDetail(null);
           }
@@ -2818,6 +2868,7 @@
                   return item.id !== submission.id;
                 });
 
+                delete draftReviewNotes[submission.id];
                 if (selectedSubmissionId === submission.id) {
                   selectedSubmissionId = '';
                   cachedSelectedSubmission = null;
@@ -2954,12 +3005,19 @@
       function renderDetail(submission) {
         if (!submission) {
           selectedSubmissionId = '';
+          noteSectionOpen = false;
           cachedSelectedSubmission = null;
           syncSubmissionActionButtons('');
           emptyNode.hidden = false;
           detailNode.hidden = true;
           if (documentsSection) {
             documentsSection.hidden = true;
+          }
+          if (noteSection) {
+            noteSection.hidden = true;
+          }
+          if (noteToggleButton) {
+            noteToggleButton.hidden = true;
           }
           renderTouristSubmissionList();
           renderTouristSubmissionDetail(null);
@@ -3019,8 +3077,22 @@
           statusChip.className = 'vect-own-status-chip ' + statusPresentation.className;
         }
 
+        if (noteInput) {
+          noteInput.value = draftReviewNotes[submission.id] || submission.reviewNote || '';
+        }
+
+        if (noteSection) {
+          noteSection.hidden = !isActionableStatus(submission.status) || !noteSectionOpen;
+        }
+
+        if (noteToggleButton) {
+          noteToggleButton.hidden = !isActionableStatus(submission.status);
+          noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
+        }
+
         syncSubmissionActionButtons(submission.status);
 
+        renderDocuments(fields);
         renderFields(fields);
         renderTouristSubmissionList();
         renderTouristSubmissionDetail(submission);
@@ -3065,12 +3137,15 @@
       function openSubmission(submissionId) {
         console.log('=== OPEN SUBMISSION DEBUG ===');
         console.log('Opening submission:', submissionId);
-        const selected = allSubmissions.find(function (submission) {
+        const selected = getSubmissionDisplayRecords().find(function (submission) {
+          return submission.id === submissionId;
+        }) || allSubmissions.find(function (submission) {
           return submission.id === submissionId;
         }) || null;
 
         console.log('Found submission:', selected);
 
+        noteSectionOpen = false;
         selectedSubmissionId = submissionId;
         saveDashboardState();
         renderList();
@@ -3140,7 +3215,7 @@
             renderList();
 
             const latestSubmissionId = String(sessionStorage.getItem('owner-latest-submission-id') || '').trim();
-            const targetGroup = activePage === 'submission' ? 'submission' : 'owner';
+            const targetGroup = activePage === 'submission' || activePage === 'tourist-bus' ? 'submission' : 'owner';
             const visibleSubmissions = targetGroup === 'submission'
               ? getSubmissionDisplayRecords()
               : getSubmissionsForGroup(targetGroup);
@@ -3154,6 +3229,7 @@
               sessionStorage.removeItem('owner-latest-submission-id');
               if (targetGroup === 'submission') {
                 selectedSubmissionId = latestSubmission.id;
+                noteSectionOpen = false;
                 cachedSelectedSubmission = latestSubmission;
                 saveDashboardState();
                 renderTouristBusReview();
@@ -3164,6 +3240,7 @@
               console.log('Auto-selecting first submission:', visibleSubmissions[0].id);
               if (targetGroup === 'submission') {
                 selectedSubmissionId = visibleSubmissions[0].id;
+                noteSectionOpen = false;
                 cachedSelectedSubmission = visibleSubmissions[0];
                 saveDashboardState();
                 renderTouristBusReview();
@@ -3239,6 +3316,17 @@
         renderList();
       });
 
+      if (noteInput) {
+        noteInput.addEventListener('input', function () {
+          if (!selectedSubmissionId) {
+            return;
+          }
+
+          draftReviewNotes[selectedSubmissionId] = String(noteInput.value || '');
+          saveDashboardState();
+        });
+      }
+
       logoutButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           getApi('/api/vect-own/logout', {
@@ -3273,6 +3361,32 @@
         });
       });
 
+      if (noteToggleButton) {
+        noteToggleButton.addEventListener('click', function () {
+          const currentSubmission = allSubmissions.find(function (submission) {
+            return submission.id === selectedSubmissionId;
+          });
+
+          if (!currentSubmission || !isActionableStatus(currentSubmission.status)) {
+            noteSectionOpen = false;
+            if (noteSection) {
+              noteSection.hidden = true;
+            }
+            noteToggleButton.hidden = true;
+            return;
+          }
+
+          noteSectionOpen = !noteSectionOpen;
+
+          if (noteSection) {
+            noteSection.hidden = !noteSectionOpen;
+          }
+
+          noteToggleButton.textContent = noteSectionOpen ? 'Hide review note' : 'Review note';
+          saveDashboardState();
+        });
+      }
+
       actionButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           const nextStatus = button.getAttribute('data-vect-own-action');
@@ -3283,6 +3397,8 @@
             return;
           }
 
+          const noteValue = noteInput ? String(noteInput.value || '').trim() : '';
+          draftReviewNotes[selectedSubmissionId] = noteValue;
           saveDashboardState();
           syncSubmissionActionButtons(nextStatus);
 
@@ -3364,11 +3480,11 @@
         if (reviewButton) {
           const itemKey = String(reviewButton.getAttribute('data-vect-own-item-key') || '').trim();
           const itemLabel = String(reviewButton.getAttribute('data-vect-own-item-label') || '').trim();
-          const currentState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-state') || 'accepted').trim());
+          const nextState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-next-state') || 'pending').trim());
           const submissionSelections = getSubmissionReviewSelections(selectedSubmissionId);
 
           if (itemKey) {
-            submissionSelections[itemKey] = currentState === 'accepted' ? 'rejected' : 'accepted';
+            submissionSelections[itemKey] = nextState;
             submissionSelections[itemKey + '__label'] = itemLabel;
             saveDashboardState();
           }
