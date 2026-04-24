@@ -1980,17 +1980,9 @@
 
       function getPreferredFieldOrder() {
         return [
-          'owner-company-name',
-          'owner-name',
-          'owner-first-name',
           'owner-email',
-          'owner-whatsapp-number',
-          'owner-categories',
-          'owner-districts',
-          'owner-address',
-          'owner-city',
-          'owner-state',
-          'owner-pincode'
+          'owner-company-name',
+          'owner-profile-photo-url'
         ];
       }
 
@@ -2898,8 +2890,14 @@
         const node = targetNode || fieldsNode;
         const hiddenFieldKeys = getHiddenFieldKeys();
         const preferredOrder = getPreferredFieldOrder();
+        const allowedKeys = new Set([
+          'owner-email',
+          'owner-company-name',
+          'owner-profile-photo-url',
+          'owner-profile-photo'
+        ]);
         const entries = Object.entries(fields || {}).filter(function (entry) {
-          return hiddenFieldKeys.indexOf(entry[0]) === -1;
+          return allowedKeys.has(entry[0]) && hiddenFieldKeys.indexOf(entry[0]) === -1;
         }).sort(function (left, right) {
           const leftIndex = preferredOrder.indexOf(left[0]);
           const rightIndex = preferredOrder.indexOf(right[0]);
@@ -3006,7 +3004,6 @@
 
         syncSubmissionActionButtons(submission.status);
 
-        renderDocuments(fields);
         renderFields(fields);
         renderTouristSubmissionList();
         renderTouristSubmissionDetail(submission);
