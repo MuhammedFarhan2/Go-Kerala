@@ -1009,9 +1009,9 @@
           </div>
 
           <div class="vect-own-tourist-top-actions">
+            <button type="button" class="vect-own-tourist-pill is-update" data-vect-own-tourist-action="all">All</button>
             <button type="button" class="vect-own-tourist-pill is-pending" data-vect-own-tourist-action="pending">Pending</button>
-            <button type="button" class="vect-own-tourist-pill is-reject" data-vect-own-tourist-action="rejected">Reject</button>
-            <button type="button" class="vect-own-tourist-pill is-update" data-vect-own-tourist-action="updated">Update</button>
+            <button type="button" class="vect-own-tourist-pill is-accept" data-vect-own-tourist-action="accepted">Accept</button>
           </div>
 
           <section class="vect-own-tourist-submissions-layout" aria-label="Submission list and details">
@@ -1318,11 +1318,11 @@
       function getTouristBusReviewStatus() {
         const stored = String(sessionStorage.getItem(TOURIST_BUS_STATUS_KEY) || '').trim().toLowerCase();
 
-        if (stored === 'accepted' || stored === 'rejected' || stored === 'pending' || stored === 'updated') {
+        if (stored === 'all' || stored === 'accepted' || stored === 'rejected' || stored === 'pending' || stored === 'updated') {
           return stored;
         }
 
-        return 'pending';
+        return 'all';
       }
 
       function getLocalTouristSubmission() {
@@ -1373,7 +1373,7 @@
       function setTouristBusReviewStatus(status) {
         const clean = String(status || '').trim().toLowerCase();
 
-        if (clean === 'accepted' || clean === 'rejected' || clean === 'pending' || clean === 'updated') {
+        if (clean === 'all' || clean === 'accepted' || clean === 'rejected' || clean === 'pending' || clean === 'updated') {
           sessionStorage.setItem(TOURIST_BUS_STATUS_KEY, clean);
         } else {
           sessionStorage.removeItem(TOURIST_BUS_STATUS_KEY);
@@ -1383,6 +1383,10 @@
       }
 
       function getTouristBusStatusPresentation(status) {
+        if (status === 'all') {
+          return { className: 'is-updated', label: 'All' };
+        }
+
         if (status === 'accepted') {
           return { className: 'is-accepted', label: 'Accepted' };
         }
@@ -2548,11 +2552,11 @@
           submission: countSubmissionStatuses(submissionSubmissions)
         };
 
-        const activeGroup = activePage === 'submission' ? 'submission' : 'owner';
+        const activeGroup = activePage === 'submission' || activePage === 'tourist-bus' ? 'submission' : 'owner';
         const activeCounts = countsByGroup[activeGroup] || countsByGroup.owner;
 
         countNode.textContent = activeGroup === 'submission'
-          ? String(activeCounts.pending || 0) + ' pending'
+          ? String(submissionSubmissions.length || 0) + (submissionSubmissions.length === 1 ? ' tourist bus' : ' tourist buses')
           : activeCounts.total + ' submissions';
         metricNodes.forEach(function (node) {
           const metric = node.getAttribute('data-vect-own-metric');
