@@ -249,9 +249,8 @@
 
     .vect-own-tourist-bottom-actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1fr);
       gap: 12px;
-      margin-top: 16px;
     }
 
     .vect-own-tourist-selected-summary {
@@ -805,11 +804,55 @@
       border: 1px solid #e5e7eb;
       border-radius: 22px;
       background: #fff;
-      padding: 16px;
+      padding: 12px;
+      margin: 0 16px 16px;
     }
 
     .vect-own-tourist-bottom-box .vect-own-detail-actions {
       margin-top: 0;
+    }
+
+    .vect-own-tourist-bottom-button {
+      appearance: none;
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 18px;
+      padding: 0 18px;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+    }
+
+    .vect-own-tourist-bottom-button:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
+    }
+
+    .vect-own-tourist-bottom-button:active {
+      transform: translateY(0);
+    }
+
+    .vect-own-tourist-bottom-button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    .vect-own-tourist-bottom-button.is-accept {
+      background: #1fa647;
+    }
+
+    .vect-own-tourist-bottom-button.is-reject {
+      background: #ea2525;
+    }
+
+    .vect-own-tourist-bottom-button.is-selected {
+      box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.28);
     }
   </style>
 </head>
@@ -1042,6 +1085,13 @@
     </section>
   </main>
 
+  <div class="vect-own-tourist-bottom-box" hidden data-vect-own-tourist-bottom-box>
+    <div class="vect-own-tourist-bottom-actions">
+      <button type="button" class="vect-own-tourist-bottom-button is-accept" data-vect-own-tourist-bottom-action="accepted">Accept</button>
+      <button type="button" class="vect-own-tourist-bottom-button is-reject" data-vect-own-tourist-bottom-action="updated">Reject</button>
+    </div>
+  </div>
+
   <nav class="vect-own-bottom-nav" aria-label="Vect Own navigation">
     <div class="vect-own-bottom-nav-inner">
       <button type="button" class="vect-own-bottom-tab is-active" data-vect-own-page-tab="dashboard">Dashboard</button>
@@ -1110,6 +1160,8 @@
       const touristVehicleSubtitleNode = document.querySelector('[data-vect-own-vehicle-subtitle]');
       const touristBusStatusNode = document.querySelector('[data-vect-own-tourist-status]');
       const touristBusActionButtons = Array.from(document.querySelectorAll('[data-vect-own-tourist-action]'));
+      const touristBottomBoxNode = document.querySelector('[data-vect-own-tourist-bottom-box]');
+      const touristBottomActionButtons = Array.from(document.querySelectorAll('[data-vect-own-tourist-bottom-action]'));
       const touristSubmissionListNode = document.querySelector('[data-vect-own-tourist-list]');
       const touristSubmissionListSubtitleNode = document.querySelector('[data-vect-own-tourist-list-subtitle]');
       const touristSubmissionEmptyNode = document.querySelector('[data-vect-own-tourist-empty]');
@@ -1150,6 +1202,7 @@
         });
 
         updateMetrics();
+        syncTouristBottomActionButtons(getSelectedSubmission('submission'));
         saveDashboardState({ pushHistory: shouldPushHistory });
       }
 
@@ -1295,6 +1348,26 @@
         touristBusActionButtons.forEach(function (button) {
           const buttonStatus = String(button.getAttribute('data-vect-own-tourist-action') || '').trim().toLowerCase();
           button.classList.toggle('is-selected', !!safeStatus && buttonStatus === safeStatus);
+        });
+      }
+
+      function syncTouristBottomActionButtons(submission) {
+        if (!touristBottomBoxNode || !touristBottomActionButtons.length) {
+          return;
+        }
+
+        const isTouristPage = activePage === 'tourist-bus';
+        const currentSubmission = submission || (isTouristPage ? getSelectedSubmission('submission') : null);
+        const safeStatus = String(currentSubmission && currentSubmission.status || '').trim().toLowerCase();
+
+        touristBottomBoxNode.hidden = !isTouristPage;
+
+        touristBottomActionButtons.forEach(function (button) {
+          const buttonStatus = String(button.getAttribute('data-vect-own-tourist-bottom-action') || '').trim().toLowerCase();
+          const isSelected = !!currentSubmission && buttonStatus === safeStatus;
+          button.disabled = !currentSubmission;
+          button.classList.toggle('is-selected', isSelected);
+          button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
         });
       }
 
@@ -1760,6 +1833,7 @@
             touristSubmissionDetailSubtitleNode.textContent = 'Select a submission';
           }
           touristSubmissionContentNode.innerHTML = '';
+          syncTouristBottomActionButtons(null);
           return;
         }
 
@@ -1794,6 +1868,8 @@
           '</div>',
           '</div>'
         ].join('');
+
+        syncTouristBottomActionButtons(submission);
       }
 
       function formatDate(value) {
@@ -3427,6 +3503,65 @@
               }
             })
             .catch(function (error) {
+              window.alert(error.message || 'Unable to update submission.');
+            });
+        });
+      });
+
+      touristBottomActionButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const nextStatus = String(button.getAttribute('data-vect-own-tourist-bottom-action') || '').trim().toLowerCase();
+          const currentSubmission = getSelectedSubmission('submission');
+          const targetSubmissionId = selectedSubmissionId;
+
+          if (!targetSubmissionId || !nextStatus || !currentSubmission) {
+            return;
+          }
+
+          syncTouristBottomActionButtons(Object.assign({}, currentSubmission, { status: nextStatus }));
+
+          getApi('/api/vect-own/submissions/' + encodeURIComponent(targetSubmissionId), {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              status: nextStatus,
+              reviewNote: ''
+            })
+          })
+            .then(function (response) {
+              if (!response.ok) {
+                return response.json().then(function (payload) {
+                  throw new Error((payload && payload.error) || 'Unable to update submission.');
+                });
+              }
+
+              return response.json();
+            })
+            .then(function () {
+              syncBlankSheetStatus(targetSubmissionId, nextStatus);
+              return refreshSubmissions(false);
+            })
+            .then(function () {
+              openSubmission(targetSubmissionId);
+
+              if (nextStatus === 'accepted') {
+                const whatsappLink = getWhatsappLink(currentSubmission);
+
+                if (whatsappLink) {
+                  window.open(whatsappLink, '_blank');
+                }
+              } else {
+                const rejectWhatsappLink = getRejectWhatsappLink(currentSubmission);
+
+                if (rejectWhatsappLink) {
+                  window.open(rejectWhatsappLink, '_blank');
+                }
+              }
+            })
+            .catch(function (error) {
+              syncTouristBottomActionButtons(getSelectedSubmission('submission'));
               window.alert(error.message || 'Unable to update submission.');
             });
         });
