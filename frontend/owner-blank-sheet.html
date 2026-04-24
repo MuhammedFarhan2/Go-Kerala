@@ -229,6 +229,14 @@
       color: #111827;
     }
 
+    .owner-add-preview-status.is-active {
+      color: #16a34a;
+    }
+
+    .owner-add-preview-status.is-rejected {
+      color: #dc2626;
+    }
+
     .owner-add-preview-meta {
       display: flex;
       flex-wrap: wrap;
@@ -246,6 +254,39 @@
       color: #0f172a;
       font-size: 0.8rem;
       font-weight: 700;
+    }
+
+    .owner-add-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .owner-add-action-btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      min-height: 40px;
+      padding: 0 18px;
+      font-size: 0.86rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: #ffffff;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    }
+
+    .owner-add-action-btn.is-accept {
+      background: #16a34a;
+    }
+
+    .owner-add-action-btn.is-reject {
+      background: #dc2626;
+    }
+
+    .owner-add-action-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
     }
 
     @media (max-width: 420px) {
@@ -477,6 +518,11 @@
             </div>
           </button>
 
+          <div class="owner-add-actions" id="owner-add-actions" hidden>
+            <button type="button" class="owner-add-action-btn is-accept" id="owner-add-accept">Accept</button>
+            <button type="button" class="owner-add-action-btn is-reject" id="owner-add-reject">Reject</button>
+          </div>
+
           <div class="owner-add-box" role="button" aria-label="Add bus" data-open-add-vehicle>
             <div class="owner-add-plus" aria-hidden="true">+</div>
           </div>
@@ -563,13 +609,54 @@
       const addPreviewMetaNode = document.getElementById('owner-add-preview-meta');
       const addPreviewImageNode = document.getElementById('owner-add-preview-image');
       const addPreviewPlaceholderNode = document.getElementById('owner-add-preview-placeholder');
+      const addActionsNode = document.getElementById('owner-add-actions');
+      const addAcceptButton = document.getElementById('owner-add-accept');
+      const addRejectButton = document.getElementById('owner-add-reject');
       const tabs = Array.from(document.querySelectorAll('[data-owner-tab]'));
       const pages = Array.from(document.querySelectorAll('[data-owner-page]'));
       const addVehicleTrigger = document.querySelector('[data-open-add-vehicle]');
       const latestVehicleKey = 'owner-latest-vehicle-summary';
       const latestTouristSubmissionKey = 'owner-latest-tourist-submission';
+      const latestVehicleStatusKey = 'owner-latest-vehicle-status';
       const apiBaseUrl = 'https://go-kerala-backend.onrender.com';
       let previewRenderToken = 0;
+
+      function normalizeVehicleStatus(value) {
+        const clean = String(value || '').trim().toLowerCase();
+        if (clean === 'accepted' || clean === 'active') {
+          return 'active';
+        }
+        if (clean === 'rejected' || clean === 'reject') {
+          return 'rejected';
+        }
+        return 'pending';
+      }
+
+      function getVehicleStatusPresentation(status) {
+        const safeStatus = normalizeVehicleStatus(status);
+        if (safeStatus === 'active') {
+          return { label: 'Active', className: 'is-active' };
+        }
+        if (safeStatus === 'rejected') {
+          return { label: 'Rejected', className: 'is-rejected' };
+        }
+        return { label: 'Pending', className: '' };
+      }
+
+      function setLatestVehicleStatus(status) {
+        const normalizedStatus = normalizeVehicleStatus(status);
+        sessionStorage.setItem(latestVehicleStatusKey, normalizedStatus);
+
+        try {
+          const previewData = JSON.parse(sessionStorage.getItem(latestVehicleKey) || 'null');
+          if (previewData && typeof previewData === 'object') {
+            previewData.statusLabel = getVehicleStatusPresentation(normalizedStatus).label;
+            sessionStorage.setItem(latestVehicleKey, JSON.stringify(previewData));
+          }
+        } catch (error) {
+          return;
+        }
+      }
 
       function setAvatar(text) {
         const value = String(text || 'VM').trim();
@@ -831,6 +918,15 @@
         if (!previewData) {
           addPreviewNode.hidden = true;
           addPreviewNode.classList.remove('is-visible');
+          if (addActionsNode) {
+            addActionsNode.hidden = true;
+          }
+          if (addAcceptButton) {
+            addAcceptButton.disabled = true;
+          }
+          if (addRejectButton) {
+            addRejectButton.disabled = true;
+          }
           if (addPreviewEyebrowNode) {
             addPreviewEyebrowNode.textContent = 'Tourist Bus';
           }
@@ -840,6 +936,7 @@
           addPreviewCopyNode.textContent = 'Your latest vehicle details will appear here.';
           if (addPreviewStatusNode) {
             addPreviewStatusNode.textContent = 'Status : Pending';
+            addPreviewStatusNode.classList.remove('is-active', 'is-rejected');
           }
           renderPreviewMeta([]);
           applyPreviewImage('', '');
@@ -870,14 +967,32 @@
 
         addPreviewTitleNode.textContent = modelVariant || 'Latest vehicle';
         addPreviewCopyNode.textContent = subtitleParts.join(' | ') || 'Saved from the latest submit.';
+        const storedStatus = normalizeVehicleStatus(sessionStorage.getItem(latestVehicleStatusKey));
+        const statusFromPreview = normalizeVehicleStatus(previewData.statusLabel);
+        const nextStatus = storedStatus !== 'pending' ? storedStatus : statusFromPreview;
+        const statusPresentation = getVehicleStatusPresentation(nextStatus);
+
         if (addPreviewStatusNode) {
-          addPreviewStatusNode.textContent = 'Status : ' + (valueToText(previewData.statusLabel) || 'Pending');
+          addPreviewStatusNode.textContent = 'Status : ' + statusPresentation.label;
+          addPreviewStatusNode.classList.remove('is-active', 'is-rejected');
+          if (statusPresentation.className) {
+            addPreviewStatusNode.classList.add(statusPresentation.className);
+          }
         }
         renderPreviewMeta(metaValues);
         applyPreviewImage('', '');
 
         addPreviewNode.hidden = false;
         addPreviewNode.classList.add('is-visible');
+        if (addActionsNode) {
+          addActionsNode.hidden = false;
+        }
+        if (addAcceptButton) {
+          addAcceptButton.disabled = false;
+        }
+        if (addRejectButton) {
+          addRejectButton.disabled = false;
+        }
 
         resolveStoredPreviewImage(previewData, latestTouristSubmission).then(function (imageUrl) {
           if (currentPreviewToken !== previewRenderToken) {
@@ -1010,6 +1125,20 @@
       if (addPreviewNode) {
         addPreviewNode.addEventListener('click', function () {
           openLatestVehicleSubmission();
+        });
+      }
+
+      if (addAcceptButton) {
+        addAcceptButton.addEventListener('click', function () {
+          setLatestVehicleStatus('active');
+          renderLatestVehiclePreview();
+        });
+      }
+
+      if (addRejectButton) {
+        addRejectButton.addEventListener('click', function () {
+          setLatestVehicleStatus('rejected');
+          renderLatestVehiclePreview();
         });
       }
 
