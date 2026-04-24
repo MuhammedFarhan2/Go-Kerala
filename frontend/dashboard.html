@@ -3113,7 +3113,7 @@
           }
           setActivePage(targetPage, { pushHistory: true });
           if (targetPage === 'submission') {
-            renderTouristBusReview();
+            updateVehicleHeader(currentVehicleCategory || 'tourist');
           }
         });
       });

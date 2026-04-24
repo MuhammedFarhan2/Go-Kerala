@@ -3172,13 +3172,9 @@
           if (targetPage === 'navigation3') {
             return;
           }
-          if (targetPage === 'submission') {
-            openTouristBusReview();
-            return;
-          }
           setActivePage(targetPage, { pushHistory: true });
           if (targetPage === 'submission') {
-            renderTouristBusReview();
+            updateVehicleHeader(currentVehicleCategory || 'tourist');
           }
         });
       });
