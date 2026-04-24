@@ -404,9 +404,10 @@
     }
 
     .vect-own-tourist-image-card {
+      position: relative;
       display: grid;
       gap: 8px;
-      padding: 14px;
+      padding: 14px 108px 14px 14px;
       border: 1px solid #e5e7eb;
       border-radius: 18px;
       background: #fff;
@@ -423,20 +424,27 @@
 
     .vect-own-tourist-image-link {
       appearance: none;
-      align-self: start;
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
       border: 0;
-      background: transparent;
-      color: #0f4aa3;
+      min-width: 84px;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: #111827;
+      color: #fff;
       font: inherit;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       font-weight: 700;
       text-decoration: none;
       cursor: pointer;
-      padding: 0;
+      box-shadow: 0 10px 20px rgba(17, 24, 39, 0.1);
     }
 
     .vect-own-tourist-image-link:hover {
-      text-decoration: underline;
+      filter: brightness(0.98);
     }
 
     .vect-own-tourist-file-name {
@@ -922,13 +930,7 @@
               <div class="vect-own-document-grid" data-vect-own-documents></div>
             </div>
 
-            <div class="vect-own-detail-section vect-own-note-section" hidden data-vect-own-note-section>
-              <h3 class="vect-own-detail-section-title">Owner note</h3>
-              <textarea class="vect-own-note-input" rows="4" placeholder="Optional review note" data-vect-own-note></textarea>
-            </div>
-
             <div class="vect-own-detail-actions">
-              <button type="button" class="vect-own-action is-note" data-vect-own-note-toggle>Review note</button>
               <button type="button" class="vect-own-action is-accept" data-vect-own-action="accepted">Accept</button>
               <button type="button" class="vect-own-action is-reject" data-vect-own-action="rejected">Reject</button>
             </div>
@@ -1580,28 +1582,11 @@
         const sessionInsurance = readBusStorageList('insurance');
         const sessionPermit = readBusStorageList('permit');
 
-<<<<<<< HEAD
-        const modelVariant = readValue(['owner-bus-model-variant', 'bus-model-variant', 'modelVariant']) || sessionModelVariant;
-=======
         const modelVariant = readValue(['owner-bus-model-variant', 'bus-model-variant', 'modelVariant']) || busSummary.modelVariant || sessionModelVariant;
->>>>>>> 57cef132657fc198554fd7999a2478a8ad1547b1
         const busType = readValue([
           'owner-bus-type',
           'bus-type',
           'vehicle-bus-type',
-<<<<<<< HEAD
-          'type',
-          'owner-categories'
-        ]) || sessionBusType || (Array.isArray(summary.categories) ? summary.categories[0] : '');
-        const seats = readValue(['owner-bus-seats', 'bus-seats', 'seats']) || sessionSeats;
-        const tvMusic = readValue(['owner-bus-tv', 'bus-tv', 'tv']) || sessionTv;
-        const place = readValue(['owner-bus-place', 'bus-place', 'place']) || sessionPlace || summary.place || summary.villageName || summary.location;
-        const permitType = readValue(['permitType', 'owner-permit', 'bus-permit']) || sessionPermitType;
-        const photoValues = toList(images.photos || safeFields['owner-bus-photos'] || safeFields.photos || sessionPhotos);
-        const rcBookValues = toList(images.rc || safeFields['owner-bus-rc'] || safeFields.rc || sessionRc);
-        const insuranceValues = toList(images.insurance || safeFields['owner-bus-insurance'] || safeFields.insurance || sessionInsurance);
-        const permitValues = toList(images.permit || safeFields['owner-bus-permit'] || safeFields.permit || sessionPermit);
-=======
           'type',
           'owner-categories'
         ]) || busSummary.type || sessionBusType || (Array.isArray(summary.categories) ? summary.categories[0] : '');
@@ -1613,7 +1598,6 @@
         const rcBookValues = toList(images.rc || busSummary.rc || safeFields['owner-bus-rc'] || safeFields.rc || sessionRc);
         const insuranceValues = toList(images.insurance || busSummary.insurance || safeFields['owner-bus-insurance'] || safeFields.insurance || sessionInsurance);
         const permitValues = toList(images.permit || busSummary.permit || safeFields['owner-bus-permit'] || safeFields.permit || sessionPermit);
->>>>>>> 57cef132657fc198554fd7999a2478a8ad1547b1
 
         return {
           modelVariant: modelVariant,
@@ -1966,6 +1950,20 @@
       function getHiddenFieldKeys() {
         return getDocumentFieldKeys().concat([
           'owner-last-name',
+          'owner-note',
+          'owner-review-note',
+          'owner-optional-review-note',
+          'owner-bus-type',
+          'owner-bus-seats',
+          'owner-bus-tv',
+          'owner-bus-place',
+          'owner-bus-permit-type',
+          'owner-bus-photos',
+          'owner-bus-rc',
+          'owner-bus-insurance',
+          'owner-bus-permit',
+          'latest-tourist-submission',
+          'latest-vehicle-summary',
           'owner-heavy-licence-photo-name-1',
           'owner-heavy-licence-photo-name-2',
           'owner-aadhaar-photo-name',
@@ -1979,7 +1977,9 @@
           'owner-aadhaar-submitted',
           'owner-aadhaar-submitted-v2',
           'owner-profile-photo-status-v2',
-          'owner-profile-photo-submitted-v2'
+          'owner-profile-photo-submitted-v2',
+          'owner-note-input',
+          'owner-review-note-box'
         ]);
       }
 
