@@ -292,6 +292,29 @@
       text-decoration: none;
     }
 
+    .owner-bus-question.is-locked {
+      opacity: 0.52;
+    }
+
+    .owner-bus-question.is-locked .owner-bus-label,
+    .owner-bus-question.is-locked .owner-choice-label,
+    .owner-bus-question.is-locked .owner-bus-upload-note,
+    .owner-bus-question.is-locked .owner-bus-photo-note {
+      color: #94a3b8;
+    }
+
+    .owner-review-fix-note {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #fff7ed;
+      border: 1px solid #fdba74;
+      color: #9a3412;
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
     .owner-upload-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -409,7 +432,9 @@
         </div>
 
         <div class="owner-bus-form">
-          <div class="owner-bus-question">
+          <p class="owner-review-fix-note" hidden data-owner-review-fix-note>Only the reviewer-marked sections can be edited right now.</p>
+
+          <div class="owner-bus-question" data-owner-edit-section="modelVariant">
             <p class="owner-bus-label">Bus Model / Variant</p>
             <div class="owner-bus-place-field">
               <input
@@ -423,7 +448,7 @@
             <p class="owner-upload-error" data-owner-upload-error="modelVariant"></p>
           </div>
 
-          <div class="owner-bus-question">
+          <div class="owner-bus-question" data-owner-edit-section="type">
             <p class="owner-bus-label">Bus Type</p>
             <div class="owner-choice-stack" data-owner-bus-type-group>
               <button type="button" class="owner-choice-button" data-owner-bus-type="A/C">A/C</button>
@@ -432,13 +457,13 @@
             <p class="owner-upload-error" data-owner-upload-error="busType"></p>
           </div>
 
-          <div class="owner-bus-question">
+          <div class="owner-bus-question" data-owner-edit-section="seats">
             <p class="owner-bus-label">Number of seats</p>
             <input type="number" min="1" inputmode="numeric" class="owner-bus-seat" data-owner-bus-seats placeholder="Enter number">
             <p class="owner-upload-error" data-owner-upload-error="seats"></p>
           </div>
 
-          <div class="owner-bus-question">
+          <div class="owner-bus-question" data-owner-edit-section="tv">
             <p class="owner-bus-label">TV/Music Systems</p>
             <div class="owner-choice-stack" data-owner-bus-tv-group>
               <button type="button" class="owner-choice-button" data-owner-bus-tv="Yes">Yes</button>
@@ -447,7 +472,7 @@
             <p class="owner-upload-error" data-owner-upload-error="tvMusic"></p>
           </div>
 
-          <div class="owner-bus-question">
+          <div class="owner-bus-question" data-owner-edit-section="place">
             <p class="owner-bus-label">Enter the place of this Tourist Bus</p>
             <div class="owner-bus-place-field">
               <input
@@ -463,7 +488,7 @@
             <p class="owner-upload-error" data-owner-upload-error="place"></p>
           </div>
 
-          <div class="owner-bus-question">
+          <div class="owner-bus-question" data-owner-edit-section="photos">
             <p class="owner-bus-label">Photos</p>
             <div class="owner-bus-photo-block">
               <div class="owner-upload-list" data-owner-upload-list="photos" hidden></div>
@@ -476,7 +501,7 @@
             <p class="owner-upload-error" data-owner-upload-error="photos"></p>
           </div>
 
-          <div class="owner-bus-question">
+          <div class="owner-bus-question" data-owner-edit-section="rc">
             <p class="owner-bus-label">R.C Book</p>
             <div class="owner-bus-photo-block">
               <div class="owner-upload-list" data-owner-upload-list="rc" hidden></div>
@@ -489,7 +514,7 @@
             <p class="owner-upload-error" data-owner-upload-error="rc"></p>
           </div>
 
-          <div class="owner-bus-question">
+          <div class="owner-bus-question" data-owner-edit-section="insurance">
             <p class="owner-bus-label">Insurance</p>
             <div class="owner-bus-photo-block">
               <div class="owner-upload-list" data-owner-upload-list="insurance" hidden></div>
@@ -502,7 +527,7 @@
             <p class="owner-upload-error" data-owner-upload-error="insurance"></p>
           </div>
 
-          <div class="owner-bus-question">
+          <div class="owner-bus-question" data-owner-edit-section="permit">
             <p class="owner-bus-label">Permit</p>
             <div class="owner-bus-photo-block">
               <p class="owner-choice-label">Choose One</p>
@@ -562,6 +587,7 @@
       const submitButton = document.getElementById('owner-upload-submit');
       const flowNode = document.getElementById('owner-bus-flow');
       const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
+      const editableSectionsParam = String(pageParams.get('editable') || '').trim();
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://go-kerala-backend.onrender.com';
       const apiBaseCandidates = Array.from(new Set([
@@ -572,6 +598,8 @@
         return String(value || '').trim().replace(/\/$/, '');
       }).filter(Boolean)));
       const storagePrefix = 'owner-bus-page-';
+      const reuploadEditableSectionsKey = 'owner-reupload-editable-sections';
+      const reuploadHydratedSubmissionKey = 'owner-reupload-hydrated-submission-id';
       const fields = {
         model: document.querySelector('[data-owner-bus-model]'),
         type: document.querySelectorAll('[data-owner-bus-type]'),
@@ -593,6 +621,7 @@
         permitTrigger: document.querySelector('[data-owner-upload-trigger="permit"]'),
         permitList: document.querySelector('[data-owner-upload-list="permit"]')
       };
+      const reviewFixNoteNode = document.querySelector('[data-owner-review-fix-note]');
       const errorNodes = Array.from(document.querySelectorAll('[data-owner-upload-error]'));
       const uploadConfigs = {
         photos: { input: 'photosInput', trigger: 'photosTrigger', list: 'photosList', maxCount: 5, multiple: true, storePreview: true },
@@ -604,6 +633,38 @@
       const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
       const profileName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || 'Owner profile').trim();
       const placeOptions = Array.isArray(window.ownerBusPlaceOptions) ? window.ownerBusPlaceOptions : [];
+      const editableSections = getEditableSections();
+
+      function parseEditableSections(value) {
+        const raw = String(value || '').trim();
+
+        if (!raw) {
+          return [];
+        }
+
+        return raw.split(',').map(function (item) {
+          return String(item || '').trim();
+        }).filter(Boolean).filter(function (item, index, list) {
+          return list.indexOf(item) === index;
+        });
+      }
+
+      function getEditableSections() {
+        const fromQuery = parseEditableSections(editableSectionsParam);
+
+        if (fromQuery.length) {
+          return fromQuery;
+        }
+
+        try {
+          const stored = JSON.parse(sessionStorage.getItem(reuploadEditableSectionsKey) || '[]');
+          return Array.isArray(stored) ? stored.map(function (item) {
+            return String(item || '').trim();
+          }).filter(Boolean) : [];
+        } catch (error) {
+          return [];
+        }
+      }
 
       function setAvatar(text) {
         const value = String(text || 'VM').trim();
@@ -841,6 +902,166 @@
         }
       }
 
+      function toArray(value) {
+        if (Array.isArray(value)) {
+          return value.slice();
+        }
+
+        if (value && typeof value === 'object') {
+          return [value];
+        }
+
+        const text = String(value || '').trim();
+
+        if (!text) {
+          return [];
+        }
+
+        try {
+          const parsed = JSON.parse(text);
+          return Array.isArray(parsed) ? parsed : [parsed];
+        } catch (error) {
+          return [text];
+        }
+      }
+
+      function toStoredUploadEntries(value) {
+        return toArray(value).map(function (item) {
+          if (item && typeof item === 'object' && !Array.isArray(item)) {
+            const name = String(item.name || item.fileName || item.filename || item.url || item.path || '').trim();
+
+            if (!name) {
+              return null;
+            }
+
+            return {
+              name: name,
+              mediaKey: String(item.mediaKey || '').trim(),
+              previewDataUrl: String(item.previewDataUrl || '').trim()
+            };
+          }
+
+          const name = String(item || '').trim();
+
+          if (!name) {
+            return null;
+          }
+
+          return {
+            name: name,
+            mediaKey: '',
+            previewDataUrl: ''
+          };
+        }).filter(Boolean);
+      }
+
+      function shouldAllowSection(sectionName) {
+        if (!reuploadSubmissionId || !editableSections.length) {
+          return true;
+        }
+
+        return editableSections.indexOf(String(sectionName || '').trim()) > -1;
+      }
+
+      function setButtonGroupDisabled(nodeList, disabled) {
+        Array.from(nodeList || []).forEach(function (button) {
+          button.disabled = disabled;
+          button.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+        });
+      }
+
+      function setQuestionLocked(sectionName, disabled) {
+        const question = document.querySelector('[data-owner-edit-section="' + String(sectionName || '').trim() + '"]');
+
+        if (!question) {
+          return;
+        }
+
+        question.classList.toggle('is-locked', disabled);
+      }
+
+      function applyEditableSectionsState() {
+        const isRestricted = Boolean(reuploadSubmissionId && editableSections.length);
+
+        if (reviewFixNoteNode) {
+          reviewFixNoteNode.hidden = !isRestricted;
+        }
+
+        setQuestionLocked('modelVariant', !shouldAllowSection('modelVariant'));
+        setQuestionLocked('type', !shouldAllowSection('type'));
+        setQuestionLocked('seats', !shouldAllowSection('seats'));
+        setQuestionLocked('tv', !shouldAllowSection('tv'));
+        setQuestionLocked('place', !shouldAllowSection('place'));
+        setQuestionLocked('photos', !shouldAllowSection('photos'));
+        setQuestionLocked('rc', !shouldAllowSection('rc'));
+        setQuestionLocked('insurance', !shouldAllowSection('insurance'));
+        setQuestionLocked('permit', !shouldAllowSection('permit'));
+
+        if (fields.model) {
+          fields.model.disabled = !shouldAllowSection('modelVariant');
+        }
+
+        setButtonGroupDisabled(fields.type, !shouldAllowSection('type'));
+
+        if (fields.seats) {
+          fields.seats.disabled = !shouldAllowSection('seats');
+        }
+
+        setButtonGroupDisabled(fields.tv, !shouldAllowSection('tv'));
+
+        if (fields.placeInput) {
+          fields.placeInput.disabled = !shouldAllowSection('place');
+        }
+
+        if (fields.photosInput) {
+          fields.photosInput.disabled = !shouldAllowSection('photos');
+        }
+        if (fields.photosTrigger) {
+          fields.photosTrigger.disabled = !shouldAllowSection('photos');
+        }
+
+        if (fields.rcInput) {
+          fields.rcInput.disabled = !shouldAllowSection('rc');
+        }
+        if (fields.rcTrigger) {
+          fields.rcTrigger.disabled = !shouldAllowSection('rc');
+        }
+
+        if (fields.insuranceInput) {
+          fields.insuranceInput.disabled = !shouldAllowSection('insurance');
+        }
+        if (fields.insuranceTrigger) {
+          fields.insuranceTrigger.disabled = !shouldAllowSection('insurance');
+        }
+
+        if (fields.permitInput) {
+          fields.permitInput.disabled = !shouldAllowSection('permit');
+        }
+        if (fields.permitTrigger) {
+          fields.permitTrigger.disabled = !shouldAllowSection('permit');
+        }
+        setButtonGroupDisabled(fields.permitButtons, !shouldAllowSection('permit'));
+      }
+
+      function hydrateSubmissionValues(submission) {
+        const safeSubmission = submission && typeof submission === 'object' ? submission : {};
+        const submissionFields = safeSubmission.fields && typeof safeSubmission.fields === 'object' ? safeSubmission.fields : {};
+        const busSummary = safeSubmission.bus && typeof safeSubmission.bus === 'object'
+          ? safeSubmission.bus
+          : (safeSubmission.summary && safeSubmission.summary.bus && typeof safeSubmission.summary.bus === 'object' ? safeSubmission.summary.bus : {});
+
+        saveValue('modelVariant', submissionFields['owner-bus-model-variant'] || busSummary.modelVariant || '');
+        saveValue('type', submissionFields['owner-bus-type'] || busSummary.type || '');
+        saveValue('seats', submissionFields['owner-bus-seats'] || busSummary.seats || '');
+        saveValue('tv', submissionFields['owner-bus-tv'] || busSummary.tvMusic || '');
+        savePlace(submissionFields['owner-bus-place'] || busSummary.place || '');
+        savePermitType(submissionFields['owner-bus-permit-type'] || busSummary.permitType || '');
+        saveUploadEntries('photos', toStoredUploadEntries(submissionFields['owner-bus-photos'] || busSummary.photos));
+        saveUploadEntries('rc', toStoredUploadEntries(submissionFields['owner-bus-rc'] || busSummary.rc));
+        saveUploadEntries('insurance', toStoredUploadEntries(submissionFields['owner-bus-insurance'] || busSummary.insurance));
+        saveUploadEntries('permit', toStoredUploadEntries(submissionFields['owner-bus-permit'] || busSummary.permit));
+      }
+
       function getApiUrl(pathName) {
         const safePath = String(pathName || '').trim();
 
@@ -898,6 +1119,47 @@
         return tryNext();
       }
 
+      function hydrateReuploadSubmission() {
+        if (!reuploadSubmissionId) {
+          return Promise.resolve();
+        }
+
+        if (editableSections.length) {
+          sessionStorage.setItem(reuploadEditableSectionsKey, JSON.stringify(editableSections));
+        }
+
+        const hydratedForSubmission = String(sessionStorage.getItem(reuploadHydratedSubmissionKey) || '').trim();
+
+        if (hydratedForSubmission === reuploadSubmissionId) {
+          applyEditableSectionsState();
+          return Promise.resolve();
+        }
+
+        return fetchWithApiFallback('/api/submissions/' + encodeURIComponent(reuploadSubmissionId))
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error('Unable to load the previous submission details.');
+            }
+
+            return response.json();
+          })
+          .then(function (payload) {
+            const safeSubmission = payload && payload.submission ? payload.submission : null;
+
+            if (safeSubmission) {
+              hydrateSubmissionValues(safeSubmission);
+              sessionStorage.setItem(reuploadHydratedSubmissionKey, reuploadSubmissionId);
+            }
+          })
+          .catch(function () {
+            return;
+          })
+          .then(function () {
+            restoreSelections();
+            applyEditableSectionsState();
+          });
+      }
+
       function setError(name, message) {
         const node = document.querySelector('[data-owner-upload-error="' + name + '"]');
         if (!node) {
@@ -923,6 +1185,7 @@
       function renderUploadSection(section) {
         const config = uploadConfigs[section];
         const listNode = config ? fields[config.list] : null;
+        const isEditable = shouldAllowSection(section === 'permit' ? 'permit' : section);
 
         if (!listNode) {
           return;
@@ -949,7 +1212,13 @@
           del.type = 'button';
           del.className = 'owner-upload-delete';
           del.textContent = 'Delete';
+          del.disabled = !isEditable;
+          del.setAttribute('aria-disabled', isEditable ? 'false' : 'true');
           del.addEventListener('click', function () {
+            if (!isEditable) {
+              return;
+            }
+
             const nextEntries = readUploadEntries(section);
             const removedEntry = nextEntries.splice(index, 1)[0];
 
@@ -1075,6 +1344,13 @@
 
       if (flowNode) {
         flowNode.hidden = false;
+      }
+
+      if (!reuploadSubmissionId) {
+        sessionStorage.removeItem(reuploadEditableSectionsKey);
+        sessionStorage.removeItem(reuploadHydratedSubmissionKey);
+      } else if (editableSections.length) {
+        sessionStorage.setItem(reuploadEditableSectionsKey, JSON.stringify(editableSections));
       }
 
       if (fields.model) {
@@ -1211,6 +1487,8 @@
       renderUploadSection('insurance');
       renderUploadSection('permit');
       restoreSelections();
+      applyEditableSectionsState();
+      hydrateReuploadSubmission();
 
       if (submitButton) {
         submitButton.addEventListener('click', function () {
@@ -1431,6 +1709,8 @@
                 sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
                 if (reuploadSubmissionId) {
                   sessionStorage.removeItem('owner-reupload-submission-id');
+                  sessionStorage.removeItem(reuploadEditableSectionsKey);
+                  sessionStorage.removeItem(reuploadHydratedSubmissionKey);
                 }
               }
               window.location.href = 'owner-blank-sheet.html?tab=add-bus';
@@ -1452,6 +1732,9 @@
 
           if (reuploadSubmissionId) {
             backUrl.searchParams.set('submissionId', reuploadSubmissionId);
+            if (editableSections.length) {
+              backUrl.searchParams.set('editable', editableSections.join(','));
+            }
           }
 
           window.location.href = backUrl.toString();
@@ -1466,6 +1749,9 @@
 
           if (reuploadSubmissionId) {
             backUrl.searchParams.set('submissionId', reuploadSubmissionId);
+            if (editableSections.length) {
+              backUrl.searchParams.set('editable', editableSections.join(','));
+            }
           }
 
           window.location.href = backUrl.toString();

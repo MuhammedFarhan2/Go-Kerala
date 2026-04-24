@@ -618,12 +618,45 @@
       const latestVehicleKey = 'owner-latest-vehicle-summary';
       const latestTouristSubmissionKey = 'owner-latest-tourist-submission';
       const latestVehicleStatusKey = 'owner-latest-vehicle-status';
+      const reuploadEditableSectionsKey = 'owner-reupload-editable-sections';
       const apiBaseUrl = 'https://go-kerala-backend.onrender.com';
       let previewRenderToken = 0;
+      const editableSectionsFromQuery = String(pageParams.get('editable') || '').trim();
+
+      function parseEditableSections(value) {
+        const raw = String(value || '').trim();
+
+        if (!raw) {
+          return [];
+        }
+
+        return raw.split(',').map(function (item) {
+          return String(item || '').trim();
+        }).filter(Boolean).filter(function (item, index, list) {
+          return list.indexOf(item) === index;
+        });
+      }
+
+      function getEditableSectionsParam() {
+        const fromQuery = parseEditableSections(editableSectionsFromQuery);
+
+        if (fromQuery.length) {
+          return fromQuery;
+        }
+
+        try {
+          const stored = JSON.parse(sessionStorage.getItem(reuploadEditableSectionsKey) || '[]');
+          return Array.isArray(stored) ? stored.map(function (item) {
+            return String(item || '').trim();
+          }).filter(Boolean) : [];
+        } catch (error) {
+          return [];
+        }
+      }
 
       function normalizeVehicleStatus(value) {
         const clean = String(value || '').trim().toLowerCase();
-        if (clean === 'accepted' || clean === 'active') {
+        if (clean === 'accepted' || clean === 'active' || clean === 'online') {
           return 'active';
         }
         if (clean === 'rejected' || clean === 'reject') {
@@ -635,7 +668,7 @@
       function getVehicleStatusPresentation(status) {
         const safeStatus = normalizeVehicleStatus(status);
         if (safeStatus === 'active') {
-          return { label: 'Active', className: 'is-active' };
+          return { label: 'Online', className: 'is-active' };
         }
         if (safeStatus === 'rejected') {
           return { label: 'Rejected', className: 'is-rejected' };
@@ -1028,8 +1061,12 @@
 
       if (!reuploadSubmissionId) {
         sessionStorage.removeItem('owner-reupload-submission-id');
+        sessionStorage.removeItem(reuploadEditableSectionsKey);
       } else {
         sessionStorage.setItem('owner-reupload-submission-id', reuploadSubmissionId);
+        if (editableSectionsFromQuery) {
+          sessionStorage.setItem(reuploadEditableSectionsKey, JSON.stringify(parseEditableSections(editableSectionsFromQuery)));
+        }
       }
 
       const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
@@ -1112,10 +1149,15 @@
       if (addVehicleTrigger) {
         addVehicleTrigger.addEventListener('click', function () {
           const nextUrl = new URL('owner-add-vehicle.html', window.location.href);
+          const editableSections = getEditableSectionsParam();
 
           if (reuploadSubmissionId) {
             nextUrl.searchParams.set('submissionId', reuploadSubmissionId);
             sessionStorage.setItem('owner-reupload-submission-id', reuploadSubmissionId);
+            if (editableSections.length) {
+              nextUrl.searchParams.set('editable', editableSections.join(','));
+              sessionStorage.setItem(reuploadEditableSectionsKey, JSON.stringify(editableSections));
+            }
           }
 
           window.location.href = nextUrl.toString();
@@ -1130,7 +1172,7 @@
 
       if (addAcceptButton) {
         addAcceptButton.addEventListener('click', function () {
-          setLatestVehicleStatus('active');
+          setLatestVehicleStatus('online');
           renderLatestVehiclePreview();
         });
       }

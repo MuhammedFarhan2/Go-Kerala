@@ -1929,9 +1929,25 @@ async function handlePublicSubmissionDetail(requestUrl, response) {
     return;
   }
 
+  const safeFields = submission.fields || {};
+  const summary = summarizeSubmissionFields(safeFields, submission.whatsappNumber);
+  const submissionWithUrls = Object.assign({}, submission, {
+    fields: Object.assign({}, safeFields, {
+      'owner-profile-photo-url': getUploadUrl(safeFields['owner-profile-photo-url'] || safeFields['owner-profile-photo-name'] || safeFields['owner-profile-photo']),
+      'owner-aadhaar-photo-url': getUploadUrl(safeFields['owner-aadhaar-photo-url'] || safeFields['owner-aadhaar-photo-name']),
+      'owner-heavy-licence-photo-url-1': getUploadUrl(safeFields['owner-heavy-licence-photo-url-1'] || safeFields['owner-heavy-licence-photo-name-1']),
+      'owner-heavy-licence-photo-url-2': getUploadUrl(safeFields['owner-heavy-licence-photo-url-2'] || safeFields['owner-heavy-licence-photo-name-2']),
+      'owner-pan-photo-url': getUploadUrl(safeFields['owner-pan-photo-url'] || safeFields['owner-pan-photo-name']),
+      'owner-gst-photo-url': getUploadUrl(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
+      'owner-company-logo-url': getUploadUrl(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name'])
+    }),
+    summary: summary,
+    bus: summary.bus || {}
+  });
+
   sendJson(response, 200, {
     success: true,
-    submission: serializeSubmissionForList(submission)
+    submission: submissionWithUrls
   });
 }
 

@@ -312,7 +312,12 @@
       const panel = document.getElementById('account-panel');
       const backdrop = document.getElementById('account-backdrop');
       const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
+      const editableSections = String(pageParams.get('editable') || '').trim();
       let selectedType = '';
+
+      if (!reuploadSubmissionId) {
+        sessionStorage.removeItem('owner-reupload-editable-sections');
+      }
 
       function setAvatar(text) {
         const value = String(text || 'VM').trim();
@@ -351,6 +356,12 @@
         if (reuploadSubmissionId) {
           nextUrl.searchParams.set('submissionId', reuploadSubmissionId);
           sessionStorage.setItem('owner-reupload-submission-id', reuploadSubmissionId);
+          if (editableSections) {
+            nextUrl.searchParams.set('editable', editableSections);
+            sessionStorage.setItem('owner-reupload-editable-sections', JSON.stringify(editableSections.split(',').map(function (item) {
+              return String(item || '').trim();
+            }).filter(Boolean)));
+          }
         }
 
         nextButton.setAttribute('href', nextUrl.toString());

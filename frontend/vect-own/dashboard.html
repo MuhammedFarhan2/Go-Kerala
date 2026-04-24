@@ -2727,6 +2727,103 @@
         return lines.join('\n').trim();
       }
 
+      function getSubmissionCorrectionItemKeys(submission) {
+        const currentSubmission = submission || getSelectedSubmission('submission');
+        const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
+
+        return Object.keys(submissionSelections).filter(function (key) {
+          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
+        });
+      }
+
+      function mapReviewItemKeyToEditableSection(itemKey) {
+        const safeKey = String(itemKey || '').trim().toLowerCase();
+
+        if (safeKey === 'tourist-model-variant') {
+          return 'modelVariant';
+        }
+        if (safeKey === 'tourist-bus-type') {
+          return 'type';
+        }
+        if (safeKey === 'tourist-seats') {
+          return 'seats';
+        }
+        if (safeKey === 'tourist-tv') {
+          return 'tv';
+        }
+        if (safeKey === 'tourist-place') {
+          return 'place';
+        }
+        if (safeKey.indexOf('tourist-photo-') === 0) {
+          return 'photos';
+        }
+        if (safeKey.indexOf('tourist-rc-') === 0) {
+          return 'rc';
+        }
+        if (safeKey.indexOf('tourist-insurance-') === 0) {
+          return 'insurance';
+        }
+        if (safeKey === 'tourist-permit-type' || safeKey.indexOf('tourist-permit-') === 0) {
+          return 'permit';
+        }
+
+        return '';
+      }
+
+      function getSubmissionEditableSections(submission) {
+        return getSubmissionCorrectionItemKeys(submission).map(function (itemKey) {
+          return mapReviewItemKeyToEditableSection(itemKey);
+        }).filter(Boolean).filter(function (item, index, list) {
+          return list.indexOf(item) === index;
+        });
+      }
+
+      function getBlankSheetLink(submission, editableSections) {
+        const currentSubmission = submission || getSelectedSubmission('submission');
+        const submissionId = currentSubmission && currentSubmission.id ? String(currentSubmission.id).trim() : '';
+        const linkUrl = new URL('../owner-blank-sheet.html', window.location.href);
+
+        linkUrl.searchParams.set('tab', 'add-bus');
+
+        if (submissionId) {
+          linkUrl.searchParams.set('submissionId', submissionId);
+        }
+
+        if (Array.isArray(editableSections) && editableSections.length) {
+          linkUrl.searchParams.set('editable', editableSections.join(','));
+        }
+
+        return linkUrl.toString();
+      }
+
+      function buildTouristAcceptWhatsappMessage(submission) {
+        return ACCEPT_WHATSAPP_MESSAGE + '\n' + getBlankSheetLink(submission, []);
+      }
+
+      function buildTouristRejectWhatsappMessage(submission) {
+        const currentSubmission = submission || getSelectedSubmission('submission');
+        const rejectedKeys = getSubmissionCorrectionItemKeys(currentSubmission);
+        const editableSections = getSubmissionEditableSections(currentSubmission);
+
+        if (!rejectedKeys.length || !editableSections.length) {
+          return REJECT_INTRO_MESSAGE;
+        }
+
+        const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
+        const lines = [REJECT_INTRO_MESSAGE, ''];
+
+        rejectedKeys.forEach(function (itemKey) {
+          const itemLabel = String(submissionSelections[itemKey + '__label'] || itemKey).trim();
+          lines.push(getRejectMessageText(itemKey, itemLabel));
+        });
+
+        lines.push('');
+        lines.push('Open this link and update only the marked parts:');
+        lines.push(getBlankSheetLink(currentSubmission, editableSections));
+
+        return lines.join('\n').trim();
+      }
+
       function getWhatsappLink(submission) {
         const summary = submission && submission.summary ? submission.summary : {};
         const fields = submission && submission.fields ? submission.fields : {};
@@ -3163,12 +3260,15 @@
       function syncBlankSheetStatus(submissionId, status) {
         const safeStatus = String(status || '').trim().toLowerCase();
         const statusLabel = safeStatus === 'accepted'
-          ? 'Active'
-          : safeStatus === 'rejected'
+          ? 'Online'
+          : safeStatus === 'rejected' || safeStatus === 'updated'
             ? 'Rejected'
-            : safeStatus === 'updated'
-              ? 'Updated'
-              : 'Pending';
+            : 'Pending';
+        const blankSheetStatus = safeStatus === 'accepted'
+          ? 'online'
+          : safeStatus === 'rejected' || safeStatus === 'updated'
+            ? 'rejected'
+            : 'pending';
 
         try {
           const latestSubmission = JSON.parse(sessionStorage.getItem('owner-latest-tourist-submission') || 'null');
@@ -3192,6 +3292,8 @@
         } catch (error) {
           // Ignore session sync errors.
         }
+
+        sessionStorage.setItem('owner-latest-vehicle-status', blankSheetStatus);
       }
 
       function openSubmission(submissionId) {
@@ -3513,10 +3615,31 @@
           const nextStatus = String(button.getAttribute('data-vect-own-tourist-bottom-action') || '').trim().toLowerCase();
           const currentSubmission = getSelectedSubmission('submission');
           const targetSubmissionId = selectedSubmissionId;
+          const editableSections = getSubmissionEditableSections(currentSubmission);
 
           if (!targetSubmissionId || !nextStatus || !currentSubmission) {
             return;
           }
+
+          if (nextStatus === 'accepted' && editableSections.length) {
+            window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
+            return;
+          }
+
+          if (nextStatus !== 'accepted' && !editableSections.length) {
+            window.alert('Mark the wrong parts first, then press Reject.');
+            return;
+          }
+
+          if (nextStatus === 'accepted') {
+            sessionStorage.removeItem('owner-reupload-submission-id');
+            sessionStorage.removeItem('owner-reupload-editable-sections');
+          } else {
+            sessionStorage.setItem('owner-reupload-submission-id', targetSubmissionId);
+            sessionStorage.setItem('owner-reupload-editable-sections', JSON.stringify(editableSections));
+          }
+
+          saveDashboardState();
 
           syncTouristBottomActionButtons(Object.assign({}, currentSubmission, { status: nextStatus }));
 
@@ -3547,13 +3670,15 @@
               openSubmission(targetSubmissionId);
 
               if (nextStatus === 'accepted') {
-                const whatsappLink = getWhatsappLink(currentSubmission);
+                const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
+                const whatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristAcceptWhatsappMessage(currentSubmission)) : '';
 
                 if (whatsappLink) {
                   window.open(whatsappLink, '_blank');
                 }
               } else {
-                const rejectWhatsappLink = getRejectWhatsappLink(currentSubmission);
+                const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
+                const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission)) : '';
 
                 if (rejectWhatsappLink) {
                   window.open(rejectWhatsappLink, '_blank');
