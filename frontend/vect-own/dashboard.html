@@ -2010,16 +2010,21 @@
 
       function getPreferredFieldOrder() {
         return [
-          'owner-email',
           'owner-company-name',
-          'owner-profile-photo-url'
+          'owner-categories',
+          'owner-districts',
+          'owner-profile-photo-url',
+          'owner-heavy-licence-photo-url-1'
         ];
       }
 
       function getFieldLabel(key) {
         const labels = {
-          'owner-profile-photo-url': 'Last Photo',
-          'owner-profile-photo': 'Last Photo',
+          'owner-categories': 'Vehicle',
+          'owner-districts': 'District',
+          'owner-profile-photo-url': 'Profile',
+          'owner-profile-photo': 'Profile',
+          'owner-heavy-licence-photo-url-1': 'Licence Front',
           'owner-company-name': 'Company Name',
           'owner-email': 'Email'
         };
@@ -2807,10 +2812,12 @@
         const hiddenFieldKeys = getHiddenFieldKeys();
         const preferredOrder = getPreferredFieldOrder();
         const allowedKeys = new Set([
-          'owner-email',
           'owner-company-name',
+          'owner-categories',
+          'owner-districts',
           'owner-profile-photo-url',
-          'owner-profile-photo'
+          'owner-profile-photo',
+          'owner-heavy-licence-photo-url-1'
         ]);
         const entries = Object.entries(fields || {}).filter(function (entry) {
           if (!allowedKeys.has(entry[0]) || hiddenFieldKeys.indexOf(entry[0]) !== -1) {
