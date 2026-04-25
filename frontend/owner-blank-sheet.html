@@ -256,38 +256,6 @@
       font-weight: 700;
     }
 
-    .owner-add-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .owner-add-action-btn {
-      appearance: none;
-      border: 0;
-      border-radius: 999px;
-      min-height: 40px;
-      padding: 0 18px;
-      font-size: 0.86rem;
-      font-weight: 800;
-      cursor: pointer;
-      color: #ffffff;
-      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
-    }
-
-    .owner-add-action-btn.is-accept {
-      background: #16a34a;
-    }
-
-    .owner-add-action-btn.is-reject {
-      background: #dc2626;
-    }
-
-    .owner-add-action-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
 
     @media (max-width: 420px) {
       .owner-add-preview {
@@ -518,11 +486,6 @@
             </div>
           </button>
 
-          <div class="owner-add-actions" id="owner-add-actions" hidden>
-            <button type="button" class="owner-add-action-btn is-accept" id="owner-add-accept">Accept</button>
-            <button type="button" class="owner-add-action-btn is-reject" id="owner-add-reject">Reject</button>
-          </div>
-
           <div class="owner-add-box" role="button" aria-label="Add bus" data-open-add-vehicle>
             <div class="owner-add-plus" aria-hidden="true">+</div>
           </div>
@@ -609,9 +572,6 @@
       const addPreviewMetaNode = document.getElementById('owner-add-preview-meta');
       const addPreviewImageNode = document.getElementById('owner-add-preview-image');
       const addPreviewPlaceholderNode = document.getElementById('owner-add-preview-placeholder');
-      const addActionsNode = document.getElementById('owner-add-actions');
-      const addAcceptButton = document.getElementById('owner-add-accept');
-      const addRejectButton = document.getElementById('owner-add-reject');
       const tabs = Array.from(document.querySelectorAll('[data-owner-tab]'));
       const pages = Array.from(document.querySelectorAll('[data-owner-page]'));
       const addVehicleTrigger = document.querySelector('[data-open-add-vehicle]');
@@ -668,7 +628,7 @@
       function getVehicleStatusPresentation(status) {
         const safeStatus = normalizeVehicleStatus(status);
         if (safeStatus === 'active') {
-          return { label: 'Online', className: 'is-active' };
+          return { label: 'Active', className: 'is-active' };
         }
         if (safeStatus === 'rejected') {
           return { label: 'Rejected', className: 'is-rejected' };
@@ -679,6 +639,7 @@
       function setLatestVehicleStatus(status) {
         const normalizedStatus = normalizeVehicleStatus(status);
         sessionStorage.setItem(latestVehicleStatusKey, normalizedStatus);
+        localStorage.setItem(latestVehicleStatusKey, normalizedStatus);
 
         try {
           const previewData = JSON.parse(sessionStorage.getItem(latestVehicleKey) || 'null');
@@ -951,15 +912,6 @@
         if (!previewData) {
           addPreviewNode.hidden = true;
           addPreviewNode.classList.remove('is-visible');
-          if (addActionsNode) {
-            addActionsNode.hidden = true;
-          }
-          if (addAcceptButton) {
-            addAcceptButton.disabled = true;
-          }
-          if (addRejectButton) {
-            addRejectButton.disabled = true;
-          }
           if (addPreviewEyebrowNode) {
             addPreviewEyebrowNode.textContent = 'Tourist Bus';
           }
@@ -1000,7 +952,10 @@
 
         addPreviewTitleNode.textContent = modelVariant || 'Latest vehicle';
         addPreviewCopyNode.textContent = subtitleParts.join(' | ') || 'Saved from the latest submit.';
-        const storedStatus = normalizeVehicleStatus(sessionStorage.getItem(latestVehicleStatusKey));
+        const storedStatus = normalizeVehicleStatus(
+          sessionStorage.getItem(latestVehicleStatusKey) ||
+          localStorage.getItem(latestVehicleStatusKey)
+        );
         const statusFromPreview = normalizeVehicleStatus(previewData.statusLabel);
         const nextStatus = storedStatus !== 'pending' ? storedStatus : statusFromPreview;
         const statusPresentation = getVehicleStatusPresentation(nextStatus);
@@ -1017,15 +972,6 @@
 
         addPreviewNode.hidden = false;
         addPreviewNode.classList.add('is-visible');
-        if (addActionsNode) {
-          addActionsNode.hidden = false;
-        }
-        if (addAcceptButton) {
-          addAcceptButton.disabled = false;
-        }
-        if (addRejectButton) {
-          addRejectButton.disabled = false;
-        }
 
         resolveStoredPreviewImage(previewData, latestTouristSubmission).then(function (imageUrl) {
           if (currentPreviewToken !== previewRenderToken) {
@@ -1167,20 +1113,6 @@
       if (addPreviewNode) {
         addPreviewNode.addEventListener('click', function () {
           openLatestVehicleSubmission();
-        });
-      }
-
-      if (addAcceptButton) {
-        addAcceptButton.addEventListener('click', function () {
-          setLatestVehicleStatus('online');
-          renderLatestVehiclePreview();
-        });
-      }
-
-      if (addRejectButton) {
-        addRejectButton.addEventListener('click', function () {
-          setLatestVehicleStatus('rejected');
-          renderLatestVehiclePreview();
         });
       }
 

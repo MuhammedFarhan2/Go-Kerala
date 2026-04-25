@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../style.css?v=20260423-1">
   <style>
     .vect-own-main {
-      padding-bottom: 92px;
+      padding-bottom: 12px;
     }
 
     .vect-own-page {
@@ -142,7 +142,7 @@
 
     @media (max-width: 680px) {
       .vect-own-main {
-        padding: 8px 4px 96px;
+        padding: 8px 4px 12px;
       }
 
       .vect-own-page-card {
@@ -250,8 +250,9 @@
     .vect-own-tourist-bottom-actions {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
-      gap: 12px;
+      gap: 8px;
     }
+
 
     .vect-own-tourist-selected-summary {
       display: grid;
@@ -522,7 +523,7 @@
 
     .vect-own-review-button {
       appearance: none;
-      border: 1px solid #d1d5db !important;
+      border: 0 !important;
       border-radius: 999px;
       min-width: 78px;
       min-height: 34px;
@@ -530,14 +531,12 @@
       font: inherit;
       font-size: 0.8rem;
       font-weight: 700;
-      background: #fff !important;
-      color: #475569 !important;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      box-shadow: none;
+      box-shadow: 0 10px 20px rgba(17, 24, 39, 0.08);
       transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
     }
 
@@ -551,21 +550,13 @@
       opacity: 0.92;
     }
 
-    .vect-own-review-button.is-pending.is-active {
-      background: #111827 !important;
-      border-color: #111827 !important;
-      color: #fff !important;
-    }
-
-    .vect-own-review-button.is-accept.is-active {
+    .vect-own-review-button.is-accept {
       background: #16a34a !important;
-      border-color: #16a34a !important;
       color: #fff !important;
     }
 
-    .vect-own-review-button.is-update.is-active {
-      background: #ea580c !important;
-      border-color: #ea580c !important;
+    .vect-own-review-button.is-reject {
+      background: #dc2626 !important;
       color: #fff !important;
     }
 
@@ -814,8 +805,9 @@
       border: 1px solid #e5e7eb;
       border-radius: 22px;
       background: #fff;
-      padding: 12px;
-      margin: 0 16px 16px;
+      padding: 8px;
+      margin: 0 16px 92px;
+      overflow: hidden;
     }
 
     .vect-own-tourist-bottom-box .vect-own-detail-actions {
@@ -854,11 +846,15 @@
     }
 
     .vect-own-tourist-bottom-button.is-accept {
-      background: #1fa647;
+      background: #16a34a !important;
+      border-color: #16a34a !important;
+      color: #ffffff !important;
     }
 
     .vect-own-tourist-bottom-button.is-reject {
-      background: #ea2525;
+      background: #dc2626 !important;
+      border-color: #dc2626 !important;
+      color: #ffffff !important;
     }
 
     .vect-own-tourist-bottom-button.is-selected {
@@ -1379,6 +1375,80 @@
           button.classList.toggle('is-selected', isSelected);
           button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
         });
+
+      }
+
+      function handleTouristBottomStatusUpdate(nextStatus) {
+        const cleanStatus = String(nextStatus || '').trim().toLowerCase();
+        const currentSubmission = getSelectedSubmission('submission');
+        const targetSubmissionId = selectedSubmissionId;
+        const editableSections = getSubmissionEditableSections(currentSubmission);
+
+        if (!targetSubmissionId || !cleanStatus || !currentSubmission) {
+          return;
+        }
+
+        if (cleanStatus === 'accepted' && editableSections.length) {
+          window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
+          return;
+        }
+
+        if (cleanStatus !== 'accepted' && !editableSections.length) {
+          window.alert('Mark the wrong parts first, then press Reject.');
+          return;
+        }
+
+        if (cleanStatus === 'accepted') {
+          sessionStorage.removeItem('owner-reupload-submission-id');
+          sessionStorage.removeItem('owner-reupload-editable-sections');
+        } else {
+          sessionStorage.setItem('owner-reupload-submission-id', targetSubmissionId);
+          sessionStorage.setItem('owner-reupload-editable-sections', JSON.stringify(editableSections));
+        }
+
+        saveDashboardState();
+        syncTouristBottomActionButtons(Object.assign({}, currentSubmission, { status: cleanStatus }));
+
+        getApi('/api/vect-own/submissions/' + encodeURIComponent(targetSubmissionId), {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            status: cleanStatus,
+            reviewNote: ''
+          })
+        })
+          .then(function (response) {
+            if (!response.ok) {
+              return response.json().then(function (payload) {
+                throw new Error((payload && payload.error) || 'Unable to update submission.');
+              });
+            }
+
+            return response.json();
+          })
+          .then(function () {
+            syncBlankSheetStatus(targetSubmissionId, cleanStatus);
+            setTouristBusReviewStatus(cleanStatus);
+            return refreshSubmissions(false);
+          })
+          .then(function () {
+            openSubmission(targetSubmissionId);
+
+            if (cleanStatus !== 'accepted') {
+              const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
+              const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission)) : '';
+
+              if (rejectWhatsappLink) {
+                window.open(rejectWhatsappLink, '_blank');
+              }
+            }
+          })
+          .catch(function (error) {
+            syncTouristBottomActionButtons(getSelectedSubmission('submission'));
+            window.alert(error.message || 'Unable to update submission.');
+          });
       }
 
       function readBusStorageValue(key) {
@@ -1724,32 +1794,26 @@
       function normalizeReviewState(value) {
         const safeValue = String(value || '').trim().toLowerCase();
 
-        if (safeValue === 'pending' || safeValue === 'accepted' || safeValue === 'updated') {
+        if (safeValue === 'accepted' || safeValue === 'rejected') {
           return safeValue;
         }
 
-        if (safeValue === 'rejected' || safeValue === 'deselected') {
-          return 'updated';
+        if (safeValue === 'deselected') {
+          return 'rejected';
         }
 
-        return 'pending';
+        return 'accepted';
       }
 
       function buildReviewActionButtons(itemKey, itemLabel, itemState, options) {
         const safeState = normalizeReviewState(itemState);
         const placementClass = options && options.position === 'bottom' ? ' is-bottom' : '';
-        const reviewOptions = [
-          { state: 'pending', label: 'Pending', className: ' is-pending' },
-          { state: 'accepted', label: 'Accept', className: ' is-accept' },
-          { state: 'updated', label: 'Update', className: ' is-update' }
-        ];
+        const buttonLabel = safeState === 'rejected' ? 'Reject' : 'Accept';
+        const buttonClass = safeState === 'rejected' ? ' is-reject is-active' : ' is-accept is-active';
 
         return [
           '<div class="vect-own-review-actions' + placementClass + '">',
-          reviewOptions.map(function (reviewOption) {
-            const isActive = safeState === reviewOption.state;
-            return '<button type="button" class="vect-own-review-button' + reviewOption.className + (isActive ? ' is-active' : '') + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" data-vect-own-review-next-state="' + escapeHtml(reviewOption.state) + '" aria-pressed="' + (isActive ? 'true' : 'false') + '">' + reviewOption.label + '</button>';
-          }).join(''),
+          '<button type="button" class="vect-own-review-button' + buttonClass + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" aria-pressed="' + (safeState === 'accepted' ? 'true' : 'false') + '">' + buttonLabel + '</button>',
           '</div>'
         ].join('');
       }
@@ -2724,7 +2788,7 @@
         const currentSubmission = submission || getSelectedSubmission('owner');
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
         const rejectedKeys = Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'updated' || submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
+          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
         });
 
         if (!rejectedKeys.length) {
@@ -2748,7 +2812,7 @@
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
 
         return Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'updated' || submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
+          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
         });
       }
 
@@ -3310,6 +3374,7 @@
         }
 
         sessionStorage.setItem('owner-latest-vehicle-status', blankSheetStatus);
+        localStorage.setItem('owner-latest-vehicle-status', blankSheetStatus);
       }
 
       function openSubmission(submissionId) {
@@ -3606,13 +3671,7 @@
             .then(function () {
               openSubmission(targetSubmissionId);
 
-              if (nextStatus === 'accepted' && currentSubmission) {
-                const whatsappLink = getWhatsappLink(currentSubmission);
-
-                if (whatsappLink) {
-                  window.open(whatsappLink, '_blank');
-                }
-              } else if (nextStatus === 'rejected' && currentSubmission) {
+              if (nextStatus === 'rejected' && currentSubmission) {
                 const rejectWhatsappLink = getRejectWhatsappLink(currentSubmission);
 
                 if (rejectWhatsappLink) {
@@ -3629,82 +3688,7 @@
       touristBottomActionButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           const nextStatus = String(button.getAttribute('data-vect-own-tourist-bottom-action') || '').trim().toLowerCase();
-          const currentSubmission = getSelectedSubmission('submission');
-          const targetSubmissionId = selectedSubmissionId;
-          const editableSections = getSubmissionEditableSections(currentSubmission);
-
-          if (!targetSubmissionId || !nextStatus || !currentSubmission) {
-            return;
-          }
-
-          if (nextStatus === 'accepted' && editableSections.length) {
-            window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
-            return;
-          }
-
-          if (nextStatus !== 'accepted' && !editableSections.length) {
-            window.alert('Mark the wrong parts first, then press Reject.');
-            return;
-          }
-
-          if (nextStatus === 'accepted') {
-            sessionStorage.removeItem('owner-reupload-submission-id');
-            sessionStorage.removeItem('owner-reupload-editable-sections');
-          } else {
-            sessionStorage.setItem('owner-reupload-submission-id', targetSubmissionId);
-            sessionStorage.setItem('owner-reupload-editable-sections', JSON.stringify(editableSections));
-          }
-
-          saveDashboardState();
-
-          syncTouristBottomActionButtons(Object.assign({}, currentSubmission, { status: nextStatus }));
-
-          getApi('/api/vect-own/submissions/' + encodeURIComponent(targetSubmissionId), {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              status: nextStatus,
-              reviewNote: ''
-            })
-          })
-            .then(function (response) {
-              if (!response.ok) {
-                return response.json().then(function (payload) {
-                  throw new Error((payload && payload.error) || 'Unable to update submission.');
-                });
-              }
-
-              return response.json();
-            })
-            .then(function () {
-              syncBlankSheetStatus(targetSubmissionId, nextStatus);
-              return refreshSubmissions(false);
-            })
-            .then(function () {
-              openSubmission(targetSubmissionId);
-
-              if (nextStatus === 'accepted') {
-                const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
-                const whatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristAcceptWhatsappMessage(currentSubmission)) : '';
-
-                if (whatsappLink) {
-                  window.open(whatsappLink, '_blank');
-                }
-              } else {
-                const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
-                const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission)) : '';
-
-                if (rejectWhatsappLink) {
-                  window.open(rejectWhatsappLink, '_blank');
-                }
-              }
-            })
-            .catch(function (error) {
-              syncTouristBottomActionButtons(getSelectedSubmission('submission'));
-              window.alert(error.message || 'Unable to update submission.');
-            });
+          handleTouristBottomStatusUpdate(nextStatus);
         });
       });
 
@@ -3740,11 +3724,11 @@
         if (reviewButton) {
           const itemKey = String(reviewButton.getAttribute('data-vect-own-item-key') || '').trim();
           const itemLabel = String(reviewButton.getAttribute('data-vect-own-item-label') || '').trim();
-          const nextState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-next-state') || 'pending').trim());
+          const currentState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-state') || 'accepted').trim());
           const submissionSelections = getSubmissionReviewSelections(selectedSubmissionId);
 
           if (itemKey) {
-            submissionSelections[itemKey] = nextState;
+            submissionSelections[itemKey] = currentState === 'accepted' ? 'rejected' : 'accepted';
             submissionSelections[itemKey + '__label'] = itemLabel;
             saveDashboardState();
           }
