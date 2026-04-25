@@ -2115,6 +2115,42 @@
           });
       }
 
+      function loadPreviewImageWithRetry(imageNode, imageUrl, maxAttempts) {
+        return new Promise(function (resolve, reject) {
+          const maxTry = Math.max(1, Number(maxAttempts) || 1);
+          let attempt = 0;
+
+          function tryLoad() {
+            attempt += 1;
+            const candidateUrl = attempt === 1
+              ? imageUrl
+              : imageUrl + (imageUrl.indexOf('?') === -1 ? '?' : '&') + '_img_retry=' + Date.now() + '_' + attempt;
+
+            imageNode.onload = function () {
+              imageNode.onload = null;
+              imageNode.onerror = null;
+              resolve(candidateUrl);
+            };
+
+            imageNode.onerror = function () {
+              imageNode.onload = null;
+              imageNode.onerror = null;
+
+              if (attempt < maxTry) {
+                tryLoad();
+                return;
+              }
+
+              reject(new Error('Image preview failed to load.'));
+            };
+
+            imageNode.src = candidateUrl;
+          }
+
+          tryLoad();
+        });
+      }
+
       function getDocumentFieldKeys() {
         return [
           'owner-profile-photo',
@@ -2468,21 +2504,20 @@
                 return;
               }
 
-              imageNode.src = imageUrl;
               viewButton.disabled = false;
               viewButton.setAttribute('data-vect-own-image-url', imageUrl);
               viewButton.setAttribute('data-vect-own-image-label', item.label);
 
-              imageNode.addEventListener('error', function () {
-                imageNode.hidden = true;
-                fallbackNode.hidden = false;
-                fallbackNode.textContent = 'Unable to load preview. Use View full image.';
-              }, { once: true });
-
-              imageNode.addEventListener('load', function () {
-                imageNode.hidden = false;
-                fallbackNode.hidden = true;
-              }, { once: true });
+              return loadPreviewImageWithRetry(imageNode, imageUrl, 2)
+                .then(function () {
+                  imageNode.hidden = false;
+                  fallbackNode.hidden = true;
+                })
+                .catch(function () {
+                  imageNode.hidden = true;
+                  fallbackNode.hidden = false;
+                  fallbackNode.textContent = 'Unable to load preview. Use View full image.';
+                });
             })
             .catch(function () {
               imageNode.hidden = true;
