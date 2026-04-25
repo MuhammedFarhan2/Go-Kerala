@@ -9,6 +9,25 @@
   </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="style.css?v=20260406-2">
+  <style>
+    .product-status-badge {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .product-status-badge[hidden] {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -125,13 +144,28 @@
           <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
         </a>
 
-        <a href="route.html?scope=open-truck" class="product-box">
+        <a
+          href="route.html?scope=open-truck"
+          class="product-box"
+          id="dynamic-vehicle-card"
+          data-default-href="route.html?scope=open-truck"
+          data-default-image="white-flatbed-truck.png"
+          data-default-image-alt="White flatbed truck"
+          data-default-title="Open Body Trucks"
+          data-default-copy="Includes Open Body Pickups, Lorries, etc."
+        >
           <span class="product-icon" aria-hidden="true">
-            <img src="white-flatbed-truck.png" alt="White flatbed truck" class="product-icon-image-vehicle" />
+            <img
+              src="white-flatbed-truck.png"
+              alt="White flatbed truck"
+              class="product-icon-image-vehicle"
+              id="dynamic-vehicle-card-image"
+            />
           </span>
           <span class="product-copy">
-            <strong>Open Body Trucks</strong>
-            <span>Includes Open Body Pickups, Lorries, etc.</span>
+            <strong id="dynamic-vehicle-card-title">Open Body Trucks</strong>
+            <span id="dynamic-vehicle-card-copy">Includes Open Body Pickups, Lorries, etc.</span>
+            <span class="product-status-badge" id="dynamic-vehicle-card-status" hidden>Active</span>
           </span>
           <span class="product-arrow" aria-hidden="true">&rsaquo;</span>
         </a>
@@ -206,6 +240,107 @@
           }
         }
       });
+    })();
+  </script>
+  <script>
+    (function () {
+      const latestVehicleKey = 'owner-latest-vehicle-summary';
+      const latestVehicleStatusKey = 'owner-latest-vehicle-status';
+      const cardNode = document.getElementById('dynamic-vehicle-card');
+      const imageNode = document.getElementById('dynamic-vehicle-card-image');
+      const titleNode = document.getElementById('dynamic-vehicle-card-title');
+      const copyNode = document.getElementById('dynamic-vehicle-card-copy');
+      const statusNode = document.getElementById('dynamic-vehicle-card-status');
+
+      function readJson(key) {
+        try {
+          return JSON.parse(localStorage.getItem(key) || sessionStorage.getItem(key) || 'null');
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function normalizeVehicleStatus(value) {
+        const clean = String(value || '').trim().toLowerCase();
+        if (clean === 'accepted' || clean === 'active' || clean === 'online') {
+          return 'active';
+        }
+        if (clean === 'rejected' || clean === 'reject' || clean === 'updated') {
+          return 'rejected';
+        }
+        return 'pending';
+      }
+
+      function getScopeFromVehicle(vehicleLabel) {
+        const clean = String(vehicleLabel || '').trim().toLowerCase();
+        if (clean.indexOf('tourist') > -1 || clean.indexOf('bus') > -1) {
+          return 'tourist';
+        }
+        if (clean.indexOf('open') > -1) {
+          return 'open-truck';
+        }
+        if (clean.indexOf('closed') > -1 || clean.indexOf('truck') > -1) {
+          return 'truck';
+        }
+        if (clean.indexOf('excavator') > -1) {
+          return 'excavator';
+        }
+        if (clean.indexOf('backhoe') > -1 || clean.indexOf('jcb') > -1) {
+          return 'backhoe';
+        }
+        return 'tourist';
+      }
+
+      function resolveImageUrl(value) {
+        const text = String(value || '').trim();
+        if (!text) {
+          return '';
+        }
+        if (/^data:image\//i.test(text) || /^https?:\/\//i.test(text)) {
+          return text;
+        }
+        if (/^\//.test(text)) {
+          return text;
+        }
+        return text;
+      }
+
+      if (!cardNode || !imageNode || !titleNode || !copyNode || !statusNode) {
+        return;
+      }
+
+      const latestVehicle = readJson(latestVehicleKey);
+      const latestStatus = normalizeVehicleStatus(
+        localStorage.getItem(latestVehicleStatusKey) ||
+        sessionStorage.getItem(latestVehicleStatusKey) ||
+        (latestVehicle && latestVehicle.statusLabel) ||
+        ''
+      );
+
+      if (!latestVehicle || latestStatus !== 'active') {
+        return;
+      }
+
+      const vehicleLabel = String(latestVehicle.vehicleLabel || 'Tourist Bus').trim() || 'Tourist Bus';
+      const title = String(latestVehicle.modelVariant || vehicleLabel).trim() || vehicleLabel;
+      const copyParts = [
+        latestVehicle.type ? 'Bus Type: ' + String(latestVehicle.type).trim() : '',
+        latestVehicle.place ? String(latestVehicle.place).trim() : '',
+        latestVehicle.seats ? String(latestVehicle.seats).trim() + ' seats' : ''
+      ].filter(Boolean);
+      const imageUrl = resolveImageUrl(latestVehicle.photoPreviewUrl || (Array.isArray(latestVehicle.photos) ? latestVehicle.photos[0] : ''));
+      const scope = getScopeFromVehicle(vehicleLabel);
+
+      cardNode.href = 'route.html?scope=' + encodeURIComponent(scope);
+      titleNode.textContent = title;
+      copyNode.textContent = copyParts.join(' | ') || 'Available for bookings now.';
+      statusNode.hidden = false;
+      statusNode.textContent = 'Active';
+
+      if (imageUrl) {
+        imageNode.src = imageUrl;
+        imageNode.alt = title;
+      }
     })();
   </script>
   <script src="script.js?v=20260406-2"></script>

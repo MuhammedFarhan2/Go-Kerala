@@ -248,11 +248,10 @@
     }
 
     .vect-own-tourist-bottom-actions {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
     }
-
 
     .vect-own-tourist-selected-summary {
       display: grid;
@@ -523,7 +522,7 @@
 
     .vect-own-review-button {
       appearance: none;
-      border: 0 !important;
+      border: 1px solid #d1d5db !important;
       border-radius: 999px;
       min-width: 78px;
       min-height: 34px;
@@ -531,12 +530,14 @@
       font: inherit;
       font-size: 0.8rem;
       font-weight: 700;
+      background: #fff !important;
+      color: #475569 !important;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      box-shadow: 0 10px 20px rgba(17, 24, 39, 0.08);
+      box-shadow: none;
       transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
     }
 
@@ -550,13 +551,21 @@
       opacity: 0.92;
     }
 
-    .vect-own-review-button.is-accept {
-      background: #16a34a !important;
+    .vect-own-review-button.is-pending.is-active {
+      background: #111827 !important;
+      border-color: #111827 !important;
       color: #fff !important;
     }
 
-    .vect-own-review-button.is-reject {
-      background: #dc2626 !important;
+    .vect-own-review-button.is-accept.is-active {
+      background: #16a34a !important;
+      border-color: #16a34a !important;
+      color: #fff !important;
+    }
+
+    .vect-own-review-button.is-update.is-active {
+      background: #ea580c !important;
+      border-color: #ea580c !important;
       color: #fff !important;
     }
 
@@ -805,8 +814,8 @@
       border: 1px solid #e5e7eb;
       border-radius: 22px;
       background: #fff;
-      padding: 8px;
-      margin: 0 16px 92px;
+      padding: 0;
+      margin: 0 16px 20px;
       overflow: hidden;
     }
 
@@ -819,7 +828,7 @@
       width: 100%;
       min-height: 52px;
       border: 0;
-      border-radius: 18px;
+      border-radius: 0;
       padding: 0 18px;
       font: inherit;
       font-size: 1rem;
@@ -846,14 +855,14 @@
     }
 
     .vect-own-tourist-bottom-button.is-accept {
-      background: #16a34a !important;
-      border-color: #16a34a !important;
+      background: #28a745 !important;
+      border-color: #28a745 !important;
       color: #ffffff !important;
     }
 
     .vect-own-tourist-bottom-button.is-reject {
-      background: #dc2626 !important;
-      border-color: #dc2626 !important;
+      background: #dc3545 !important;
+      border-color: #dc3545 !important;
       color: #ffffff !important;
     }
 
@@ -1093,8 +1102,8 @@
 
   <div class="vect-own-tourist-bottom-box" hidden data-vect-own-tourist-bottom-box>
     <div class="vect-own-tourist-bottom-actions">
-      <button type="button" class="vect-own-tourist-bottom-button is-accept" data-vect-own-tourist-bottom-action="accepted">Accept</button>
       <button type="button" class="vect-own-tourist-bottom-button is-reject" data-vect-own-tourist-bottom-action="updated">Reject</button>
+      <button type="button" class="vect-own-tourist-bottom-button is-accept" data-vect-own-tourist-bottom-action="accepted">Accept</button>
     </div>
   </div>
 
@@ -1138,6 +1147,7 @@
       const fieldsNode = document.querySelector('[data-vect-own-fields]');
       const documentsNode = document.querySelector('[data-vect-own-documents]');
       const documentsSection = documentsNode ? documentsNode.closest('.vect-own-detail-section') : null;
+      const pageLoaderNode = document.getElementById('page-loader');
       const lightboxNode = document.querySelector('[data-vect-own-lightbox]');
       const lightboxImageNode = document.querySelector('[data-vect-own-lightbox-image]');
       const tabs = Array.from(document.querySelectorAll('[data-vect-own-tab]'));
@@ -1155,7 +1165,6 @@
       }).filter(Boolean)));
       const SESSION_KEY = 'vect-own-session-token';
       const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
-      const ACCEPT_WHATSAPP_MESSAGE = 'Congratulation you have selected as a member of VECT Movers. Please open this link after accept: ' + new URL('../owner-blank-sheet.html', window.location.href).toString();
       const REJECT_INTRO_MESSAGE = 'Sorry, your valuation have rejected because';
       const pageTabs = Array.from(document.querySelectorAll('[data-vect-own-page-tab]'));
       const pages = Array.from(document.querySelectorAll('[data-vect-own-page]'));
@@ -1191,6 +1200,34 @@
       if (!listNode || !detailNode || !emptyNode) {
         return;
       }
+
+      function hidePageLoader() {
+        document.documentElement.classList.remove('show-page-loader');
+
+        if (pageLoaderNode) {
+          pageLoaderNode.classList.remove('is-active');
+          pageLoaderNode.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      function buildLocalPageUrl(path, queryParams) {
+        const safePath = String(path || '').trim();
+        const searchParams = new URLSearchParams();
+
+        Object.keys(queryParams || {}).forEach(function (key) {
+          const value = queryParams[key];
+
+          if (value === null || value === undefined || value === '') {
+            return;
+          }
+
+          searchParams.set(key, String(value));
+        });
+
+        return safePath + (searchParams.toString() ? '?' + searchParams.toString() : '');
+      }
+
+      const ACCEPT_WHATSAPP_MESSAGE = 'Congratulation you have selected as a member of VECT Movers. Please open this link after accept: ' + buildLocalPageUrl('../owner-blank-sheet.html');
 
       function setActivePage(pageName, options) {
         const shouldPushHistory = Boolean(options && options.pushHistory);
@@ -1375,80 +1412,6 @@
           button.classList.toggle('is-selected', isSelected);
           button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
         });
-
-      }
-
-      function handleTouristBottomStatusUpdate(nextStatus) {
-        const cleanStatus = String(nextStatus || '').trim().toLowerCase();
-        const currentSubmission = getSelectedSubmission('submission');
-        const targetSubmissionId = selectedSubmissionId;
-        const editableSections = getSubmissionEditableSections(currentSubmission);
-
-        if (!targetSubmissionId || !cleanStatus || !currentSubmission) {
-          return;
-        }
-
-        if (cleanStatus === 'accepted' && editableSections.length) {
-          window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
-          return;
-        }
-
-        if (cleanStatus !== 'accepted' && !editableSections.length) {
-          window.alert('Mark the wrong parts first, then press Reject.');
-          return;
-        }
-
-        if (cleanStatus === 'accepted') {
-          sessionStorage.removeItem('owner-reupload-submission-id');
-          sessionStorage.removeItem('owner-reupload-editable-sections');
-        } else {
-          sessionStorage.setItem('owner-reupload-submission-id', targetSubmissionId);
-          sessionStorage.setItem('owner-reupload-editable-sections', JSON.stringify(editableSections));
-        }
-
-        saveDashboardState();
-        syncTouristBottomActionButtons(Object.assign({}, currentSubmission, { status: cleanStatus }));
-
-        getApi('/api/vect-own/submissions/' + encodeURIComponent(targetSubmissionId), {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            status: cleanStatus,
-            reviewNote: ''
-          })
-        })
-          .then(function (response) {
-            if (!response.ok) {
-              return response.json().then(function (payload) {
-                throw new Error((payload && payload.error) || 'Unable to update submission.');
-              });
-            }
-
-            return response.json();
-          })
-          .then(function () {
-            syncBlankSheetStatus(targetSubmissionId, cleanStatus);
-            setTouristBusReviewStatus(cleanStatus);
-            return refreshSubmissions(false);
-          })
-          .then(function () {
-            openSubmission(targetSubmissionId);
-
-            if (cleanStatus !== 'accepted') {
-              const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
-              const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission)) : '';
-
-              if (rejectWhatsappLink) {
-                window.open(rejectWhatsappLink, '_blank');
-              }
-            }
-          })
-          .catch(function (error) {
-            syncTouristBottomActionButtons(getSelectedSubmission('submission'));
-            window.alert(error.message || 'Unable to update submission.');
-          });
       }
 
       function readBusStorageValue(key) {
@@ -1794,26 +1757,32 @@
       function normalizeReviewState(value) {
         const safeValue = String(value || '').trim().toLowerCase();
 
-        if (safeValue === 'accepted' || safeValue === 'rejected') {
+        if (safeValue === 'pending' || safeValue === 'accepted' || safeValue === 'updated') {
           return safeValue;
         }
 
-        if (safeValue === 'deselected') {
-          return 'rejected';
+        if (safeValue === 'rejected' || safeValue === 'deselected') {
+          return 'updated';
         }
 
-        return 'accepted';
+        return 'pending';
       }
 
       function buildReviewActionButtons(itemKey, itemLabel, itemState, options) {
         const safeState = normalizeReviewState(itemState);
         const placementClass = options && options.position === 'bottom' ? ' is-bottom' : '';
-        const buttonLabel = safeState === 'rejected' ? 'Reject' : 'Accept';
-        const buttonClass = safeState === 'rejected' ? ' is-reject is-active' : ' is-accept is-active';
+        const reviewOptions = [
+          { state: 'pending', label: 'Pending', className: ' is-pending' },
+          { state: 'accepted', label: 'Accept', className: ' is-accept' },
+          { state: 'updated', label: 'Update', className: ' is-update' }
+        ];
 
         return [
           '<div class="vect-own-review-actions' + placementClass + '">',
-          '<button type="button" class="vect-own-review-button' + buttonClass + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" aria-pressed="' + (safeState === 'accepted' ? 'true' : 'false') + '">' + buttonLabel + '</button>',
+          reviewOptions.map(function (reviewOption) {
+            const isActive = safeState === reviewOption.state;
+            return '<button type="button" class="vect-own-review-button' + reviewOption.className + (isActive ? ' is-active' : '') + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" data-vect-own-review-next-state="' + escapeHtml(reviewOption.state) + '" aria-pressed="' + (isActive ? 'true' : 'false') + '">' + reviewOption.label + '</button>';
+          }).join(''),
           '</div>'
         ].join('');
       }
@@ -2823,7 +2792,7 @@
         const currentSubmission = submission || getSelectedSubmission('owner');
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
         const rejectedKeys = Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
+          return submissionSelections[key] === 'updated' || submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
         });
 
         if (!rejectedKeys.length) {
@@ -2847,7 +2816,7 @@
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
 
         return Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
+          return submissionSelections[key] === 'updated' || submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
         });
       }
 
@@ -2896,19 +2865,11 @@
       function getBlankSheetLink(submission, editableSections) {
         const currentSubmission = submission || getSelectedSubmission('submission');
         const submissionId = currentSubmission && currentSubmission.id ? String(currentSubmission.id).trim() : '';
-        const linkUrl = new URL('../owner-blank-sheet.html', window.location.href);
-
-        linkUrl.searchParams.set('tab', 'add-bus');
-
-        if (submissionId) {
-          linkUrl.searchParams.set('submissionId', submissionId);
-        }
-
-        if (Array.isArray(editableSections) && editableSections.length) {
-          linkUrl.searchParams.set('editable', editableSections.join(','));
-        }
-
-        return linkUrl.toString();
+        return buildLocalPageUrl('../owner-blank-sheet.html', {
+          tab: 'add-bus',
+          submissionId: submissionId,
+          editable: Array.isArray(editableSections) && editableSections.length ? editableSections.join(',') : ''
+        });
       }
 
       function buildTouristAcceptWhatsappMessage(submission) {
@@ -3487,9 +3448,7 @@
 
             allSubmissions = Array.isArray(payload.submissions) ? payload.submissions : [];
             console.log('All submissions loaded:', allSubmissions.length);
-            console.log('Submission IDs:', allSubmissions.map(function(s) { 
-              return s.id; 
-            }));
+            console.log('Submission IDs:', allSubmissions.map(s => s.id));
             
             updateMetrics();
             renderList();
@@ -3703,12 +3662,19 @@
             })
             .then(function () {
               syncBlankSheetStatus(targetSubmissionId, nextStatus);
+              setTouristBusReviewStatus(nextStatus);
               return refreshSubmissions(false);
             })
             .then(function () {
               openSubmission(targetSubmissionId);
 
-              if (nextStatus === 'rejected' && currentSubmission) {
+              if (nextStatus === 'accepted' && currentSubmission) {
+                const whatsappLink = getWhatsappLink(currentSubmission);
+
+                if (whatsappLink) {
+                  window.open(whatsappLink, '_blank');
+                }
+              } else if (nextStatus === 'rejected' && currentSubmission) {
                 const rejectWhatsappLink = getRejectWhatsappLink(currentSubmission);
 
                 if (rejectWhatsappLink) {
@@ -3725,7 +3691,83 @@
       touristBottomActionButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           const nextStatus = String(button.getAttribute('data-vect-own-tourist-bottom-action') || '').trim().toLowerCase();
-          handleTouristBottomStatusUpdate(nextStatus);
+          const currentSubmission = getSelectedSubmission('submission');
+          const targetSubmissionId = selectedSubmissionId;
+          const editableSections = getSubmissionEditableSections(currentSubmission);
+
+          if (!targetSubmissionId || !nextStatus || !currentSubmission) {
+            return;
+          }
+
+          if (nextStatus === 'accepted' && editableSections.length) {
+            window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
+            return;
+          }
+
+          if (nextStatus !== 'accepted' && !editableSections.length) {
+            window.alert('Mark the wrong parts first, then press Reject.');
+            return;
+          }
+
+          if (nextStatus === 'accepted') {
+            sessionStorage.removeItem('owner-reupload-submission-id');
+            sessionStorage.removeItem('owner-reupload-editable-sections');
+          } else {
+            sessionStorage.setItem('owner-reupload-submission-id', targetSubmissionId);
+            sessionStorage.setItem('owner-reupload-editable-sections', JSON.stringify(editableSections));
+          }
+
+          saveDashboardState();
+
+          syncTouristBottomActionButtons(Object.assign({}, currentSubmission, { status: nextStatus }));
+
+          getApi('/api/vect-own/submissions/' + encodeURIComponent(targetSubmissionId), {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              status: nextStatus,
+              reviewNote: ''
+            })
+          })
+            .then(function (response) {
+              if (!response.ok) {
+                return response.json().then(function (payload) {
+                  throw new Error((payload && payload.error) || 'Unable to update submission.');
+                });
+              }
+
+              return response.json();
+            })
+            .then(function () {
+              syncBlankSheetStatus(targetSubmissionId, nextStatus);
+              setTouristBusReviewStatus(nextStatus);
+              return refreshSubmissions(false);
+            })
+            .then(function () {
+              openSubmission(targetSubmissionId);
+
+              if (nextStatus === 'accepted') {
+                const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
+                const whatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristAcceptWhatsappMessage(currentSubmission)) : '';
+
+                if (whatsappLink) {
+                  window.open(whatsappLink, '_blank');
+                }
+              } else {
+                const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
+                const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission)) : '';
+
+                if (rejectWhatsappLink) {
+                  window.open(rejectWhatsappLink, '_blank');
+                }
+              }
+            })
+            .catch(function (error) {
+              syncTouristBottomActionButtons(getSelectedSubmission('submission'));
+              window.alert(error.message || 'Unable to update submission.');
+            });
         });
       });
 
@@ -3734,6 +3776,14 @@
       window.addEventListener('popstate', function () {
         restoreDashboardState();
         renderTouristBusReview();
+      });
+
+      window.addEventListener('pageshow', function () {
+        window.requestAnimationFrame(hidePageLoader);
+      });
+
+      window.addEventListener('load', function () {
+        window.requestAnimationFrame(hidePageLoader);
       });
 
       fetch(getApiUrl('/api/vect-own/me'), {
@@ -3753,6 +3803,9 @@
         })
         .catch(function () {
           // Redirect already handled above if needed.
+        })
+        .finally(function () {
+          hidePageLoader();
         });
 
       document.addEventListener('click', function (event) {
@@ -3761,11 +3814,11 @@
         if (reviewButton) {
           const itemKey = String(reviewButton.getAttribute('data-vect-own-item-key') || '').trim();
           const itemLabel = String(reviewButton.getAttribute('data-vect-own-item-label') || '').trim();
-          const currentState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-state') || 'accepted').trim());
+          const nextState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-next-state') || 'pending').trim());
           const submissionSelections = getSubmissionReviewSelections(selectedSubmissionId);
 
           if (itemKey) {
-            submissionSelections[itemKey] = currentState === 'accepted' ? 'rejected' : 'accepted';
+            submissionSelections[itemKey] = nextState;
             submissionSelections[itemKey + '__label'] = itemLabel;
             saveDashboardState();
           }
@@ -3799,5 +3852,6 @@
       });
     })();
   </script>
+  <script src="../script.js?v=20260414-2"></script>
 </body>
 </html>

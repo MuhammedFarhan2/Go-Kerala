@@ -642,10 +642,15 @@
         localStorage.setItem(latestVehicleStatusKey, normalizedStatus);
 
         try {
-          const previewData = JSON.parse(sessionStorage.getItem(latestVehicleKey) || 'null');
+          const previewData = JSON.parse(
+            sessionStorage.getItem(latestVehicleKey) ||
+            localStorage.getItem(latestVehicleKey) ||
+            'null'
+          );
           if (previewData && typeof previewData === 'object') {
             previewData.statusLabel = getVehicleStatusPresentation(normalizedStatus).label;
             sessionStorage.setItem(latestVehicleKey, JSON.stringify(previewData));
+            localStorage.setItem(latestVehicleKey, JSON.stringify(previewData));
           }
         } catch (error) {
           return;
@@ -828,13 +833,21 @@
         let latestTouristSubmission = null;
 
         try {
-          previewData = JSON.parse(sessionStorage.getItem(latestVehicleKey) || 'null');
+          previewData = JSON.parse(
+            sessionStorage.getItem(latestVehicleKey) ||
+            localStorage.getItem(latestVehicleKey) ||
+            'null'
+          );
         } catch (error) {
           previewData = null;
         }
 
         try {
-          latestTouristSubmission = JSON.parse(sessionStorage.getItem(latestTouristSubmissionKey) || 'null');
+          latestTouristSubmission = JSON.parse(
+            sessionStorage.getItem(latestTouristSubmissionKey) ||
+            localStorage.getItem(latestTouristSubmissionKey) ||
+            'null'
+          );
         } catch (error) {
           latestTouristSubmission = null;
         }
@@ -898,13 +911,21 @@
         previewRenderToken = currentPreviewToken;
 
         try {
-          previewData = JSON.parse(sessionStorage.getItem(latestVehicleKey) || 'null');
+          previewData = JSON.parse(
+            sessionStorage.getItem(latestVehicleKey) ||
+            localStorage.getItem(latestVehicleKey) ||
+            'null'
+          );
         } catch (error) {
           previewData = null;
         }
 
         try {
-          latestTouristSubmission = JSON.parse(sessionStorage.getItem(latestTouristSubmissionKey) || 'null');
+          latestTouristSubmission = JSON.parse(
+            sessionStorage.getItem(latestTouristSubmissionKey) ||
+            localStorage.getItem(latestTouristSubmissionKey) ||
+            'null'
+          );
         } catch (error) {
           latestTouristSubmission = null;
         }
@@ -986,13 +1007,18 @@
         let latestTouristSubmission = null;
 
         try {
-          latestTouristSubmission = JSON.parse(sessionStorage.getItem(latestTouristSubmissionKey) || 'null');
+          latestTouristSubmission = JSON.parse(
+            sessionStorage.getItem(latestTouristSubmissionKey) ||
+            localStorage.getItem(latestTouristSubmissionKey) ||
+            'null'
+          );
         } catch (error) {
           latestTouristSubmission = null;
         }
 
         const latestSubmissionId = String(
           sessionStorage.getItem('owner-latest-submission-id') ||
+          localStorage.getItem('owner-latest-submission-id') ||
           (latestTouristSubmission && latestTouristSubmission.id) ||
           ''
         ).trim();
@@ -1002,6 +1028,7 @@
         }
 
         sessionStorage.setItem('owner-latest-submission-id', latestSubmissionId);
+        localStorage.setItem('owner-latest-submission-id', latestSubmissionId);
         window.location.href = 'vect-own/dashboard.html?page=tourist-bus&vehicle=tourist&submissionId=' + encodeURIComponent(latestSubmissionId);
       }
 

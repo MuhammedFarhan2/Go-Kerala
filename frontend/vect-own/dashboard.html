@@ -3395,34 +3395,44 @@
       function syncBlankSheetStatus(submissionId, status) {
         const safeStatus = String(status || '').trim().toLowerCase();
         const statusLabel = safeStatus === 'accepted'
-          ? 'Online'
+          ? 'Active'
           : safeStatus === 'rejected' || safeStatus === 'updated'
             ? 'Rejected'
             : 'Pending';
         const blankSheetStatus = safeStatus === 'accepted'
-          ? 'online'
+          ? 'active'
           : safeStatus === 'rejected' || safeStatus === 'updated'
             ? 'rejected'
             : 'pending';
 
         try {
-          const latestSubmission = JSON.parse(sessionStorage.getItem('owner-latest-tourist-submission') || 'null');
+          const latestSubmission = JSON.parse(
+            sessionStorage.getItem('owner-latest-tourist-submission') ||
+            localStorage.getItem('owner-latest-tourist-submission') ||
+            'null'
+          );
           if (latestSubmission && String(latestSubmission.id || '').trim() === String(submissionId || '').trim()) {
             latestSubmission.status = safeStatus || latestSubmission.status;
             if (!latestSubmission.summary) {
               latestSubmission.summary = {};
             }
             sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestSubmission));
+            localStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestSubmission));
           }
         } catch (error) {
           // Ignore session sync errors.
         }
 
         try {
-          const latestSummary = JSON.parse(sessionStorage.getItem('owner-latest-vehicle-summary') || 'null');
+          const latestSummary = JSON.parse(
+            sessionStorage.getItem('owner-latest-vehicle-summary') ||
+            localStorage.getItem('owner-latest-vehicle-summary') ||
+            'null'
+          );
           if (latestSummary && typeof latestSummary === 'object') {
             latestSummary.statusLabel = statusLabel;
             sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestSummary));
+            localStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestSummary));
           }
         } catch (error) {
           // Ignore session sync errors.

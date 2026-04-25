@@ -1669,6 +1669,10 @@
           sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
           sessionStorage.setItem('owner-latest-submission-id', String(latestTouristSubmission.id));
           sessionStorage.setItem('vect-own-tourist-bus-status', 'pending');
+          localStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
+          localStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
+          localStorage.setItem('owner-latest-submission-id', String(latestTouristSubmission.id));
+          localStorage.setItem('owner-latest-vehicle-status', 'pending');
           const requestPromise = reuploadSubmissionId
             ? fetchWithApiFallback('/api/submissions/' + encodeURIComponent(reuploadSubmissionId) + '/owner-update', {
                 method: 'PATCH',
@@ -1707,6 +1711,8 @@
                 latestTouristSubmission.status = savedSubmission.status || latestTouristSubmission.status;
                 sessionStorage.setItem('owner-latest-submission-id', String(savedSubmission.id));
                 sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
+                localStorage.setItem('owner-latest-submission-id', String(savedSubmission.id));
+                localStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
                 if (reuploadSubmissionId) {
                   sessionStorage.removeItem('owner-reupload-submission-id');
                   sessionStorage.removeItem(reuploadEditableSectionsKey);
