@@ -1060,6 +1060,57 @@
         window.location.href = 'vect-own/dashboard.html?page=tourist-bus&vehicle=tourist&submissionId=' + encodeURIComponent(latestSubmissionId);
       }
 
+      function syncLatestVehicleStatusFromServer() {
+        const latestSubmissionId = String(
+          sessionStorage.getItem('owner-latest-submission-id') ||
+          localStorage.getItem('owner-latest-submission-id') ||
+          ''
+        ).trim();
+
+        if (!latestSubmissionId) {
+          return Promise.resolve();
+        }
+
+        return fetch(apiBaseUrl + '/api/submissions/' + encodeURIComponent(latestSubmissionId))
+          .then(function (response) {
+            if (!response.ok) {
+              return null;
+            }
+
+            return response.json();
+          })
+          .then(function (payload) {
+            const submission = payload && payload.submission ? payload.submission : null;
+            const nextStatus = normalizeVehicleStatus(submission && submission.status);
+
+            if (!submission || nextStatus === 'pending') {
+              return;
+            }
+
+            try {
+              const latestSubmission = JSON.parse(
+                sessionStorage.getItem(latestTouristSubmissionKey) ||
+                localStorage.getItem(latestTouristSubmissionKey) ||
+                'null'
+              );
+
+              if (latestSubmission && typeof latestSubmission === 'object') {
+                latestSubmission.status = submission.status;
+                sessionStorage.setItem(latestTouristSubmissionKey, JSON.stringify(latestSubmission));
+                localStorage.setItem(latestTouristSubmissionKey, JSON.stringify(latestSubmission));
+              }
+            } catch (error) {
+              return;
+            }
+
+            setLatestVehicleStatus(nextStatus);
+            renderLatestVehiclePreview();
+          })
+          .catch(function () {
+            return;
+          });
+      }
+
       if (!reuploadSubmissionId) {
         sessionStorage.removeItem('owner-reupload-submission-id');
         sessionStorage.removeItem(reuploadEditableSectionsKey);
@@ -1172,6 +1223,7 @@
       }
 
       renderLatestVehiclePreview();
+      syncLatestVehicleStatusFromServer();
 
       setActiveOwnerPage(pageParams.get('tab') || pageParams.get('page') || 'booking');
     })();
