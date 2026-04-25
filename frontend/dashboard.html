@@ -3487,7 +3487,9 @@
 
             allSubmissions = Array.isArray(payload.submissions) ? payload.submissions : [];
             console.log('All submissions loaded:', allSubmissions.length);
-            console.log('Submission IDs:', allSubmissions.map(s => s.id));
+            console.log('Submission IDs:', allSubmissions.map(function(s) { 
+              return s.id; 
+            }));
             
             updateMetrics();
             renderList();
@@ -3797,6 +3799,5 @@
       });
     })();
   </script>
-  <script src="../script.js?v=20260414-2"></script>
 </body>
 </html>
