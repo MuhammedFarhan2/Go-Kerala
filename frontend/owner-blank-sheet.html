@@ -729,6 +729,18 @@
 
       function getPreviewImageUrl(value) {
         const text = String(value || '').trim();
+        const staticAssetFiles = new Set([
+          'tour-bus.png',
+          'yellow-backhoe-loader.png',
+          'Aadhaar-Card.png',
+          'yellow-hydraulic-excavator.png',
+          'modern-white-box-truck.png',
+          'white-flatbed-truck.png',
+          'heavy-driving-licence-reference.png',
+          'heavy-driving-licence-reference-v2.png',
+          'images-3.jpg',
+          'profile-photo-reference.avif'
+        ]);
 
         if (!text) {
           return '';
@@ -746,7 +758,15 @@
           return apiBaseUrl + '/' + text;
         }
 
-        if (/\.(png|jpe?g|webp|gif|svg|heic|heif)$/i.test(text)) {
+        if (staticAssetFiles.has(text)) {
+          return text;
+        }
+
+        if (/^[a-f0-9]{24,}-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
+          return apiBaseUrl + '/uploads/' + encodeURIComponent(text);
+        }
+
+        if (/^Screenshot-.*-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
           return apiBaseUrl + '/uploads/' + encodeURIComponent(text);
         }
 
