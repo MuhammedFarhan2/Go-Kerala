@@ -998,7 +998,14 @@
           localStorage.getItem(latestVehicleStatusKey)
         );
         const statusFromPreview = normalizeVehicleStatus(previewData.statusLabel);
-        const nextStatus = storedStatus !== 'pending' ? storedStatus : statusFromPreview;
+        const statusFromSubmission = normalizeVehicleStatus(
+          latestTouristSubmission && latestTouristSubmission.status
+        );
+        const nextStatus = storedStatus !== 'pending'
+          ? storedStatus
+          : statusFromSubmission !== 'pending'
+            ? statusFromSubmission
+            : statusFromPreview;
         const statusPresentation = getVehicleStatusPresentation(nextStatus);
 
         if (addPreviewStatusNode) {
@@ -1008,6 +1015,7 @@
             addPreviewStatusNode.classList.add(statusPresentation.className);
           }
         }
+        setLatestVehicleStatus(nextStatus);
         renderPreviewMeta(metaValues);
         applyPreviewImage('', '');
 
