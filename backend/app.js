@@ -470,9 +470,19 @@ function sendFile(response, filePath) {
 }
 
 function sendUploadFile(response, rawFileName) {
-  const safeFileName = path.basename(String(rawFileName || '').trim());
+  const requestedFileName = String(rawFileName || '').trim();
+  let decodedFileName = requestedFileName;
 
-  if (!safeFileName || safeFileName !== String(rawFileName || '').trim()) {
+  try {
+    decodedFileName = decodeURIComponent(requestedFileName);
+  } catch (error) {
+    sendText(response, 400, 'Invalid file name');
+    return;
+  }
+
+  const safeFileName = path.basename(decodedFileName);
+
+  if (!safeFileName || safeFileName !== decodedFileName) {
     sendText(response, 400, 'Invalid file name');
     return;
   }
