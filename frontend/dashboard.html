@@ -2461,10 +2461,10 @@
         }
 
         if (/^(uploads\/).+/i.test(safeFileName)) {
-          return getApiUrl('/' + safeFileName);
+          return new URL('../' + safeFileName, window.location.href).toString();
         }
 
-        return getApiUrl('/uploads/' + encodeURIComponent(safeFileName));
+        return new URL('../uploads/' + encodeURIComponent(safeFileName), window.location.href).toString();
       }
 
       function buildDisplayFields(submission) {

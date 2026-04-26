@@ -807,70 +807,72 @@
         });
       }
 
+      function uploadFileToServer(file) {
+        const safeFile = file instanceof File ? file : null;
+
+        if (!safeFile) {
+          return Promise.reject(new Error('Please choose a valid file.'));
+        }
+
+        return readFileAsBase64(safeFile).then(function (base64Data) {
+          return fetchWithApiFallback('/api/upload-heavy-licence', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fileName: safeFile.name,
+              mimeType: safeFile.type,
+              data: base64Data
+            })
+          });
+        }).then(function (response) {
+          return response.text().then(function (responseText) {
+            let payload = {};
+
+            try {
+              payload = responseText ? JSON.parse(responseText) : {};
+            } catch (error) {
+              payload = {
+                error: responseText || 'Unexpected server response.'
+              };
+            }
+
+            if (!response.ok || !payload.success || !payload.fileName) {
+              throw new Error(payload.error || 'Unable to save image.');
+            }
+
+            return {
+              name: String(payload.fileName || '').trim(),
+              mediaKey: '',
+              previewDataUrl: getApiUrl('/uploads/' + encodeURIComponent(String(payload.fileName || '').trim()))
+            };
+          });
+        });
+      }
+
       function createUploadEntries(section, files) {
         const config = uploadConfigs[section] || {};
         const safeFiles = Array.isArray(files) ? files : [];
 
         if (!config.storePreview) {
-          return Promise.resolve(safeFiles.map(function (file) {
-            return {
-              name: String(file && file.name || '').trim(),
-              mediaKey: '',
-              previewDataUrl: ''
-            };
-          }).filter(function (entry) {
-            return entry.name;
-          }));
+          return Promise.all(safeFiles.map(function (file) {
+            return uploadFileToServer(file);
+          })).then(function (entries) {
+            return entries.filter(function (entry) {
+              return entry && entry.name;
+            });
+          });
         }
 
-        return Promise.all(safeFiles.map(function (file, index) {
+        return Promise.all(safeFiles.map(function (file) {
           const fileName = String(file && file.name || '').trim();
 
           if (!fileName) {
             return Promise.resolve(null);
           }
 
-          return readFileAsDataUrl(file).then(function (previewDataUrl) {
-            const safePreviewDataUrl = String(previewDataUrl || '').trim();
-
-            if (!safePreviewDataUrl) {
-              return {
-                name: fileName,
-                mediaKey: '',
-                previewDataUrl: ''
-              };
-            }
-
-            if (!window.ownerMediaStore || typeof window.ownerMediaStore.setItem !== 'function') {
-              return {
-                name: fileName,
-                mediaKey: '',
-                previewDataUrl: safePreviewDataUrl
-              };
-            }
-
-            const mediaKey = storageKey(section + '-preview-' + Date.now() + '-' + index + '-' + Math.random().toString(16).slice(2));
-
-            return window.ownerMediaStore.setItem(mediaKey, safePreviewDataUrl).then(function () {
-              return {
-                name: fileName,
-                mediaKey: mediaKey,
-                previewDataUrl: ''
-              };
-            }).catch(function () {
-              return {
-                name: fileName,
-                mediaKey: '',
-                previewDataUrl: safePreviewDataUrl
-              };
-            });
-          }).catch(function () {
-            return {
-              name: fileName,
-              mediaKey: '',
-              previewDataUrl: ''
-            };
-          });
+          return uploadFileToServer(file);
         })).then(function (entries) {
           return entries.filter(Boolean);
         });
