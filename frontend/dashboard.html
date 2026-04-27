@@ -248,10 +248,11 @@
     }
 
     .vect-own-tourist-bottom-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
     }
+
 
     .vect-own-tourist-selected-summary {
       display: grid;
@@ -522,7 +523,7 @@
 
     .vect-own-review-button {
       appearance: none;
-      border: 1px solid #d1d5db !important;
+      border: 0 !important;
       border-radius: 999px;
       min-width: 78px;
       min-height: 34px;
@@ -530,14 +531,12 @@
       font: inherit;
       font-size: 0.8rem;
       font-weight: 700;
-      background: #fff !important;
-      color: #475569 !important;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      box-shadow: none;
+      box-shadow: 0 10px 20px rgba(17, 24, 39, 0.08);
       transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
     }
 
@@ -551,21 +550,13 @@
       opacity: 0.92;
     }
 
-    .vect-own-review-button.is-pending.is-active {
-      background: #111827 !important;
-      border-color: #111827 !important;
-      color: #fff !important;
-    }
-
-    .vect-own-review-button.is-accept.is-active {
+    .vect-own-review-button.is-accept {
       background: #16a34a !important;
-      border-color: #16a34a !important;
       color: #fff !important;
     }
 
-    .vect-own-review-button.is-update.is-active {
-      background: #ea580c !important;
-      border-color: #ea580c !important;
+    .vect-own-review-button.is-reject {
+      background: #dc2626 !important;
       color: #fff !important;
     }
 
@@ -814,8 +805,8 @@
       border: 1px solid #e5e7eb;
       border-radius: 22px;
       background: #fff;
-      padding: 0;
-      margin: 0 16px 20px;
+      padding: 8px;
+      margin: 0 16px 92px;
       overflow: hidden;
     }
 
@@ -828,7 +819,7 @@
       width: 100%;
       min-height: 52px;
       border: 0;
-      border-radius: 0;
+      border-radius: 18px;
       padding: 0 18px;
       font: inherit;
       font-size: 1rem;
@@ -855,14 +846,14 @@
     }
 
     .vect-own-tourist-bottom-button.is-accept {
-      background: #28a745 !important;
-      border-color: #28a745 !important;
+      background: #16a34a !important;
+      border-color: #16a34a !important;
       color: #ffffff !important;
     }
 
     .vect-own-tourist-bottom-button.is-reject {
-      background: #dc3545 !important;
-      border-color: #dc3545 !important;
+      background: #dc2626 !important;
+      border-color: #dc2626 !important;
       color: #ffffff !important;
     }
 
@@ -1102,8 +1093,8 @@
 
   <div class="vect-own-tourist-bottom-box" hidden data-vect-own-tourist-bottom-box>
     <div class="vect-own-tourist-bottom-actions">
-      <button type="button" class="vect-own-tourist-bottom-button is-reject" data-vect-own-tourist-bottom-action="updated">Reject</button>
       <button type="button" class="vect-own-tourist-bottom-button is-accept" data-vect-own-tourist-bottom-action="accepted">Accept</button>
+      <button type="button" class="vect-own-tourist-bottom-button is-reject" data-vect-own-tourist-bottom-action="updated">Reject</button>
     </div>
   </div>
 
@@ -1198,6 +1189,76 @@
       let draftReviewNotes = {};
       let reviewSelections = {};
       const LOCAL_TOURIST_SUBMISSION_KEY = 'owner-latest-tourist-submission';
+
+      const localMediaStore = (function () {
+        if (window.ownerMediaStore && typeof window.ownerMediaStore.getItem === 'function') {
+          return window.ownerMediaStore;
+        }
+
+        const DB_NAME = 'vectOwnerMedia';
+        const STORE_NAME = 'images';
+
+        function openDatabase() {
+          return new Promise(function (resolve, reject) {
+            if (!window.indexedDB) {
+              reject(new Error('IndexedDB is not supported on this device.'));
+              return;
+            }
+
+            const request = window.indexedDB.open(DB_NAME, 1);
+
+            request.onerror = function () {
+              reject(new Error('Unable to open local media storage.'));
+            };
+
+            request.onupgradeneeded = function () {
+              const database = request.result;
+
+              if (!database.objectStoreNames.contains(STORE_NAME)) {
+                database.createObjectStore(STORE_NAME);
+              }
+            };
+
+            request.onsuccess = function () {
+              resolve(request.result);
+            };
+          });
+        }
+
+        function runStoreOperation(mode, handler) {
+          return openDatabase().then(function (database) {
+            return new Promise(function (resolve, reject) {
+              const transaction = database.transaction(STORE_NAME, mode);
+              const store = transaction.objectStore(STORE_NAME);
+              const request = handler(store);
+
+              transaction.oncomplete = function () {
+                resolve(request && request.result);
+              };
+
+              transaction.onerror = function () {
+                reject(transaction.error || new Error('Media storage transaction failed.'));
+              };
+
+              transaction.onabort = function () {
+                reject(transaction.error || new Error('Media storage transaction was aborted.'));
+              };
+            }).finally(function () {
+              database.close();
+            });
+          });
+        }
+
+        return {
+          getItem: function (key) {
+            return runStoreOperation('readonly', function (store) {
+              return store.get(String(key || ''));
+            }).then(function (value) {
+              return typeof value === 'string' ? value : '';
+            });
+          }
+        };
+      })();
 
       if (!listNode || !detailNode || !emptyNode) {
         return;
@@ -1414,6 +1475,80 @@
           button.classList.toggle('is-selected', isSelected);
           button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
         });
+
+      }
+
+      function handleTouristBottomStatusUpdate(nextStatus) {
+        const cleanStatus = String(nextStatus || '').trim().toLowerCase();
+        const currentSubmission = getSelectedSubmission('submission');
+        const targetSubmissionId = selectedSubmissionId;
+        const editableSections = getSubmissionEditableSections(currentSubmission);
+
+        if (!targetSubmissionId || !cleanStatus || !currentSubmission) {
+          return;
+        }
+
+        if (cleanStatus === 'accepted' && editableSections.length) {
+          window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
+          return;
+        }
+
+        if (cleanStatus !== 'accepted' && !editableSections.length) {
+          window.alert('Mark the wrong parts first, then press Reject.');
+          return;
+        }
+
+        if (cleanStatus === 'accepted') {
+          sessionStorage.removeItem('owner-reupload-submission-id');
+          sessionStorage.removeItem('owner-reupload-editable-sections');
+        } else {
+          sessionStorage.setItem('owner-reupload-submission-id', targetSubmissionId);
+          sessionStorage.setItem('owner-reupload-editable-sections', JSON.stringify(editableSections));
+        }
+
+        saveDashboardState();
+        syncTouristBottomActionButtons(Object.assign({}, currentSubmission, { status: cleanStatus }));
+
+        getApi('/api/vect-own/submissions/' + encodeURIComponent(targetSubmissionId), {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            status: cleanStatus,
+            reviewNote: ''
+          })
+        })
+          .then(function (response) {
+            if (!response.ok) {
+              return response.json().then(function (payload) {
+                throw new Error((payload && payload.error) || 'Unable to update submission.');
+              });
+            }
+
+            return response.json();
+          })
+          .then(function () {
+            syncBlankSheetStatus(targetSubmissionId, cleanStatus);
+            setTouristBusReviewStatus(cleanStatus);
+            return refreshSubmissions(false);
+          })
+          .then(function () {
+            openSubmission(targetSubmissionId);
+
+            if (cleanStatus !== 'accepted') {
+              const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
+              const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission)) : '';
+
+              if (rejectWhatsappLink) {
+                window.open(rejectWhatsappLink, '_blank');
+              }
+            }
+          })
+          .catch(function (error) {
+            syncTouristBottomActionButtons(getSelectedSubmission('submission'));
+            window.alert(error.message || 'Unable to update submission.');
+          });
       }
 
       function readBusStorageValue(key) {
@@ -1461,7 +1596,11 @@
 
       function getLocalTouristSubmission() {
         try {
-          const raw = String(sessionStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) || '').trim();
+          const raw = String(
+            sessionStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) ||
+            localStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) ||
+            ''
+          ).trim();
 
           if (!raw) {
             return null;
@@ -1477,6 +1616,24 @@
         } catch (error) {
           return null;
         }
+      }
+
+      function mergeSubmissionWithLocalTouristMedia(submission) {
+        const localSubmission = getLocalTouristSubmission();
+        const safeSubmission = submission && typeof submission === 'object' ? submission : null;
+
+        if (!safeSubmission || !localSubmission) {
+          return submission;
+        }
+
+        if (String(safeSubmission.id || '').trim() !== String(localSubmission.id || '').trim()) {
+          return submission;
+        }
+
+        return Object.assign({}, safeSubmission, localSubmission, {
+          summary: Object.assign({}, safeSubmission.summary || {}, localSubmission.summary || {}),
+          bus: Object.assign({}, safeSubmission.bus || {}, localSubmission.bus || {})
+        });
       }
 
       function mergeLocalTouristSubmission(submissions) {
@@ -1543,10 +1700,12 @@
 
         if (value && typeof value === 'object') {
           return String(
-            value.url ||
+            value.fileUrl ||
+            value.previewDataUrl ||
             value.src ||
             value.path ||
-            value.fileUrl ||
+            value.url ||
+            value.viewUrl ||
             value.fileName ||
             value.filename ||
             value.name ||
@@ -1772,32 +1931,26 @@
       function normalizeReviewState(value) {
         const safeValue = String(value || '').trim().toLowerCase();
 
-        if (safeValue === 'pending' || safeValue === 'accepted' || safeValue === 'updated') {
+        if (safeValue === 'accepted' || safeValue === 'rejected') {
           return safeValue;
         }
 
-        if (safeValue === 'rejected' || safeValue === 'deselected') {
-          return 'updated';
+        if (safeValue === 'deselected') {
+          return 'rejected';
         }
 
-        return 'pending';
+        return 'accepted';
       }
 
       function buildReviewActionButtons(itemKey, itemLabel, itemState, options) {
         const safeState = normalizeReviewState(itemState);
         const placementClass = options && options.position === 'bottom' ? ' is-bottom' : '';
-        const reviewOptions = [
-          { state: 'pending', label: 'Pending', className: ' is-pending' },
-          { state: 'accepted', label: 'Accept', className: ' is-accept' },
-          { state: 'updated', label: 'Update', className: ' is-update' }
-        ];
+        const buttonLabel = safeState === 'rejected' ? 'Reject' : 'Accept';
+        const buttonClass = safeState === 'rejected' ? ' is-reject is-active' : ' is-accept is-active';
 
         return [
           '<div class="vect-own-review-actions' + placementClass + '">',
-          reviewOptions.map(function (reviewOption) {
-            const isActive = safeState === reviewOption.state;
-            return '<button type="button" class="vect-own-review-button' + reviewOption.className + (isActive ? ' is-active' : '') + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" data-vect-own-review-next-state="' + escapeHtml(reviewOption.state) + '" aria-pressed="' + (isActive ? 'true' : 'false') + '">' + reviewOption.label + '</button>';
-          }).join(''),
+          '<button type="button" class="vect-own-review-button' + buttonClass + '" data-vect-own-item-key="' + escapeHtml(itemKey) + '" data-vect-own-item-label="' + escapeHtml(itemLabel) + '" data-vect-own-review-state="' + escapeHtml(safeState) + '" aria-pressed="' + (safeState === 'accepted' ? 'true' : 'false') + '">' + buttonLabel + '</button>',
           '</div>'
         ].join('');
       }
@@ -1823,30 +1976,22 @@
       }
 
       function buildTouristImageCard(title, value, itemKey) {
-          const normalizeImageSource = typeof extractImageSource === 'function'
-            ? extractImageSource
-            : function (fallbackValue) {
-                if (Array.isArray(fallbackValue)) {
-                  return fallbackValue.length ? normalizeImageSource(fallbackValue[0]) : '';
-                }
-
-                if (fallbackValue && typeof fallbackValue === 'object') {
-                  return String(
-                    fallbackValue.previewDataUrl ||
-                    fallbackValue.url ||
-                    fallbackValue.src ||
-                    fallbackValue.path ||
-                    fallbackValue.fileUrl ||
-                    fallbackValue.fileName ||
-                    fallbackValue.filename ||
-                    fallbackValue.name ||
-                    ''
-                  ).trim();
-                }
-
-                return String(fallbackValue || '').trim();
-              };
-          const safeValue = normalizeImageSource(value);
+          const entry = value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+          const mediaKey = String(entry && entry.mediaKey || '').trim();
+          const safeValue = entry
+            ? String(
+                entry.previewDataUrl ||
+                entry.fileUrl ||
+                entry.src ||
+                entry.path ||
+                entry.url ||
+                entry.viewUrl ||
+                entry.fileName ||
+                entry.filename ||
+                entry.name ||
+                ''
+              ).trim()
+            : String(extractImageSource(value) || '').trim();
           const imageUrl = resolveStoredUploadUrl(safeValue, safeValue) || getImageUrl(safeValue);
 
           if (!safeValue) {
@@ -1859,14 +2004,134 @@
         }
 
           return [
-            '<div class="vect-own-tourist-image-card">',
+            '<div class="vect-own-tourist-image-card"' +
+              (mediaKey ? ' data-vect-own-media-key="' + escapeHtml(mediaKey) + '"' : '') +
+              ' data-vect-own-media-label="' + escapeHtml(title) + '"' +
+              ' data-vect-own-image-value="' + escapeHtml(safeValue) + '">',
             '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
-            imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
-            imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
+            '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview"' + (imageUrl ? '' : ' hidden') + ' data-vect-own-media-image>',
+            '<p class="vect-own-tourist-file-empty" data-vect-own-media-fallback' + (imageUrl ? ' hidden' : '') + '>' + escapeHtml(valueToText(safeValue) || 'Loading image...') + '</p>',
+            '<button type="button" class="vect-own-tourist-image-link"' + (imageUrl ? '' : ' hidden') + ' data-vect-own-media-button data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>',
             buildReviewActionButtons(itemKey, title, getItemReviewState(selectedSubmissionId, itemKey), { position: 'bottom' }),
           '</div>'
           ].join('');
         }
+
+      function hydrateTouristImagePreviews(rootNode) {
+        if (!rootNode) {
+          return;
+        }
+
+        Array.from(rootNode.querySelectorAll('.vect-own-tourist-image-card')).forEach(function (card) {
+          const imageValue = String(card.getAttribute('data-vect-own-image-value') || '').trim();
+          const mediaKey = String(card.getAttribute('data-vect-own-media-key') || '').trim();
+          const label = String(card.getAttribute('data-vect-own-media-label') || '').trim() || 'Submitted image';
+          const imageNode = card.querySelector('[data-vect-own-media-image]');
+          const buttonNode = card.querySelector('[data-vect-own-media-button]');
+          const fallbackNode = card.querySelector('[data-vect-own-media-fallback]');
+          const initialUrl = resolveStoredUploadUrl(imageValue, imageValue) || getImageUrl(imageValue);
+
+          if (!imageNode) {
+            return;
+          }
+
+          function applyLoadedUrl(nextUrl) {
+            const safeUrl = String(nextUrl || '').trim();
+
+            if (!safeUrl) {
+              imageNode.hidden = true;
+              if (buttonNode) {
+                buttonNode.hidden = true;
+              }
+              if (fallbackNode) {
+                fallbackNode.hidden = false;
+                fallbackNode.textContent = 'No preview available.';
+              }
+              return;
+            }
+
+            imageNode.src = safeUrl;
+            imageNode.alt = label;
+            imageNode.hidden = false;
+
+            if (buttonNode) {
+              buttonNode.hidden = false;
+              buttonNode.setAttribute('data-vect-own-image-url', safeUrl);
+              buttonNode.setAttribute('data-vect-own-image-label', label);
+            }
+
+            if (fallbackNode) {
+              fallbackNode.hidden = true;
+            }
+          }
+
+          function tryLocalFallback() {
+            if (!mediaKey || !localMediaStore || typeof localMediaStore.getItem !== 'function') {
+              applyLoadedUrl('');
+              return;
+            }
+
+            localMediaStore.getItem(mediaKey).then(function (storedUrl) {
+              applyLoadedUrl(storedUrl);
+            }).catch(function () {
+              applyLoadedUrl('');
+            });
+          }
+
+          if (!initialUrl) {
+            tryLocalFallback();
+            return;
+          }
+
+          loadPreviewImageWithRetry(imageNode, initialUrl, 2).then(function (loadedUrl) {
+            applyLoadedUrl(loadedUrl || initialUrl);
+          }).catch(function () {
+            tryLocalFallback();
+          });
+        });
+      }
+
+      function hydrateLocalMediaPreviews(rootNode) {
+        if (!rootNode || !localMediaStore || typeof localMediaStore.getItem !== 'function') {
+          return;
+        }
+
+        Array.from(rootNode.querySelectorAll('[data-vect-own-media-key]')).forEach(function (card) {
+          const mediaKey = String(card.getAttribute('data-vect-own-media-key') || '').trim();
+          const label = String(card.getAttribute('data-vect-own-media-label') || '').trim() || 'Submitted image';
+          const imageNode = card.querySelector('[data-vect-own-media-image]');
+          const buttonNode = card.querySelector('[data-vect-own-media-button]');
+          const fallbackNode = card.querySelector('[data-vect-own-media-fallback]');
+
+          if (!mediaKey || !imageNode) {
+            return;
+          }
+
+          localMediaStore.getItem(mediaKey).then(function (storedUrl) {
+            const safeUrl = String(storedUrl || '').trim();
+
+            if (!safeUrl) {
+              return;
+            }
+
+            imageNode.src = safeUrl;
+            imageNode.alt = label;
+            imageNode.hidden = false;
+
+            if (buttonNode) {
+              buttonNode.hidden = false;
+              buttonNode.setAttribute('data-vect-own-image-url', safeUrl);
+              buttonNode.setAttribute('data-vect-own-image-label', label);
+            }
+
+            if (fallbackNode) {
+              fallbackNode.hidden = true;
+            }
+          }).catch(function () {
+            return;
+          });
+        });
+      }
 
       function buildTouristFileSection(title, values, itemKeyPrefix) {
         const safeValues = Array.isArray(values) ? values.filter(function (item) {
@@ -1933,6 +2198,8 @@
           '</div>'
         ].join('');
 
+        hydrateTouristImagePreviews(touristSubmissionContentNode);
+        hydrateLocalMediaPreviews(touristSubmissionContentNode);
         syncTouristBottomActionButtons(submission);
       }
 
@@ -2036,6 +2303,17 @@
         }
 
         if (/^https?:\/\//i.test(text)) {
+          try {
+            const absoluteUrl = new URL(text, window.location.href);
+            const uploadedFile = String(absoluteUrl.searchParams.get('file') || '').trim();
+
+            if (/owner-uploaded-photo\.html$/i.test(absoluteUrl.pathname) && uploadedFile) {
+              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
+            }
+          } catch (error) {
+            // Keep the original URL when parsing fails.
+          }
+
           return text;
         }
 
@@ -2070,6 +2348,17 @@
         }
 
         if (/^\//.test(text)) {
+          try {
+            const relativeUrl = new URL(text, window.location.origin);
+            const uploadedFile = String(relativeUrl.searchParams.get('file') || '').trim();
+
+            if (/owner-uploaded-photo\.html$/i.test(relativeUrl.pathname) && uploadedFile) {
+              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
+            }
+          } catch (error) {
+            // Fall through to the normal relative path handling below.
+          }
+
           return getApiUrl(text);
         }
 
@@ -2309,10 +2598,10 @@
         }
 
         if (/^(uploads\/).+/i.test(safeFileName)) {
-          return new URL('../' + safeFileName, window.location.href).toString();
+          return getApiUrl('/' + safeFileName.replace(/^\/+/, ''));
         }
 
-        return new URL('../uploads/' + encodeURIComponent(safeFileName), window.location.href).toString();
+        return getApiUrl('/uploads/' + encodeURIComponent(safeFileName));
       }
 
       function buildDisplayFields(submission) {
@@ -2893,7 +3182,7 @@
         const currentSubmission = submission || getSelectedSubmission('owner');
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
         const rejectedKeys = Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'updated' || submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
+          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
         });
 
         if (!rejectedKeys.length) {
@@ -2917,7 +3206,7 @@
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
 
         return Object.keys(submissionSelections).filter(function (key) {
-          return submissionSelections[key] === 'updated' || submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
+          return submissionSelections[key] === 'rejected' || submissionSelections[key] === 'deselected';
         });
       }
 
@@ -3437,34 +3726,44 @@
       function syncBlankSheetStatus(submissionId, status) {
         const safeStatus = String(status || '').trim().toLowerCase();
         const statusLabel = safeStatus === 'accepted'
-          ? 'Online'
+          ? 'Active'
           : safeStatus === 'rejected' || safeStatus === 'updated'
             ? 'Rejected'
             : 'Pending';
         const blankSheetStatus = safeStatus === 'accepted'
-          ? 'online'
+          ? 'active'
           : safeStatus === 'rejected' || safeStatus === 'updated'
             ? 'rejected'
             : 'pending';
 
         try {
-          const latestSubmission = JSON.parse(sessionStorage.getItem('owner-latest-tourist-submission') || 'null');
+          const latestSubmission = JSON.parse(
+            sessionStorage.getItem('owner-latest-tourist-submission') ||
+            localStorage.getItem('owner-latest-tourist-submission') ||
+            'null'
+          );
           if (latestSubmission && String(latestSubmission.id || '').trim() === String(submissionId || '').trim()) {
             latestSubmission.status = safeStatus || latestSubmission.status;
             if (!latestSubmission.summary) {
               latestSubmission.summary = {};
             }
             sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestSubmission));
+            localStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestSubmission));
           }
         } catch (error) {
           // Ignore session sync errors.
         }
 
         try {
-          const latestSummary = JSON.parse(sessionStorage.getItem('owner-latest-vehicle-summary') || 'null');
+          const latestSummary = JSON.parse(
+            sessionStorage.getItem('owner-latest-vehicle-summary') ||
+            localStorage.getItem('owner-latest-vehicle-summary') ||
+            'null'
+          );
           if (latestSummary && typeof latestSummary === 'object') {
             latestSummary.statusLabel = statusLabel;
             sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestSummary));
+            localStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestSummary));
           }
         } catch (error) {
           // Ignore session sync errors.
@@ -3505,7 +3804,7 @@
           .then(function (payload) {
             console.log('Detail payload received:', payload);
             console.log('Submission to render:', payload.submission);
-            renderDetail(payload.submission);
+            renderDetail(mergeSubmissionWithLocalTouristMedia(payload.submission));
           })
           .catch(function (error) {
             console.log('Error loading details, using cached:', error);
@@ -3549,7 +3848,9 @@
 
             allSubmissions = Array.isArray(payload.submissions) ? payload.submissions : [];
             console.log('All submissions loaded:', allSubmissions.length);
-            console.log('Submission IDs:', allSubmissions.map(s => s.id));
+            console.log('Submission IDs:', allSubmissions.map(function(s) { 
+              return s.id; 
+            }));
             
             updateMetrics();
             renderList();
@@ -3763,19 +4064,12 @@
             })
             .then(function () {
               syncBlankSheetStatus(targetSubmissionId, nextStatus);
-              setTouristBusReviewStatus(nextStatus);
               return refreshSubmissions(false);
             })
             .then(function () {
               openSubmission(targetSubmissionId);
 
-              if (nextStatus === 'accepted' && currentSubmission) {
-                const whatsappLink = getWhatsappLink(currentSubmission);
-
-                if (whatsappLink) {
-                  window.open(whatsappLink, '_blank');
-                }
-              } else if (nextStatus === 'rejected' && currentSubmission) {
+              if (nextStatus === 'rejected' && currentSubmission) {
                 const rejectWhatsappLink = getRejectWhatsappLink(currentSubmission);
 
                 if (rejectWhatsappLink) {
@@ -3792,83 +4086,7 @@
       touristBottomActionButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           const nextStatus = String(button.getAttribute('data-vect-own-tourist-bottom-action') || '').trim().toLowerCase();
-          const currentSubmission = getSelectedSubmission('submission');
-          const targetSubmissionId = selectedSubmissionId;
-          const editableSections = getSubmissionEditableSections(currentSubmission);
-
-          if (!targetSubmissionId || !nextStatus || !currentSubmission) {
-            return;
-          }
-
-          if (nextStatus === 'accepted' && editableSections.length) {
-            window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
-            return;
-          }
-
-          if (nextStatus !== 'accepted' && !editableSections.length) {
-            window.alert('Mark the wrong parts first, then press Reject.');
-            return;
-          }
-
-          if (nextStatus === 'accepted') {
-            sessionStorage.removeItem('owner-reupload-submission-id');
-            sessionStorage.removeItem('owner-reupload-editable-sections');
-          } else {
-            sessionStorage.setItem('owner-reupload-submission-id', targetSubmissionId);
-            sessionStorage.setItem('owner-reupload-editable-sections', JSON.stringify(editableSections));
-          }
-
-          saveDashboardState();
-
-          syncTouristBottomActionButtons(Object.assign({}, currentSubmission, { status: nextStatus }));
-
-          getApi('/api/vect-own/submissions/' + encodeURIComponent(targetSubmissionId), {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              status: nextStatus,
-              reviewNote: ''
-            })
-          })
-            .then(function (response) {
-              if (!response.ok) {
-                return response.json().then(function (payload) {
-                  throw new Error((payload && payload.error) || 'Unable to update submission.');
-                });
-              }
-
-              return response.json();
-            })
-            .then(function () {
-              syncBlankSheetStatus(targetSubmissionId, nextStatus);
-              setTouristBusReviewStatus(nextStatus);
-              return refreshSubmissions(false);
-            })
-            .then(function () {
-              openSubmission(targetSubmissionId);
-
-              if (nextStatus === 'accepted') {
-                const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
-                const whatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristAcceptWhatsappMessage(currentSubmission)) : '';
-
-                if (whatsappLink) {
-                  window.open(whatsappLink, '_blank');
-                }
-              } else {
-                const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
-                const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission)) : '';
-
-                if (rejectWhatsappLink) {
-                  window.open(rejectWhatsappLink, '_blank');
-                }
-              }
-            })
-            .catch(function (error) {
-              syncTouristBottomActionButtons(getSelectedSubmission('submission'));
-              window.alert(error.message || 'Unable to update submission.');
-            });
+          handleTouristBottomStatusUpdate(nextStatus);
         });
       });
 
@@ -3915,11 +4133,11 @@
         if (reviewButton) {
           const itemKey = String(reviewButton.getAttribute('data-vect-own-item-key') || '').trim();
           const itemLabel = String(reviewButton.getAttribute('data-vect-own-item-label') || '').trim();
-          const nextState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-next-state') || 'pending').trim());
+          const currentState = normalizeReviewState(String(reviewButton.getAttribute('data-vect-own-review-state') || 'accepted').trim());
           const submissionSelections = getSubmissionReviewSelections(selectedSubmissionId);
 
           if (itemKey) {
-            submissionSelections[itemKey] = nextState;
+            submissionSelections[itemKey] = currentState === 'accepted' ? 'rejected' : 'accepted';
             submissionSelections[itemKey + '__label'] = itemLabel;
             saveDashboardState();
           }
@@ -3953,6 +4171,5 @@
       });
     })();
   </script>
-  <script src="../script.js?v=20260414-2"></script>
 </body>
 </html>
