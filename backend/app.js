@@ -1970,24 +1970,18 @@ async function handlePublicSubmissionDetail(requestUrl, response) {
 }
 
 async function handleVectOwnSubmissionList(requestUrl, request, response) {
-  console.log('=== VECT OWN SUBMISSION LIST DEBUG ===');
   const session = requireVectOwnSession(request, response);
 
   if (!session) {
-    console.log('No VECT Own session found');
     return;
   }
 
-  console.log('VECT Own session found, loading submissions...');
   const statusFilter = String(requestUrl.searchParams.get('status') || '').trim().toLowerCase();
   let submissions;
 
   try {
     submissions = await listVectOwnSubmissions();
-    console.log('Loaded submissions:', submissions.length);
-    console.log('Submissions data:', JSON.stringify(submissions, null, 2));
   } catch (error) {
-    console.error('Error loading submissions:', error);
     sendJson(response, 500, { success: false, error: error.message || 'Unable to load submissions.' });
     return;
   }
@@ -1998,51 +1992,37 @@ async function handleVectOwnSubmissionList(requestUrl, request, response) {
       })
     : submissions;
 
-  console.log('Filtered submissions:', filteredSubmissions.length);
-  
   const serializedSubmissions = filteredSubmissions.map(serializeSubmissionForList);
-  console.log('Serialized submissions:', JSON.stringify(serializedSubmissions, null, 2));
 
   sendJson(response, 200, {
     success: true,
     submissions: serializedSubmissions
   });
-  
-  console.log('=== END VECT OWN SUBMISSION LIST DEBUG ===');
 }
 
 async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
-  console.log('=== VECT OWN SUBMISSION DETAIL DEBUG ===');
   const session = requireVectOwnSession(request, response);
 
   if (!session) {
-    console.log('No VECT Own session found for detail view');
     return;
   }
 
   const submissionId = String(requestUrl.pathname.split('/').pop() || '').trim();
-  console.log('Loading submission details for ID:', submissionId);
   let submission;
 
   try {
     submission = await getSubmissionByIdAsync(submissionId);
-    console.log('Found submission:', submission);
   } catch (error) {
-    console.error('Error loading submission details:', error);
     sendJson(response, 500, { success: false, error: error.message || 'Unable to load submission.' });
     return;
   }
 
   if (!submission) {
-    console.log('Submission not found for ID:', submissionId);
     sendJson(response, 404, { success: false, error: 'Submission not found.' });
     return;
   }
 
-  console.log('Sending submission details to frontend');
-  
   const safeFields = submission.fields || {};
-  const summary = summarizeSubmissionFields(safeFields, submission.whatsappNumber);
   
   // Convert photo filenames to URLs for frontend compatibility
   const submissionWithUrls = Object.assign({}, submission, {
@@ -2055,18 +2035,13 @@ async function handleVectOwnSubmissionDetail(requestUrl, request, response) {
       'owner-gst-photo-url': getUploadUrl(safeFields['owner-gst-photo-url'] || safeFields['owner-gst-photo-name']),
       'owner-company-logo-url': getUploadUrl(safeFields['owner-company-logo-url'] || safeFields['owner-company-logo-name'])
     }),
-    summary: summary,
-    bus: summary.bus || {}
+    summary: summarizeSubmissionFields(safeFields, submission.whatsappNumber)
   });
-  
-  console.log('Summary created:', submissionWithUrls.summary);
-  console.log('Full submission with URLs:', submissionWithUrls);
   
   sendJson(response, 200, {
     success: true,
     submission: submissionWithUrls
   });
-  console.log('=== END VECT OWN SUBMISSION DETAIL DEBUG ===');
 }
 
 async function handleVectOwnSubmissionUpdate(requestUrl, request, response) {
