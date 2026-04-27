@@ -2703,6 +2703,46 @@
     return 'tour-bus.png';
   }
 
+  function resolveAcceptedVehicleImage(previewData, latestTouristSubmission, fallbackScope) {
+    const photoPreviewUrl = String(
+      (previewData && previewData.photoPreviewUrl) ||
+      (latestTouristSubmission && latestTouristSubmission.bus && latestTouristSubmission.bus.photoPreviewUrl) ||
+      (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && latestTouristSubmission.summary.bus.photoPreviewUrl) ||
+      ''
+    ).trim();
+    const photoPreviewMediaKey = String(
+      (previewData && previewData.photoPreviewMediaKey) ||
+      (latestTouristSubmission && latestTouristSubmission.bus && latestTouristSubmission.bus.photoPreviewMediaKey) ||
+      (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && latestTouristSubmission.summary.bus.photoPreviewMediaKey) ||
+      ''
+    ).trim();
+    const latestBusPhotos = latestTouristSubmission && latestTouristSubmission.bus && Array.isArray(latestTouristSubmission.bus.photos)
+      ? latestTouristSubmission.bus.photos
+      : [];
+    const previewPhotos = Array.isArray(previewData && previewData.photos) && previewData.photos.length
+      ? previewData.photos
+      : latestBusPhotos;
+    const firstPhotoEntry = previewPhotos[0] || '';
+    const firstPhotoUrl = firstPhotoEntry && typeof firstPhotoEntry === 'object'
+      ? String(firstPhotoEntry.previewDataUrl || firstPhotoEntry.fileUrl || firstPhotoEntry.fileName || '').trim()
+      : String(firstPhotoEntry || '').trim();
+    const fallbackImageUrl = resolveImageUrl(firstPhotoUrl || getDefaultImageForScope(fallbackScope));
+
+    if (photoPreviewUrl) {
+      return Promise.resolve(resolveImageUrl(photoPreviewUrl));
+    }
+
+    if (photoPreviewMediaKey && window.ownerMediaStore && typeof window.ownerMediaStore.getItem === 'function') {
+      return window.ownerMediaStore.getItem(photoPreviewMediaKey).then(function (storedUrl) {
+        return resolveImageUrl(String(storedUrl || '').trim() || fallbackImageUrl);
+      }).catch(function () {
+        return fallbackImageUrl;
+      });
+    }
+
+    return Promise.resolve(fallbackImageUrl);
+  }
+
   function buildAcceptedVehicleCardMarkup(record) {
     const title = String(record.modelVariant || record.vehicleLabel || 'Vehicle').trim() || 'Vehicle';
     const place = String(record.place || '').trim();
@@ -2761,10 +2801,6 @@
     ''
   );
   const latestBus = latestSubmission && (latestSubmission.bus || (latestSubmission.summary && latestSubmission.summary.bus)) || {};
-  const latestPhotoEntry = Array.isArray(latestBus.photos) && latestBus.photos.length ? latestBus.photos[0] : (Array.isArray(latestVehicle && latestVehicle.photos) ? latestVehicle.photos[0] : '');
-  const latestPhoto = latestPhotoEntry && typeof latestPhotoEntry === 'object'
-    ? String(latestPhotoEntry.previewDataUrl || latestPhotoEntry.fileUrl || latestPhotoEntry.fileName || '').trim()
-    : String(latestPhotoEntry || '').trim();
   const vehicleLabel = String(
     latestBus.vehicleLabel ||
     (latestVehicle && latestVehicle.vehicleLabel) ||
@@ -2781,7 +2817,7 @@
     seats: latestBus.seats || (latestVehicle && latestVehicle.seats) || '',
     type: latestBus.type || (latestVehicle && latestVehicle.type) || '',
     companyName: (latestSubmission && latestSubmission.summary && latestSubmission.summary.companyName) || localStorage.getItem('owner-company-name') || 'VECT Movers',
-    photo: latestPhoto || (latestVehicle && latestVehicle.photoPreviewUrl) || ''
+    photo: ''
   };
 
   if (latestVehicleStatus !== 'accepted' || candidateScope !== routeScope || !locationMatches(candidateRecord.place)) {
@@ -2793,7 +2829,13 @@
     return;
   }
 
-  submitDemoList.insertAdjacentHTML('afterbegin', buildAcceptedVehicleCardMarkup(candidateRecord));
+  resolveAcceptedVehicleImage(latestVehicle, latestSubmission, candidateScope).then(function (imageUrl) {
+    candidateRecord.photo = imageUrl;
+    submitDemoList.insertAdjacentHTML('afterbegin', buildAcceptedVehicleCardMarkup(candidateRecord));
+  }).catch(function () {
+    candidateRecord.photo = getDefaultImageForScope(candidateScope);
+    submitDemoList.insertAdjacentHTML('afterbegin', buildAcceptedVehicleCardMarkup(candidateRecord));
+  });
 })();
 
 (function () {
