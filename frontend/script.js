@@ -2767,7 +2767,6 @@
       '<h3 class="submit-demo-title">' + title + '</h3>',
       '<span class="submit-demo-price">Accepted</span>',
       '</div>',
-      '<p class="submit-demo-meta">Owner: ' + companyName + '</p>',
       '<p class="submit-demo-meta">' + metaParts.join(' \u00b7 ') + '</p>',
       '</div>',
       '</div>',

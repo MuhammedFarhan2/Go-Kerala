@@ -3948,8 +3948,7 @@ h1 {
 
 .submit-demo-card.is-accepted-source {
   padding: 4px;
-  border-top: 2px solid #111;
-  border-left: 2px solid #111;
+  border: 2px solid #111;
 }
 
 .submit-demo-card.is-accepted-source .submit-demo-card-main {
