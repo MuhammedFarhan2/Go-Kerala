@@ -2852,11 +2852,9 @@
   resolveAcceptedVehicleImage(latestVehicle, latestSubmission, candidateScope).then(function (imageUrl) {
     candidateRecord.photo = imageUrl;
     submitDemoList.insertAdjacentHTML('afterbegin', buildAcceptedVehicleCardMarkup(candidateRecord));
-    window.dispatchEvent(new CustomEvent('submit-demo-cards-updated'));
   }).catch(function () {
     candidateRecord.photo = getDefaultImageForScope(candidateScope);
     submitDemoList.insertAdjacentHTML('afterbegin', buildAcceptedVehicleCardMarkup(candidateRecord));
-    window.dispatchEvent(new CustomEvent('submit-demo-cards-updated'));
   });
 })();
 
@@ -2871,7 +2869,7 @@
   const applyButton = document.querySelector('[data-filter-action="apply"]');
   const filterCountBadge = document.querySelector('[data-filter-count]');
   const nameTabLabel = document.querySelector('[data-submit-tab="name"] .submit-filter-tab-label');
-  let demoCards = [];
+  const demoCards = Array.from(document.querySelectorAll('[data-demo-card]'));
   const demoSheet = document.querySelector('[data-demo-sheet]');
   const demoSheetGrid = demoSheet ? demoSheet.querySelector('.submit-demo-sheet-grid') : null;
   const selectedLocationLabel = demoSheet ? demoSheet.querySelector('[data-demo-selected-location]') : null;
@@ -2887,12 +2885,6 @@
   if (!panel || !tabs.length || !panes.length || !filterPane) {
     return;
   }
-
-  function refreshDemoCards() {
-    demoCards = Array.from(document.querySelectorAll('[data-demo-card]'));
-  }
-
-  refreshDemoCards();
 
   if (nameTabLabel) {
     let primaryTabLabel = 'Vehicles';
@@ -3150,7 +3142,6 @@
   updateFilterCountBadge();
 
   function setDemoCardExpanded(card, expanded) {
-    refreshDemoCards();
     demoCards.forEach(function (otherCard) {
       const isTarget = otherCard === card;
       otherCard.classList.toggle('is-expanded', isTarget && expanded);
@@ -3389,8 +3380,6 @@
   }
 
   function updateDemoSheetPreview() {
-    refreshDemoCards();
-
     if (!demoSheetRects.length) {
       return;
     }
@@ -3540,16 +3529,8 @@
     });
   }
 
-  if (submitDemoList) {
-    submitDemoList.addEventListener('click', function (event) {
-      refreshDemoCards();
-
-      const card = event.target.closest('[data-demo-card]');
-
-      if (!card) {
-        return;
-      }
-
+  demoCards.forEach(function (card) {
+    card.addEventListener('click', function (event) {
       const actionButton = event.target.closest('[data-demo-action]');
 
       if (actionButton) {
@@ -3596,7 +3577,7 @@
         ensureDemoActionsVisible(card, 0);
       }
     });
-  }
+  });
 
   if (demoSheetGrid) {
     demoSheetGrid.addEventListener('click', function (event) {
@@ -3640,11 +3621,6 @@
       closeDemoSheet();
     });
   }
-
-  window.addEventListener('submit-demo-cards-updated', function () {
-    refreshDemoCards();
-    updateDemoSheetPreview();
-  });
 
   buildDemoSheetBoxes();
   enableDemoSheetAnyDeviceScroll();
