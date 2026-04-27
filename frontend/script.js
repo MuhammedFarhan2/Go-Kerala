@@ -2557,7 +2557,7 @@
   const fromLocation = String(sessionStorage.getItem('route-location-from') || '').trim();
   const toLocation = String(sessionStorage.getItem('route-location-to') || '').trim();
 
-  if (!submitDemoList || routeScope !== 'tourist') {
+  if (!submitDemoList || !routeScope) {
     return;
   }
 
@@ -2637,21 +2637,67 @@
     return text;
   }
 
-  function buildTouristCardMarkup(record) {
-    const title = String(record.modelVariant || 'Tourist Bus').trim() || 'Tourist Bus';
+  function getScopeFromVehicle(vehicleLabel) {
+    const clean = normalizeText(vehicleLabel);
+
+    if (clean.indexOf('tourist') > -1 || clean.indexOf('bus') > -1) {
+      return 'tourist';
+    }
+
+    if (clean.indexOf('open') > -1) {
+      return 'open-truck';
+    }
+
+    if (clean.indexOf('closed') > -1 || clean.indexOf('container') > -1 || clean.indexOf('box') > -1 || clean.indexOf('truck') > -1) {
+      return 'truck';
+    }
+
+    if (clean.indexOf('excavator') > -1) {
+      return 'excavator';
+    }
+
+    if (clean.indexOf('backhoe') > -1 || clean.indexOf('jcb') > -1) {
+      return 'backhoe';
+    }
+
+    return '';
+  }
+
+  function getDefaultImageForScope(scope) {
+    if (scope === 'open-truck') {
+      return 'white-flatbed-truck.png';
+    }
+
+    if (scope === 'truck') {
+      return 'modern-white-box-truck.png';
+    }
+
+    if (scope === 'excavator') {
+      return 'yellow-hydraulic-excavator.png';
+    }
+
+    if (scope === 'backhoe') {
+      return 'yellow-backhoe-loader.png';
+    }
+
+    return 'tour-bus.png';
+  }
+
+  function buildAcceptedVehicleCardMarkup(record) {
+    const title = String(record.modelVariant || record.vehicleLabel || 'Vehicle').trim() || 'Vehicle';
     const place = String(record.place || '').trim();
     const seats = String(record.seats || '').trim();
-    const busType = String(record.type || '').trim();
+    const vehicleType = String(record.type || '').trim();
     const companyName = String(record.companyName || 'VECT Movers').trim();
-    const imageUrl = resolveImageUrl(record.photo || 'tour-bus.png');
+    const imageUrl = resolveImageUrl(record.photo || getDefaultImageForScope(record.scope));
     const metaParts = [
       place || 'Kerala',
       seats ? seats + ' seats' : '',
-      busType || ''
+      vehicleType || ''
     ].filter(Boolean);
 
     return [
-      '<article class="submit-demo-card" data-demo-card data-demo-source="accepted-tourist">',
+      '<article class="submit-demo-card" data-demo-card data-demo-source="accepted-vehicle">',
       '<div class="submit-demo-card-main">',
       '<div class="submit-demo-image-wrap">',
       '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="' + title.replace(/"/g, '&quot;') + '" class="submit-demo-image" />',
@@ -2699,7 +2745,17 @@
   const latestPhoto = latestPhotoEntry && typeof latestPhotoEntry === 'object'
     ? String(latestPhotoEntry.previewDataUrl || latestPhotoEntry.fileUrl || latestPhotoEntry.fileName || latestPhotoEntry.name || '').trim()
     : String(latestPhotoEntry || '').trim();
+  const vehicleLabel = String(
+    latestBus.vehicleLabel ||
+    (latestVehicle && latestVehicle.vehicleLabel) ||
+    latestBus.modelVariant ||
+    (latestVehicle && latestVehicle.modelVariant) ||
+    ''
+  ).trim();
+  const candidateScope = getScopeFromVehicle(vehicleLabel);
   const candidateRecord = {
+    vehicleLabel: vehicleLabel,
+    scope: candidateScope,
     modelVariant: latestBus.modelVariant || (latestVehicle && latestVehicle.modelVariant) || '',
     place: latestBus.place || (latestVehicle && latestVehicle.place) || '',
     seats: latestBus.seats || (latestVehicle && latestVehicle.seats) || '',
@@ -2708,16 +2764,16 @@
     photo: latestPhoto || (latestVehicle && latestVehicle.photoPreviewUrl) || ''
   };
 
-  if (latestVehicleStatus !== 'accepted' || !locationMatches(candidateRecord.place)) {
+  if (latestVehicleStatus !== 'accepted' || candidateScope !== routeScope || !locationMatches(candidateRecord.place)) {
     return;
   }
 
-  const alreadyInjected = submitDemoList.querySelector('[data-demo-source="accepted-tourist"]');
+  const alreadyInjected = submitDemoList.querySelector('[data-demo-source="accepted-vehicle"]');
   if (alreadyInjected) {
     return;
   }
 
-  submitDemoList.insertAdjacentHTML('afterbegin', buildTouristCardMarkup(candidateRecord));
+  submitDemoList.insertAdjacentHTML('afterbegin', buildAcceptedVehicleCardMarkup(candidateRecord));
 })();
 
 (function () {
