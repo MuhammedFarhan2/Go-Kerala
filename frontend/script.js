@@ -2704,29 +2704,35 @@
   }
 
   function resolveAcceptedVehicleImage(previewData, latestTouristSubmission, fallbackScope) {
+    const submissionBus = latestTouristSubmission && latestTouristSubmission.bus && typeof latestTouristSubmission.bus === 'object'
+      ? latestTouristSubmission.bus
+      : (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && typeof latestTouristSubmission.summary.bus === 'object'
+        ? latestTouristSubmission.summary.bus
+        : null);
     const photoPreviewUrl = String(
+      (submissionBus && submissionBus.photoPreviewUrl) ||
       (previewData && previewData.photoPreviewUrl) ||
-      (latestTouristSubmission && latestTouristSubmission.bus && latestTouristSubmission.bus.photoPreviewUrl) ||
-      (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && latestTouristSubmission.summary.bus.photoPreviewUrl) ||
       ''
     ).trim();
     const photoPreviewMediaKey = String(
+      (submissionBus && submissionBus.photoPreviewMediaKey) ||
       (previewData && previewData.photoPreviewMediaKey) ||
-      (latestTouristSubmission && latestTouristSubmission.bus && latestTouristSubmission.bus.photoPreviewMediaKey) ||
-      (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && latestTouristSubmission.summary.bus.photoPreviewMediaKey) ||
       ''
     ).trim();
-    const latestBusPhotos = latestTouristSubmission && latestTouristSubmission.bus && Array.isArray(latestTouristSubmission.bus.photos)
-      ? latestTouristSubmission.bus.photos
+    const latestBusPhotos = submissionBus && Array.isArray(submissionBus.photos)
+      ? submissionBus.photos
       : [];
-    const previewPhotos = Array.isArray(previewData && previewData.photos) && previewData.photos.length
-      ? previewData.photos
-      : latestBusPhotos;
+    const previewPhotos = latestBusPhotos.length
+      ? latestBusPhotos
+      : (Array.isArray(previewData && previewData.photos) && previewData.photos.length
+        ? previewData.photos
+        : []);
     const firstPhotoEntry = previewPhotos[0] || '';
     const firstPhotoUrl = firstPhotoEntry && typeof firstPhotoEntry === 'object'
       ? String(firstPhotoEntry.previewDataUrl || firstPhotoEntry.fileUrl || firstPhotoEntry.fileName || '').trim()
       : String(firstPhotoEntry || '').trim();
-    const fallbackImageUrl = resolveImageUrl(firstPhotoUrl || getDefaultImageForScope(fallbackScope));
+    const safeFirstPhotoUrl = firstPhotoUrl;
+    const fallbackImageUrl = resolveImageUrl(safeFirstPhotoUrl || getDefaultImageForScope(fallbackScope));
 
     if (photoPreviewUrl) {
       return Promise.resolve(resolveImageUrl(photoPreviewUrl));
