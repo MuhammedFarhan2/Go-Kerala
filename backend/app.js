@@ -533,6 +533,14 @@ function sendFrontendPage(response, relativePagePath) {
   sendFile(response, pagePath);
 }
 
+function redirect(response, location) {
+  response.writeHead(302, {
+    Location: location,
+    'Cache-Control': 'no-store'
+  });
+  response.end();
+}
+
 function readJsonFile(filePath, fallbackValue) {
   try {
     const fileContents = fs.readFileSync(filePath, 'utf8');
@@ -2270,12 +2278,22 @@ const server = http.createServer(function (request, response) {
     return;
   }
 
-  if (request.method === 'GET' && (requestUrl.pathname === '/' || requestUrl.pathname === '/index.html')) {
+  if (request.method === 'GET' && requestUrl.pathname === '/') {
+    redirect(response, '/index.html');
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/index.html') {
     sendFrontendPage(response, 'index.html');
     return;
   }
 
-  if (request.method === 'GET' && (requestUrl.pathname === '/vect-own' || requestUrl.pathname === '/vect-own/')) {
+  if (request.method === 'GET' && requestUrl.pathname === '/vect-own') {
+    redirect(response, '/vect-own/index.html');
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/vect-own/') {
     sendFrontendPage(response, path.join('vect-own', 'index.html'));
     return;
   }
