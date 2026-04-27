@@ -1150,10 +1150,12 @@
       const apiBaseCandidates = Array.from(new Set([
         apiBaseUrl,
         'https://go-kerala-backend.onrender.com',
-        'https://mymusics.onrender.com'
+        'https://mymusics.onrender.com',
+        window.location.origin
       ].map(function (value) {
         return String(value || '').trim().replace(/\/$/, '');
       }).filter(Boolean)));
+      let activeApiBaseUrl = apiBaseUrl || apiBaseCandidates[0] || '';
       const SESSION_KEY = 'vect-own-session-token';
       const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
       const REJECT_INTRO_MESSAGE = 'Sorry, your valuation have rejected because';
@@ -2252,6 +2254,19 @@
           'profile-photo-reference.avif'
         ]);
 
+        if (/^owner-uploaded-photo\.html\?/i.test(text)) {
+          try {
+            const uploadedPhotoUrl = new URL(text, window.location.href);
+            const uploadedFile = String(uploadedPhotoUrl.searchParams.get('file') || '').trim();
+
+            if (uploadedFile) {
+              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
+            }
+          } catch (error) {
+            // Fall through to the remaining handlers below.
+          }
+        }
+
         if (staticAssetFiles.has(text)) {
           return new URL('../' + text, window.location.href).toString();
         }
@@ -2276,6 +2291,10 @@
           return getApiUrl('/' + text);
         }
 
+        if (/^[^\/?#]+\.(png|jpe?g|webp|gif)$/i.test(text)) {
+          return getApiUrl('/uploads/' + encodeURIComponent(text));
+        }
+
         if (/^[a-f0-9]{24,}-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
           return getApiUrl('/uploads/' + encodeURIComponent(text));
         }
@@ -2289,6 +2308,32 @@
 
       const imageObjectUrlCache = new Map();
 
+      function getUploadUrlCandidates(imageUrl) {
+        const safeUrl = String(imageUrl || '').trim();
+
+        if (!safeUrl || /^data:image\//i.test(safeUrl)) {
+          return safeUrl ? [safeUrl] : [];
+        }
+
+        let parsedUrl;
+
+        try {
+          parsedUrl = new URL(safeUrl, window.location.href);
+        } catch (error) {
+          return [safeUrl];
+        }
+
+        if (!/^\/uploads\//i.test(parsedUrl.pathname)) {
+          return [parsedUrl.toString()];
+        }
+
+        return Array.from(new Set(
+          [parsedUrl.pathname + parsedUrl.search].concat(apiBaseCandidates.map(function (baseUrl) {
+            return getApiUrlForBase(baseUrl, parsedUrl.pathname + parsedUrl.search);
+          }))
+        ));
+      }
+
       function resolveRenderableImageUrl(value) {
         const directUrl = getImageUrl(value);
 
@@ -2297,7 +2342,8 @@
         }
 
         if (!/^data:image\//i.test(directUrl)) {
-          return Promise.resolve(directUrl);
+          const imageCandidates = getUploadUrlCandidates(directUrl);
+          return Promise.resolve(imageCandidates[0] || directUrl);
         }
 
         if (imageObjectUrlCache.has(directUrl)) {
@@ -2320,18 +2366,31 @@
 
       function loadPreviewImageWithRetry(imageNode, imageUrl, maxAttempts) {
         return new Promise(function (resolve, reject) {
+          const candidateBases = getUploadUrlCandidates(imageUrl);
           const maxTry = Math.max(1, Number(maxAttempts) || 1);
           let attempt = 0;
+          let baseIndex = 0;
 
           function tryLoad() {
+            if (baseIndex >= candidateBases.length) {
+              reject(new Error('Image preview failed to load.'));
+              return;
+            }
+
             attempt += 1;
+            const baseUrl = candidateBases[baseIndex];
             const candidateUrl = attempt === 1
-              ? imageUrl
-              : imageUrl + (imageUrl.indexOf('?') === -1 ? '?' : '&') + '_img_retry=' + Date.now() + '_' + attempt;
+              ? baseUrl
+              : baseUrl + (baseUrl.indexOf('?') === -1 ? '?' : '&') + '_img_retry=' + Date.now() + '_' + attempt;
 
             imageNode.onload = function () {
               imageNode.onload = null;
               imageNode.onerror = null;
+              try {
+                activeApiBaseUrl = new URL(candidateUrl, window.location.href).origin;
+              } catch (error) {
+                // Keep the previously working base.
+              }
               resolve(candidateUrl);
             };
 
@@ -2344,7 +2403,9 @@
                 return;
               }
 
-              reject(new Error('Image preview failed to load.'));
+              attempt = 0;
+              baseIndex += 1;
+              tryLoad();
             };
 
             imageNode.src = candidateUrl;
@@ -2724,7 +2785,10 @@
               viewButton.setAttribute('data-vect-own-image-label', item.label);
 
               return loadPreviewImageWithRetry(imageNode, imageUrl, 2)
-                .then(function () {
+                .then(function (loadedUrl) {
+                  if (loadedUrl) {
+                    viewButton.setAttribute('data-vect-own-image-url', loadedUrl);
+                  }
                   imageNode.hidden = false;
                   fallbackNode.hidden = true;
                 })
@@ -2743,7 +2807,7 @@
       }
 
       function getApiUrl(pathName) {
-        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+        return activeApiBaseUrl ? activeApiBaseUrl + pathName : pathName;
       }
 
       function getApiUrlForBase(baseUrl, pathName) {
@@ -2778,6 +2842,10 @@
               bases.length
             ) {
               return tryNext();
+            }
+
+            if (response.ok) {
+              activeApiBaseUrl = baseUrl;
             }
 
             return response;
