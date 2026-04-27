@@ -127,12 +127,13 @@
 
     .owner-add-preview {
       display: none;
-      grid-template-columns: 176px minmax(0, 1fr);
+      grid-template-columns: 158px minmax(0, 1fr);
       align-items: stretch;
-      gap: 14px;
-      min-height: 92px;
+      gap: 10px;
+      min-height: 84px;
+      height: 84px;
       margin-bottom: 14px;
-      padding: 8px;
+      padding: 6px;
       border: 1px solid rgba(15, 23, 42, 0.12);
       border-radius: 0;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(241, 245, 249, 0.64));
@@ -154,7 +155,7 @@
 
     .owner-add-preview-media {
       width: 100%;
-      min-height: 74px;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -189,10 +190,12 @@
     .owner-add-preview-content {
       flex: 1 1 auto;
       min-width: 0;
+      height: 100%;
+      box-sizing: border-box;
       display: grid;
       gap: 4px;
       align-content: center;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border-radius: 0;
       border: 1px solid rgba(148, 163, 184, 0.18);
       background: rgba(255, 255, 255, 0.44);
@@ -259,15 +262,20 @@
 
     @media (max-width: 420px) {
       .owner-add-preview {
-        grid-template-columns: 132px minmax(0, 1fr);
+        grid-template-columns: 118px minmax(0, 1fr);
+        min-height: 76px;
+        height: 76px;
+        gap: 8px;
+        padding: 5px;
       }
 
       .owner-add-preview-media {
-        min-height: 70px;
+        height: 100%;
       }
 
       .owner-add-preview-content {
-        padding: 9px 10px;
+        height: 100%;
+        padding: 7px 8px;
       }
     }
 
