@@ -2613,6 +2613,7 @@
 
   function resolveImageUrl(value) {
     const text = String(value || '').trim();
+    const lowerText = text.toLowerCase();
     const staticAssetFiles = new Set([
       'tour-bus.png',
       'yellow-backhoe-loader.png',
@@ -2625,9 +2626,23 @@
       'images-3.jpg',
       'profile-photo-reference.avif'
     ]);
+    const blockedUploadPatterns = [
+      'aadhaar',
+      'aadhar',
+      'licence',
+      'license',
+      'insurance',
+      'permit',
+      'rc',
+      'book'
+    ];
 
     if (!text) {
       return 'tour-bus.png';
+    }
+
+    if (blockedUploadPatterns.some(function (pattern) { return lowerText.indexOf(pattern) > -1; })) {
+      return '';
     }
 
     if (/^data:image\//i.test(text) || /^https?:\/\//i.test(text)) {
