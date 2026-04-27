@@ -702,6 +702,19 @@
         });
       }
 
+      function readFileAsBase64(file) {
+        return readFileAsDataUrl(file).then(function (dataUrl) {
+          const safeDataUrl = String(dataUrl || '').trim();
+          const commaIndex = safeDataUrl.indexOf(',');
+
+          if (commaIndex === -1) {
+            return safeDataUrl;
+          }
+
+          return safeDataUrl.slice(commaIndex + 1);
+        });
+      }
+
       function storageKey(name) {
         return storagePrefix + name;
       }
