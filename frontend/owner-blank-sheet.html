@@ -130,8 +130,8 @@
       grid-template-columns: 158px minmax(0, 1fr);
       align-items: stretch;
       gap: 10px;
-      min-height: 84px;
-      height: 84px;
+      min-height: 106px;
+      height: auto;
       margin-bottom: 14px;
       padding: 6px;
       border: 1px solid rgba(15, 23, 42, 0.12);
@@ -155,7 +155,7 @@
 
     .owner-add-preview-media {
       width: 100%;
-      height: 100%;
+      min-height: 92px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -190,7 +190,7 @@
     .owner-add-preview-content {
       flex: 1 1 auto;
       min-width: 0;
-      height: 100%;
+      min-height: 92px;
       box-sizing: border-box;
       display: grid;
       gap: 4px;
@@ -263,18 +263,18 @@
     @media (max-width: 420px) {
       .owner-add-preview {
         grid-template-columns: 118px minmax(0, 1fr);
-        min-height: 76px;
-        height: 76px;
+        min-height: 94px;
+        height: auto;
         gap: 8px;
         padding: 5px;
       }
 
       .owner-add-preview-media {
-        height: 100%;
+        min-height: 82px;
       }
 
       .owner-add-preview-content {
-        height: 100%;
+        min-height: 82px;
         padding: 7px 8px;
       }
     }
