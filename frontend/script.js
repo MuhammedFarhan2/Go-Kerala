@@ -2757,7 +2757,7 @@
     ].filter(Boolean);
 
     return [
-      '<article class="submit-demo-card" data-demo-card data-demo-source="accepted-vehicle">',
+      '<article class="submit-demo-card is-accepted-source" data-demo-card data-demo-source="accepted-vehicle">',
       '<div class="submit-demo-card-main">',
       '<div class="submit-demo-image-wrap">',
       '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="' + title.replace(/"/g, '&quot;') + '" class="submit-demo-image" onerror="this.onerror=null;this.src=\'' + getDefaultImageForScope(record.scope).replace(/'/g, '&#39;') + '\';" />',
@@ -2784,18 +2784,18 @@
   }
 
   const latestSubmission = safeJsonParse(
-    localStorage.getItem('owner-latest-tourist-submission') ||
     sessionStorage.getItem('owner-latest-tourist-submission') ||
+    localStorage.getItem('owner-latest-tourist-submission') ||
     'null'
   );
   const latestVehicle = safeJsonParse(
-    localStorage.getItem('owner-latest-vehicle-summary') ||
     sessionStorage.getItem('owner-latest-vehicle-summary') ||
+    localStorage.getItem('owner-latest-vehicle-summary') ||
     'null'
   );
   const latestVehicleStatus = normalizeStatus(
-    localStorage.getItem('owner-latest-vehicle-status') ||
     sessionStorage.getItem('owner-latest-vehicle-status') ||
+    localStorage.getItem('owner-latest-vehicle-status') ||
     (latestSubmission && latestSubmission.status) ||
     (latestVehicle && latestVehicle.statusLabel) ||
     ''
