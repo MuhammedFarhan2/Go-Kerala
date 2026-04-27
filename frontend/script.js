@@ -2552,6 +2552,175 @@
 })();
 
 (function () {
+  const submitDemoList = document.querySelector('.submit-demo-list');
+  const routeScope = String(sessionStorage.getItem('route-scope') || '').trim().toLowerCase();
+  const fromLocation = String(sessionStorage.getItem('route-location-from') || '').trim();
+  const toLocation = String(sessionStorage.getItem('route-location-to') || '').trim();
+
+  if (!submitDemoList || routeScope !== 'tourist') {
+    return;
+  }
+
+  function safeJsonParse(value) {
+    try {
+      return JSON.parse(String(value || 'null'));
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function normalizeText(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+  }
+
+  function locationMatches(vehiclePlace) {
+    const place = normalizeText(vehiclePlace);
+    const from = normalizeText(fromLocation);
+    const to = normalizeText(toLocation);
+
+    if (!place) {
+      return false;
+    }
+
+    if (!from && !to) {
+      return true;
+    }
+
+    const placeParts = place.split(',').map(function (part) {
+      return part.trim();
+    }).filter(Boolean);
+
+    const fromMatches = from && (place.indexOf(from) > -1 || from.indexOf(place) > -1 || placeParts.some(function (part) {
+      return part.indexOf(from) > -1 || from.indexOf(part) > -1;
+    }));
+    const toMatches = to && (place.indexOf(to) > -1 || to.indexOf(place) > -1 || placeParts.some(function (part) {
+      return part.indexOf(to) > -1 || to.indexOf(part) > -1;
+    }));
+
+    return Boolean(fromMatches || toMatches);
+  }
+
+  function normalizeStatus(value) {
+    const text = normalizeText(value);
+    if (text === 'accepted' || text === 'active') {
+      return 'accepted';
+    }
+    return text;
+  }
+
+  function resolveImageUrl(value) {
+    const text = String(value || '').trim();
+
+    if (!text) {
+      return 'tour-bus.png';
+    }
+
+    if (/^data:image\//i.test(text) || /^https?:\/\//i.test(text)) {
+      return text;
+    }
+
+    if (/^\/uploads\//i.test(text)) {
+      return text;
+    }
+
+    if (/^(uploads\/).+/i.test(text)) {
+      return '/' + text;
+    }
+
+    if (/^[a-f0-9]{24,}-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text) || /^Screenshot-.*-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
+      return '/uploads/' + encodeURIComponent(text);
+    }
+
+    return text;
+  }
+
+  function buildTouristCardMarkup(record) {
+    const title = String(record.modelVariant || 'Tourist Bus').trim() || 'Tourist Bus';
+    const place = String(record.place || '').trim();
+    const seats = String(record.seats || '').trim();
+    const busType = String(record.type || '').trim();
+    const companyName = String(record.companyName || 'VECT Movers').trim();
+    const imageUrl = resolveImageUrl(record.photo || 'tour-bus.png');
+    const metaParts = [
+      place || 'Kerala',
+      seats ? seats + ' seats' : '',
+      busType || ''
+    ].filter(Boolean);
+
+    return [
+      '<article class="submit-demo-card" data-demo-card data-demo-source="accepted-tourist">',
+      '<div class="submit-demo-card-main">',
+      '<div class="submit-demo-image-wrap">',
+      '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="' + title.replace(/"/g, '&quot;') + '" class="submit-demo-image" />',
+      '</div>',
+      '<div class="submit-demo-content">',
+      '<div class="submit-demo-topline">',
+      '<h3 class="submit-demo-title">' + title + '</h3>',
+      '<span class="submit-demo-price">Accepted</span>',
+      '</div>',
+      '<p class="submit-demo-meta">Owner: ' + companyName + '</p>',
+      '<p class="submit-demo-meta">' + metaParts.join(' \u00b7 ') + '</p>',
+      '</div>',
+      '</div>',
+      '<div class="submit-demo-expand" aria-hidden="true">',
+      '<div class="submit-demo-expand-inner">',
+      '<div class="submit-demo-expand-actions">',
+      '<button type="button" class="submit-demo-expand-btn is-view" data-demo-action="view">VIEW</button>',
+      '<button type="button" class="submit-demo-expand-btn is-select" data-demo-action="select">SELECT</button>',
+      '</div>',
+      '</div>',
+      '</div>',
+      '</article>'
+    ].join('');
+  }
+
+  const latestSubmission = safeJsonParse(
+    localStorage.getItem('owner-latest-tourist-submission') ||
+    sessionStorage.getItem('owner-latest-tourist-submission') ||
+    'null'
+  );
+  const latestVehicle = safeJsonParse(
+    localStorage.getItem('owner-latest-vehicle-summary') ||
+    sessionStorage.getItem('owner-latest-vehicle-summary') ||
+    'null'
+  );
+  const latestVehicleStatus = normalizeStatus(
+    localStorage.getItem('owner-latest-vehicle-status') ||
+    sessionStorage.getItem('owner-latest-vehicle-status') ||
+    (latestSubmission && latestSubmission.status) ||
+    (latestVehicle && latestVehicle.statusLabel) ||
+    ''
+  );
+  const latestBus = latestSubmission && (latestSubmission.bus || (latestSubmission.summary && latestSubmission.summary.bus)) || {};
+  const latestPhotoEntry = Array.isArray(latestBus.photos) && latestBus.photos.length ? latestBus.photos[0] : (Array.isArray(latestVehicle && latestVehicle.photos) ? latestVehicle.photos[0] : '');
+  const latestPhoto = latestPhotoEntry && typeof latestPhotoEntry === 'object'
+    ? String(latestPhotoEntry.previewDataUrl || latestPhotoEntry.fileUrl || latestPhotoEntry.fileName || latestPhotoEntry.name || '').trim()
+    : String(latestPhotoEntry || '').trim();
+  const candidateRecord = {
+    modelVariant: latestBus.modelVariant || (latestVehicle && latestVehicle.modelVariant) || '',
+    place: latestBus.place || (latestVehicle && latestVehicle.place) || '',
+    seats: latestBus.seats || (latestVehicle && latestVehicle.seats) || '',
+    type: latestBus.type || (latestVehicle && latestVehicle.type) || '',
+    companyName: (latestSubmission && latestSubmission.summary && latestSubmission.summary.companyName) || localStorage.getItem('owner-company-name') || 'VECT Movers',
+    photo: latestPhoto || (latestVehicle && latestVehicle.photoPreviewUrl) || ''
+  };
+
+  if (latestVehicleStatus !== 'accepted' || !locationMatches(candidateRecord.place)) {
+    return;
+  }
+
+  const alreadyInjected = submitDemoList.querySelector('[data-demo-source="accepted-tourist"]');
+  if (alreadyInjected) {
+    return;
+  }
+
+  submitDemoList.insertAdjacentHTML('afterbegin', buildTouristCardMarkup(candidateRecord));
+})();
+
+(function () {
   const panel = document.querySelector('.submit-filter-panel');
   const tabs = Array.from(document.querySelectorAll('.submit-filter-tab'));
   const panes = Array.from(document.querySelectorAll('.submit-filter-pane'));
