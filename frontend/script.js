@@ -2613,6 +2613,18 @@
 
   function resolveImageUrl(value) {
     const text = String(value || '').trim();
+    const staticAssetFiles = new Set([
+      'tour-bus.png',
+      'yellow-backhoe-loader.png',
+      'Aadhaar-Card.png',
+      'yellow-hydraulic-excavator.png',
+      'modern-white-box-truck.png',
+      'white-flatbed-truck.png',
+      'heavy-driving-licence-reference.png',
+      'heavy-driving-licence-reference-v2.png',
+      'images-3.jpg',
+      'profile-photo-reference.avif'
+    ]);
 
     if (!text) {
       return 'tour-bus.png';
@@ -2630,7 +2642,15 @@
       return '/' + text;
     }
 
+    if (staticAssetFiles.has(text)) {
+      return text;
+    }
+
     if (/^[a-f0-9]{24,}-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text) || /^Screenshot-.*-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
+      return '/uploads/' + encodeURIComponent(text);
+    }
+
+    if (/\.(png|jpe?g|webp|gif|svg|avif|heic|heif)$/i.test(text)) {
       return '/uploads/' + encodeURIComponent(text);
     }
 
@@ -2700,7 +2720,7 @@
       '<article class="submit-demo-card" data-demo-card data-demo-source="accepted-vehicle">',
       '<div class="submit-demo-card-main">',
       '<div class="submit-demo-image-wrap">',
-      '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="' + title.replace(/"/g, '&quot;') + '" class="submit-demo-image" />',
+      '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="' + title.replace(/"/g, '&quot;') + '" class="submit-demo-image" onerror="this.onerror=null;this.src=\'' + getDefaultImageForScope(record.scope).replace(/'/g, '&#39;') + '\';" />',
       '</div>',
       '<div class="submit-demo-content">',
       '<div class="submit-demo-topline">',
@@ -2743,7 +2763,7 @@
   const latestBus = latestSubmission && (latestSubmission.bus || (latestSubmission.summary && latestSubmission.summary.bus)) || {};
   const latestPhotoEntry = Array.isArray(latestBus.photos) && latestBus.photos.length ? latestBus.photos[0] : (Array.isArray(latestVehicle && latestVehicle.photos) ? latestVehicle.photos[0] : '');
   const latestPhoto = latestPhotoEntry && typeof latestPhotoEntry === 'object'
-    ? String(latestPhotoEntry.previewDataUrl || latestPhotoEntry.fileUrl || latestPhotoEntry.fileName || latestPhotoEntry.name || '').trim()
+    ? String(latestPhotoEntry.previewDataUrl || latestPhotoEntry.fileUrl || latestPhotoEntry.fileName || '').trim()
     : String(latestPhotoEntry || '').trim();
   const vehicleLabel = String(
     latestBus.vehicleLabel ||
