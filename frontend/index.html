@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vect Own Login</title>
+  <title>VECT Movers - Home</title>
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
-  <link rel="stylesheet" href="../style.css?v=20260414-2">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
-<body class="vect-own-body">
+<body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
     <div class="page-loader-content">
       <div class="page-loader-spinner" aria-hidden="true">
@@ -23,130 +23,173 @@
     </div>
   </div>
 
-  <header class="header vect-own-header">
+  <header class="header">
     <div class="brand-lockup">
       <h1 class="logo">VECT</h1>
       <p class="logo-sub">MOVERS</p>
     </div>
-    <span class="vect-own-header-chip">Private</span>
+    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip">
+            <circle cx="12" cy="12" r="11.75"/>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#fff"/>
+        </g>
+      </svg>
+    </button>
+    <aside class="account-panel" id="account-panel" aria-hidden="true">
+      <nav class="account-panel-nav">
+        <a href="owner.html" class="account-option">Owner Login</a>
+        <a href="#" class="account-option">History</a>
+        <a href="#" class="account-option">About</a>
+        <a href="#" class="account-option">Feedback</a>
+      </nav>
+    </aside>
+    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
   </header>
 
-  <main class="vect-own-login-main">
-    <section class="vect-own-login-card" aria-label="Vect Own login">
-      <p class="vect-own-eyebrow">Selected members only</p>
-      <h1 class="vect-own-title">Vect Own</h1>
-      <p class="vect-own-copy">Enter the owner password to open the review dashboard.</p>
-
-      <form class="vect-own-login-form" data-vect-own-login-form novalidate>
-        <label class="vect-own-field">
-          <span class="vect-own-field-label">Password</span>
-          <input
-            type="password"
-            class="vect-own-input"
-            placeholder="Enter password"
-            autocomplete="current-password"
-            data-vect-own-password
-          >
-        </label>
-
-        <p class="vect-own-error" data-vect-own-error hidden></p>
-
-        <button type="submit" class="vect-own-button">Enter Portal</button>
-      </form>
-
-      <div class="owner-auth-divider">
-        <span></span>
-        <p>Or log in with</p>
-        <span></span>
-      </div>
-
-      <div class="owner-auth-socials" aria-label="Vect Own Google login">
-        <div class="owner-auth-google-wrap">
-          <div class="owner-auth-google-button" data-vect-own-google-auth-btn></div>
+  <main class="main">
+    <!-- Banner Slider -->
+    <section class="home-banner" aria-label="Featured routes">
+      <div class="swiper home-banner-slider" id="homeBanner">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide">
+            <div class="home-banner-card">
+              <img src="https://picsum.photos/id/1011/1400/700" alt="Kerala backwaters" class="home-banner-img" loading="lazy">
+              <div class="home-banner-content">
+                <h2>Kerala Backwaters</h2>
+                <p>Explore the serene waterways</p>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide">
+            <div class="home-banner-card">
+              <img src="https://picsum.photos/id/1025/1400/700" alt="Mountain routes" class="home-banner-img" loading="lazy">
+              <div class="home-banner-content">
+                <h2>Mountain Adventures</h2>
+                <p>Travel through the misty hills</p>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide">
+            <div class="home-banner-card">
+              <img src="https://picsum.photos/id/1035/1400/700" alt="Beach destinations" class="home-banner-img" loading="lazy">
+              <div class="home-banner-content">
+                <h2>Beach Getaways</h2>
+                <p>Relax on pristine beaches</p>
+              </div>
+            </div>
+          </div>
         </div>
+        <div class="swiper-pagination home-banner-pagination"></div>
+      </div>
+    </section>
+
+    <!-- Product Cards -->
+    <section class="home-products" aria-label="Available services">
+      <h2 class="home-section-title">Our Services</h2>
+      <div class="home-product-grid">
+        <a href="route.html?service=tour" class="home-product-card">
+          <div class="home-product-image">
+            <img src="https://picsum.photos/id/111/400/300" alt="Tour Bus" loading="lazy">
+          </div>
+          <div class="home-product-info">
+            <h3>Tour Bus</h3>
+            <p>Comfortable travel for groups</p>
+            <span class="home-product-price">From ₹12,000/day</span>
+          </div>
+        </a>
+        <a href="route.html?service=wedding" class="home-product-card">
+          <div class="home-product-image">
+            <img src="https://picsum.photos/id/112/400/300" alt="Wedding Bus" loading="lazy">
+          </div>
+          <div class="home-product-info">
+            <h3>Wedding Bus</h3>
+            <p>Luxury for special occasions</p>
+            <span class="home-product-price">From ₹15,000/day</span>
+          </div>
+        </a>
+        <a href="route.html?service=airport" class="home-product-card">
+          <div class="home-product-image">
+            <img src="https://picsum.photos/id/113/400/300" alt="Airport Transfer" loading="lazy">
+          </div>
+          <div class="home-product-info">
+            <h3>Airport Transfer</h3>
+            <p>Reliable pickup & drop</p>
+            <span class="home-product-price">From ₹3,500/trip</span>
+          </div>
+        </a>
+        <a href="route.html?service=corporate" class="home-product-card">
+          <div class="home-product-image">
+            <img src="https://picsum.photos/id/114/400/300" alt="Corporate Travel" loading="lazy">
+          </div>
+          <div class="home-product-info">
+            <h3>Corporate Travel</h3>
+            <p>Professional transport solutions</p>
+            <span class="home-product-price">From ₹8,000/day</span>
+          </div>
+        </a>
+        <a href="route.html?service=truck" class="home-product-card">
+          <div class="home-product-image">
+            <img src="https://picsum.photos/id/115/400/300" alt="Goods Transport" loading="lazy">
+          </div>
+          <div class="home-product-info">
+            <h3>Goods Transport</h3>
+            <p>Safe & timely delivery</p>
+            <span class="home-product-price">From ₹8,500/day</span>
+          </div>
+        </a>
       </div>
     </section>
   </main>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    (function () {
-      const form = document.querySelector('[data-vect-own-login-form]');
-      const passwordInput = document.querySelector('[data-vect-own-password]');
-      const errorNode = document.querySelector('[data-vect-own-error]');
-      const googleAuthButton = document.querySelector('[data-vect-own-google-auth-btn]');
-      const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
-      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
-      const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
-      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
-      const apiBaseCandidates = Array.from(new Set([
-        apiBaseUrl,
-        'https://go-kerala-backend.onrender.com',
-        'https://mymusics.onrender.com'
-      ].map(function (value) {
-        return String(value || '').trim().replace(/\/$/, '');
-      }).filter(Boolean)));
-      const SESSION_KEY = 'vect-own-session-token';
-
-      if (!form || !passwordInput || !errorNode) {
-        return;
+    // Initialize banner slider
+    new Swiper('.home-banner-slider', {
+      loop: true,
+      autoplay: {
+        delay: 4000,
+        disableOnInteraction: false
+      },
+      pagination: {
+        el: '.home-banner-pagination',
+        clickable: true
       }
+    });
 
-      function getApiUrl(pathName) {
-        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
+    // Account panel toggle
+    const accountBtn = document.getElementById('account-btn');
+    const accountPanel = document.getElementById('account-panel');
+    const accountBackdrop = document.getElementById('account-backdrop');
+
+    if (accountBtn && accountPanel) {
+      accountBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isHidden = accountPanel.getAttribute('aria-hidden') === 'true';
+        accountPanel.setAttribute('aria-hidden', !isHidden);
+        accountBackdrop.setAttribute('aria-hidden', !isHidden);
+      });
+
+      if (accountBackdrop) {
+        accountBackdrop.addEventListener('click', function() {
+          accountPanel.setAttribute('aria-hidden', 'true');
+          accountBackdrop.setAttribute('aria-hidden', 'true');
+        });
       }
+    }
 
-      function getApiUrlForBase(baseUrl, pathName) {
-        const safeBase = String(baseUrl || '').trim().replace(/\/$/, '');
-        const safePath = String(pathName || '').trim();
-
-        if (!safeBase) {
-          return safePath;
-        }
-
-        if (!safePath) {
-          return safeBase;
-        }
-
-        return safeBase + (safePath.charAt(0) === '/' ? safePath : '/' + safePath);
-      }
-
-      function fetchWithApiFallback(pathName, options) {
-        const bases = apiBaseCandidates.slice();
-
-        function tryNext() {
-          const baseUrl = bases.shift();
-
-          if (!baseUrl) {
-            return Promise.reject(new Error('Failed to reach the API.'));
-          }
-
-          return fetch(getApiUrlForBase(baseUrl, pathName), options).then(function (response) {
-            if (
-              !response.ok &&
-              (response.status === 404 || response.status === 502 || response.status === 503 || response.status === 504) &&
-              bases.length
-            ) {
-              return tryNext();
-            }
-
-            return response;
-          }).catch(function (error) {
-            if (bases.length) {
-              return tryNext();
-            }
-
-            throw error;
-          });
-        }
-
-        return tryNext();
-      }
-
-      function showError(message) {
-        errorNode.textContent = message;
-        errorNode.hidden = false;
-      }
+    // Remove page loader when ready
+    window.addEventListener('load', function() {
+      document.documentElement.classList.remove('show-page-loader');
+    });
+  </script>
+</body>
+</html>
 
       function hideError() {
         errorNode.hidden = true;
