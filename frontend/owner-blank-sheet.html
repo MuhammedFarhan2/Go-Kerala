@@ -1076,6 +1076,19 @@
           latestTouristSubmission = null;
         }
 
+        const storedStatus = normalizeVehicleStatus(
+          sessionStorage.getItem(latestVehicleStatusKey) ||
+          localStorage.getItem(latestVehicleStatusKey) ||
+          (latestTouristSubmission && latestTouristSubmission.status) ||
+          ''
+        );
+
+        // For drafts, continue the upload page instead of opening the review dashboard.
+        if (storedStatus === 'incomplete') {
+          window.location.href = 'owner-add-vehicle-next.html?resume=1';
+          return;
+        }
+
         const latestSubmissionId = String(
           sessionStorage.getItem('owner-latest-submission-id') ||
           localStorage.getItem('owner-latest-submission-id') ||

@@ -1674,6 +1674,38 @@
         }
       }
 
+      function hydrateDraftIfAvailable() {
+        if (reuploadSubmissionId) {
+          return;
+        }
+
+        // If the user closed the tab, sessionStorage can be empty. Restore a local draft
+        // (saved while uploading) so they can continue where they left off.
+        let latestDraft = null;
+
+        try {
+          latestDraft = JSON.parse(
+            localStorage.getItem('owner-latest-tourist-submission') ||
+            'null'
+          );
+        } catch (error) {
+          latestDraft = null;
+        }
+
+        if (!latestDraft || typeof latestDraft !== 'object') {
+          return;
+        }
+
+        const status = String(latestDraft.status || '').trim().toLowerCase();
+        const isDraft = status === 'incomplete' || status === 'draft';
+
+        if (!isDraft) {
+          return;
+        }
+
+        hydrateSubmissionValues(latestDraft);
+      }
+
       bindUploadSection('photos');
       bindUploadSection('rc');
       bindUploadSection('insurance');
@@ -1682,6 +1714,7 @@
       renderUploadSection('rc');
       renderUploadSection('insurance');
       renderUploadSection('permit');
+      hydrateDraftIfAvailable();
       restoreSelections();
       applyEditableSectionsState();
       hydrateReuploadSubmission();
