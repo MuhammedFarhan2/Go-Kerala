@@ -409,9 +409,7 @@
     }
 
     body.owner-blank-auth-locked {
-      background:
-        radial-gradient(circle at top, rgba(14, 116, 144, 0.12), transparent 38%),
-        linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      background: #f5f5f5;
       min-height: 100vh;
     }
 
@@ -427,7 +425,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 32px 18px;
+      padding: 8px 16px;
     }
 
     body.owner-blank-auth-locked .owner-blank-login-shell {
@@ -435,109 +433,101 @@
     }
 
     .owner-blank-login-card {
-      width: min(100%, 430px);
-      padding: 24px 20px;
-      border-radius: 22px;
-      border: 1px solid rgba(148, 163, 184, 0.28);
+      width: min(100%, 820px);
+      padding: 56px 44px 48px;
+      border-radius: 28px;
+      border: 1px solid #e5e7eb;
       background: #ffffff;
-      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
-    }
-
-    .owner-blank-login-kicker {
-      margin: 0 0 10px;
-      font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #0f766e;
+      box-shadow: 0 10px 34px rgba(15, 23, 42, 0.06);
     }
 
     .owner-blank-login-title {
       margin: 0;
-      font-size: 2rem;
-      line-height: 1.1;
+      font-size: clamp(3.1rem, 6vw, 4.8rem);
+      line-height: 0.98;
       font-weight: 800;
-      color: #0f172a;
+      color: #111111;
     }
 
     .owner-blank-login-copy {
-      margin: 12px 0 0;
-      font-size: 0.95rem;
+      margin: 22px 0 0;
+      font-size: 1rem;
       line-height: 1.5;
-      color: #475569;
+      color: #52525b;
+    }
+
+    .owner-blank-login-copy a {
+      color: #4f46e5;
+      text-decoration: underline;
+      pointer-events: none;
+      cursor: default;
     }
 
     .owner-blank-login-form {
       display: grid;
-      gap: 12px;
-      margin-top: 20px;
+      gap: 22px;
+      margin-top: 34px;
     }
 
     .owner-blank-login-label {
       display: grid;
-      gap: 8px;
+      gap: 10px;
     }
 
     .owner-blank-login-label span {
-      font-size: 0.9rem;
+      font-size: 0.98rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #18181b;
     }
 
     .owner-blank-login-input {
       width: 100%;
-      min-height: 52px;
-      padding: 0 16px;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
+      min-height: 66px;
+      padding: 0 20px;
+      border: 1px solid #d4d4d8;
+      border-radius: 16px;
       background: #ffffff;
-      color: #0f172a;
-      font-size: 1rem;
-      font-weight: 600;
+      color: #111827;
+      font-size: 1.05rem;
+      font-weight: 500;
       outline: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
       box-sizing: border-box;
     }
 
+    .owner-blank-login-input::placeholder {
+      color: #a1a1aa;
+    }
+
     .owner-blank-login-input:focus {
-      border-color: #0f766e;
-      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+      border-color: #6d5bd0;
+      box-shadow: 0 0 0 4px rgba(109, 91, 208, 0.12);
     }
 
     .owner-blank-login-submit {
-      min-height: 54px;
+      min-height: 68px;
       border: 0;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
+      border-radius: 16px;
+      background: #6d5bd0;
       color: #ffffff;
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.22);
+      box-shadow: none;
     }
 
     .owner-blank-login-divider {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin: 18px 0 14px;
-      color: #94a3b8;
-      font-size: 0.82rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .owner-blank-login-divider::before,
-    .owner-blank-login-divider::after {
-      content: "";
-      flex: 1 1 auto;
-      height: 1px;
-      background: #e2e8f0;
+      justify-content: center;
+      margin: 26px 0 14px;
+      color: #52525b;
+      font-size: 0.95rem;
+      font-weight: 500;
     }
 
     .owner-blank-google-button {
-      min-height: 44px;
+      min-height: 52px;
       width: 100%;
       display: flex;
       justify-content: center;
@@ -556,11 +546,35 @@
 
     .owner-blank-login-note {
       margin: 18px 0 0;
-      padding-top: 16px;
-      border-top: 1px solid #e2e8f0;
       font-size: 0.9rem;
       line-height: 1.5;
       color: #64748b;
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .owner-blank-login-shell {
+        padding: 10px;
+      }
+
+      .owner-blank-login-card {
+        padding: 34px 22px 30px;
+        border-radius: 22px;
+      }
+
+      .owner-blank-login-copy {
+        margin-top: 18px;
+      }
+
+      .owner-blank-login-form {
+        gap: 18px;
+        margin-top: 26px;
+      }
+
+      .owner-blank-login-input,
+      .owner-blank-login-submit {
+        min-height: 58px;
+      }
     }
   </style>
 </head>
@@ -578,9 +592,8 @@
 
   <section class="owner-blank-login-shell" aria-label="Owner login">
     <div class="owner-blank-login-card">
-      <p class="owner-blank-login-kicker">BlankSheet Access</p>
-      <h2 class="owner-blank-login-title">Log in first</h2>
-      <p class="owner-blank-login-copy">This page is only for owners who already have an account. New account creation is not available here.</p>
+      <h2 class="owner-blank-login-title">Log in</h2>
+      <p class="owner-blank-login-copy">Need an account? <a href="#" aria-disabled="true">Create account</a></p>
 
       <form class="owner-blank-login-form" id="owner-blank-login-form" novalidate>
         <label class="owner-blank-login-label">
@@ -597,10 +610,10 @@
         <button type="submit" class="owner-blank-login-submit">Log in to BlankSheet</button>
       </form>
 
-      <div class="owner-blank-login-divider">or continue with</div>
+      <div class="owner-blank-login-divider">Or log in with</div>
       <div class="owner-blank-google-button" id="owner-blank-google-button" aria-label="Google login"></div>
 
-      <p class="owner-blank-login-note">Only existing owner accounts can use this page. If login details were not created earlier, access needs to be arranged from the owner account setup flow.</p>
+      <p class="owner-blank-login-note">Account creation is disabled on this page. Only existing owner accounts can log in.</p>
     </div>
   </section>
 
