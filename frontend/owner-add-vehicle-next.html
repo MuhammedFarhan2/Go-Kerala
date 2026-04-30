@@ -827,17 +827,56 @@
           return Promise.reject(new Error('Please choose a valid file.'));
         }
 
-        return readFileAsBase64(safeFile).then(function (base64Data) {
+        function toUploadPayload() {
+          const mimeType = String(safeFile.type || '').trim();
+          const isSupported = mimeType === 'image/jpeg' || mimeType === 'image/png' || mimeType === 'image/webp';
+
+          // If the file is not directly supported, or it is very large, try to compress to JPEG first.
+          if (
+            (!isSupported || safeFile.size > 5 * 1024 * 1024) &&
+            window.ownerMediaTools &&
+            typeof window.ownerMediaTools.readOptimizedImage === 'function'
+          ) {
+            return window.ownerMediaTools.readOptimizedImage(safeFile, {
+              maxWidth: 1600,
+              maxHeight: 1600,
+              quality: 0.82,
+              mimeType: 'image/jpeg'
+            }).then(function (dataUrl) {
+              const safeDataUrl = String(dataUrl || '');
+              const commaIndex = safeDataUrl.indexOf(',');
+              const base64Data = commaIndex > -1 ? safeDataUrl.slice(commaIndex + 1) : '';
+              const normalizedName = (String(safeFile.name || 'image').replace(/\.[^/.]+$/, '') || 'image') + '.jpg';
+
+              if (!base64Data) {
+                throw new Error('Unable to process image file.');
+              }
+
+              return {
+                fileName: normalizedName,
+                mimeType: 'image/jpeg',
+                data: base64Data
+              };
+            });
+          }
+
+          // Default: upload the original file.
+          return readFileAsBase64(safeFile).then(function (base64Data) {
+            return {
+              fileName: safeFile.name,
+              mimeType: safeFile.type,
+              data: base64Data
+            };
+          });
+        }
+
+        return toUploadPayload().then(function (payload) {
           return fetchWithApiFallback('/api/upload-heavy-licence', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-              fileName: safeFile.name,
-              mimeType: safeFile.type,
-              data: base64Data
-            })
+            body: JSON.stringify(payload)
           });
         }).then(function (response) {
           return response.text().then(function (responseText) {
@@ -1454,6 +1493,7 @@
             return;
           }
 
+          // Backend accepts jpeg/png/webp; other formats will be auto-converted to jpeg when possible.
           const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
           const maxSize = 25 * 1024 * 1024;
           const invalid = files.find(function (file) {
@@ -1483,8 +1523,10 @@
               renderUploadSection(section);
               setError(section, '');
             })
-            .catch(function () {
-              window.alert('Unable to save the selected image.');
+            .catch(function (error) {
+              // Give a more actionable message when we can.
+              const message = error && error.message ? String(error.message) : '';
+              window.alert(message && message !== 'Failed to fetch' ? message : 'Unable to save the selected image.');
             })
             .finally(function () {
               trigger.disabled = false;

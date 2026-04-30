@@ -228,15 +228,39 @@
           saveButton.textContent = 'Saving...';
           clearError();
 
-          const base64Data = await readFileAsBase64(selectedFile);
+          let base64Data = '';
+          let fileName = selectedFile.name;
+          let mimeType = selectedFile.type;
+          const isSupported = mimeType === 'image/jpeg' || mimeType === 'image/png' || mimeType === 'image/webp';
+
+          if (
+            (!isSupported || selectedFile.size > 5 * 1024 * 1024) &&
+            window.ownerMediaTools &&
+            typeof window.ownerMediaTools.readOptimizedImage === 'function'
+          ) {
+            const dataUrl = await window.ownerMediaTools.readOptimizedImage(selectedFile, {
+              maxWidth: 1600,
+              maxHeight: 1600,
+              quality: 0.82,
+              mimeType: 'image/jpeg'
+            });
+            const safeDataUrl = String(dataUrl || '');
+            const commaIndex = safeDataUrl.indexOf(',');
+            base64Data = commaIndex > -1 ? safeDataUrl.slice(commaIndex + 1) : '';
+            fileName = (String(selectedFile.name || 'image').replace(/\.[^/.]+$/, '') || 'image') + '.jpg';
+            mimeType = 'image/jpeg';
+          } else {
+            base64Data = await readFileAsBase64(selectedFile);
+          }
+
           const response = await fetch(getApiUrl('/api/upload-heavy-licence'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              fileName: selectedFile.name,
-              mimeType: selectedFile.type,
+              fileName: fileName,
+              mimeType: mimeType,
               data: base64Data
             })
           });
