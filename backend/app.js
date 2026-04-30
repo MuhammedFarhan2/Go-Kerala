@@ -1196,7 +1196,7 @@ function handleUpload(request, response) {
     const fileName = String(payload.fileName || '').trim();
     const mimeType = String(payload.mimeType || '').trim();
     const data = String(payload.data || '');
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
     if (!fileName || !allowedTypes.includes(mimeType) || !data) {
       sendJson(response, 400, { error: 'Invalid upload data.' });
@@ -1216,6 +1216,10 @@ function handleUpload(request, response) {
           ? '.png'
           : mimeType === 'image/webp'
           ? '.webp'
+          : mimeType === 'image/heif'
+          ? '.heif'
+          : mimeType === 'image/heic'
+          ? '.heic'
           : '.jpg';
       const safeBaseName = path.basename(fileName, path.extname(fileName)).replace(/[^a-zA-Z0-9-_]/g, '-').slice(0, 40) || 'licence-photo';
       const finalFileName = safeBaseName + '-' + Date.now() + extension;
