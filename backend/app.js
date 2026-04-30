@@ -11,6 +11,7 @@ const APPLE_CLIENT_ID = String(process.env.APPLE_CLIENT_ID || '').trim();
 const GMAIL_USER = String(process.env.GMAIL_USER || '').trim();
 const GMAIL_APP_PASSWORD = String(process.env.GMAIL_APP_PASSWORD || '').trim();
 const OTP_FROM_EMAIL = String(process.env.OTP_FROM_EMAIL || GMAIL_USER || '').trim();
+const OTP_FROM_NAME = String(process.env.OTP_FROM_NAME || 'VECT MOVERS').trim();
 const TWILIO_ACCOUNT_SID = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
 const TWILIO_AUTH_TOKEN = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
 const TWILIO_FROM_NUMBER = String(process.env.TWILIO_FROM_NUMBER || '').trim();
@@ -117,6 +118,21 @@ function getMailTransporter() {
   }
 }
 
+function formatFromAddress(name, email) {
+  const safeName = String(name || '').trim();
+  const safeEmail = String(email || '').trim();
+
+  if (!safeEmail) {
+    return '';
+  }
+
+  if (!safeName) {
+    return safeEmail;
+  }
+
+  return '"' + safeName.replace(/"/g, '\\"') + '" <' + safeEmail + '>';
+}
+
 async function ensureMailTransporterReady() {
   const transporter = getMailTransporter();
 
@@ -214,12 +230,20 @@ function generateOtp() {
 
 async function sendOtpEmail(contact, otpCode) {
   const transporter = await ensureMailTransporterReady();
+  const fromAddress = formatFromAddress(OTP_FROM_NAME, OTP_FROM_EMAIL);
 
   const mailInfo = await transporter.sendMail({
-    from: OTP_FROM_EMAIL,
+    from: fromAddress || OTP_FROM_EMAIL,
+    replyTo: OTP_FROM_EMAIL,
     to: contact,
     subject: 'VECT MOVERS verification code',
-    text: 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.'
+    text: 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.',
+    html: '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">' +
+      '<h2 style="margin:0 0 12px">VECT MOVERS verification code</h2>' +
+      '<p style="margin:0 0 12px">Your verification code is:</p>' +
+      '<p style="margin:0 0 16px;font-size:28px;font-weight:700;letter-spacing:6px">' + otpCode + '</p>' +
+      '<p style="margin:0">This code expires in 5 minutes.</p>' +
+      '</div>'
   });
 
   if (!mailInfo || !mailInfo.accepted || !mailInfo.accepted.length) {
@@ -1467,6 +1491,8 @@ async function handleOtpDiagnostics(request, response) {
     gmailUserConfigured: Boolean(GMAIL_USER),
     gmailAppPasswordConfigured: Boolean(GMAIL_APP_PASSWORD),
     otpFromEmailConfigured: Boolean(OTP_FROM_EMAIL),
+    otpFromNameConfigured: Boolean(OTP_FROM_NAME),
+    gmailUser: GMAIL_USER ? GMAIL_USER.replace(/(.{2}).+(@.+)/, '$1***$2') : '',
     otpFromEmail: OTP_FROM_EMAIL ? OTP_FROM_EMAIL.replace(/(.{2}).+(@.+)/, '$1***$2') : '',
     transporterCreated: Boolean(getMailTransporter()),
     transporterVerified: mailTransporterVerified,
