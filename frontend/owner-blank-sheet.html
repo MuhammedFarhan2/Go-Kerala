@@ -956,7 +956,7 @@
       const latestTouristSubmissionKey = 'owner-latest-tourist-submission';
       const latestVehicleStatusKey = 'owner-latest-vehicle-status';
       const reuploadEditableSectionsKey = 'owner-reupload-editable-sections';
-      const apiBaseUrl = 'https://go-kerala-backend.onrender.com';
+      const submissionsApiBaseUrl = 'https://go-kerala-backend.onrender.com';
       let previewRenderToken = 0;
       const editableSectionsFromQuery = String(pageParams.get('editable') || '').trim();
 
@@ -1500,7 +1500,7 @@
           return Promise.resolve();
         }
 
-        return fetch(apiBaseUrl + '/api/submissions/' + encodeURIComponent(latestSubmissionId))
+        return fetch(submissionsApiBaseUrl + '/api/submissions/' + encodeURIComponent(latestSubmissionId))
           .then(function (response) {
             if (!response.ok) {
               return null;
