@@ -404,9 +404,138 @@
     .owner-nav-shell {
       padding-bottom: 62px;
     }
+
+    body.owner-blank-auth-locked {
+      background:
+        radial-gradient(circle at top, rgba(14, 116, 144, 0.12), transparent 38%),
+        linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+    }
+
+    body.owner-blank-auth-locked .owner-header,
+    body.owner-blank-auth-locked .owner-main,
+    body.owner-blank-auth-locked #account-backdrop,
+    body.owner-blank-auth-locked #account-panel {
+      display: none;
+    }
+
+    .owner-blank-login-shell {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 18px;
+    }
+
+    body.owner-blank-auth-locked .owner-blank-login-shell {
+      display: flex;
+    }
+
+    .owner-blank-login-card {
+      width: min(100%, 430px);
+      padding: 28px 22px;
+      border-radius: 28px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
+      backdrop-filter: blur(12px);
+    }
+
+    .owner-blank-login-kicker {
+      margin: 0 0 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #0f766e;
+    }
+
+    .owner-blank-login-title {
+      margin: 0;
+      font-size: 2rem;
+      line-height: 1.1;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .owner-blank-login-copy {
+      margin: 14px 0 0;
+      font-size: 0.98rem;
+      line-height: 1.55;
+      color: #475569;
+    }
+
+    .owner-blank-login-form {
+      display: grid;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .owner-blank-login-label {
+      display: grid;
+      gap: 8px;
+    }
+
+    .owner-blank-login-label span {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .owner-blank-login-input {
+      width: 100%;
+      min-height: 52px;
+      padding: 0 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 16px;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .owner-blank-login-input:focus {
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+    }
+
+    .owner-blank-login-submit {
+      min-height: 54px;
+      border: 0;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.22);
+    }
+
+    .owner-blank-login-error {
+      margin: 2px 0 0;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #dc2626;
+    }
+
+    .owner-blank-login-error[hidden] {
+      display: none;
+    }
+
+    .owner-blank-login-note {
+      margin: 18px 0 0;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #64748b;
+    }
   </style>
 </head>
-<body>
+<body class="owner-blank-auth-locked">
   <div class="page-loader" id="page-loader" aria-hidden="true">
     <div class="page-loader-content">
       <div class="page-loader-spinner" aria-hidden="true">
@@ -417,6 +546,31 @@
       <p class="page-loader-text">Loading</p>
     </div>
   </div>
+
+  <section class="owner-blank-login-shell" aria-label="Owner login">
+    <div class="owner-blank-login-card">
+      <p class="owner-blank-login-kicker">BlankSheet Access</p>
+      <h2 class="owner-blank-login-title">Log in first</h2>
+      <p class="owner-blank-login-copy">This page is only for owners who already have an account. New account creation is not available here.</p>
+
+      <form class="owner-blank-login-form" id="owner-blank-login-form" novalidate>
+        <label class="owner-blank-login-label">
+          <span>Email</span>
+          <input type="email" class="owner-blank-login-input" id="owner-blank-login-email" placeholder="Enter your email" autocomplete="email">
+        </label>
+
+        <label class="owner-blank-login-label">
+          <span>Password</span>
+          <input type="password" class="owner-blank-login-input" id="owner-blank-login-password" placeholder="Enter your password" autocomplete="current-password">
+        </label>
+
+        <p class="owner-blank-login-error" id="owner-blank-login-error" hidden>Please enter your login details.</p>
+        <button type="submit" class="owner-blank-login-submit">Log in to BlankSheet</button>
+      </form>
+
+      <p class="owner-blank-login-note">Only existing owner accounts can use this page. If login details were not created earlier, access needs to be arranged from the owner account setup flow.</p>
+    </div>
+  </section>
 
   <header class="header owner-header owner-blank-header owner-fixed-header">
     <div class="brand-lockup">
@@ -562,6 +716,94 @@
   <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
+      const loginForm = document.getElementById('owner-blank-login-form');
+      const loginEmailInput = document.getElementById('owner-blank-login-email');
+      const loginPasswordInput = document.getElementById('owner-blank-login-password');
+      const loginErrorNode = document.getElementById('owner-blank-login-error');
+      const savedLoginEmail = String(localStorage.getItem('owner-login-email') || '').trim();
+      const savedLoginPassword = String(localStorage.getItem('owner-login-password') || '');
+      const savedFirstName = String(localStorage.getItem('owner-login-first-name') || '').trim();
+      const savedLastName = String(localStorage.getItem('owner-login-last-name') || '').trim();
+      const savedOwnerName = [savedFirstName, savedLastName].filter(Boolean).join(' ').trim();
+      const isAuthenticated = localStorage.getItem('owner-authenticated') === 'true';
+
+      function showLoginError(message) {
+        if (!loginErrorNode) {
+          return;
+        }
+
+        loginErrorNode.textContent = message;
+        loginErrorNode.hidden = false;
+      }
+
+      function hideLoginError() {
+        if (!loginErrorNode) {
+          return;
+        }
+
+        loginErrorNode.hidden = true;
+      }
+
+      function unlockBlankSheet() {
+        document.body.classList.remove('owner-blank-auth-locked');
+      }
+
+      if (savedLoginEmail && loginEmailInput) {
+        loginEmailInput.value = savedLoginEmail;
+      }
+
+      if (isAuthenticated) {
+        unlockBlankSheet();
+        if (savedLoginEmail) {
+          sessionStorage.setItem('owner-email', savedLoginEmail);
+        }
+        if (savedOwnerName) {
+          sessionStorage.setItem('owner-name', savedOwnerName);
+        }
+      } else if (loginForm && loginEmailInput && loginPasswordInput) {
+        [loginEmailInput, loginPasswordInput].forEach(function (input) {
+          input.addEventListener('input', hideLoginError);
+        });
+
+        loginForm.addEventListener('submit', function (event) {
+          event.preventDefault();
+
+          const email = String(loginEmailInput.value || '').trim().toLowerCase();
+          const password = String(loginPasswordInput.value || '');
+          const storedEmail = savedLoginEmail.toLowerCase();
+
+          if (!email) {
+            showLoginError('Please enter your email.');
+            loginEmailInput.focus();
+            return;
+          }
+
+          if (!password) {
+            showLoginError('Please enter your password.');
+            loginPasswordInput.focus();
+            return;
+          }
+
+          if (!storedEmail || !savedLoginPassword) {
+            showLoginError('No existing owner account is available here. Account creation is disabled on this page.');
+            return;
+          }
+
+          if (email !== storedEmail || password !== savedLoginPassword) {
+            showLoginError('Invalid email or password.');
+            return;
+          }
+
+          localStorage.setItem('owner-authenticated', 'true');
+          sessionStorage.setItem('owner-email', savedLoginEmail);
+          if (savedOwnerName) {
+            sessionStorage.setItem('owner-name', savedOwnerName);
+          }
+          hideLoginError();
+          unlockBlankSheet();
+        });
+      }
+
       const pageParams = new URLSearchParams(window.location.search);
       const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
       const companyNode = document.getElementById('accountCompanyName');
