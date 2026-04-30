@@ -624,6 +624,9 @@
 
       function normalizeVehicleStatus(value) {
         const clean = String(value || '').trim().toLowerCase();
+        if (clean === 'incomplete' || clean === 'draft') {
+          return 'incomplete';
+        }
         if (clean === 'accepted' || clean === 'active' || clean === 'online') {
           return 'active';
         }
@@ -635,6 +638,9 @@
 
       function getVehicleStatusPresentation(status) {
         const safeStatus = normalizeVehicleStatus(status);
+        if (safeStatus === 'incomplete') {
+          return { label: 'Incomplete', className: '' };
+        }
         if (safeStatus === 'active') {
           return { label: 'Active', className: 'is-active' };
         }
@@ -994,6 +1000,24 @@
           previewData.permitType ? valueToText(previewData.permitType) : '',
           previewData.photoCount ? valueToText(previewData.photoCount) + ' photos' : ''
         ].filter(Boolean);
+
+        const photosFromPreview = Number(previewData.photoCount) || 0;
+        const photosFromSubmission = Number(
+          (latestTouristSubmission && latestTouristSubmission.bus && latestTouristSubmission.bus.photos && latestTouristSubmission.bus.photos.length) ||
+          (latestTouristSubmission && latestTouristSubmission.summary && latestTouristSubmission.summary.bus && latestTouristSubmission.summary.bus.photos && latestTouristSubmission.summary.bus.photos.length) ||
+          0
+        );
+        const hasAnyPhotos = (photosFromPreview || photosFromSubmission) > 0;
+
+        // If the user paused while adding a vehicle and hasn't uploaded any photos yet,
+        // don't show the "latest vehicle" preview card.
+        if (!hasAnyPhotos) {
+          addPreviewNode.hidden = true;
+          addPreviewNode.classList.remove('is-visible');
+          renderPreviewMeta([]);
+          applyPreviewImage('', '');
+          return;
+        }
 
         if (addPreviewEyebrowNode) {
           addPreviewEyebrowNode.textContent = vehicleLabel;

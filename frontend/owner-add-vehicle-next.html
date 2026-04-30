@@ -1535,6 +1535,7 @@
               saveUploadEntries(section, existingEntries.concat(newEntries));
               renderUploadSection(section);
               setError(section, '');
+              persistDraftProgress();
             })
             .catch(function (error) {
               // Give a more actionable message when we can.
@@ -1548,6 +1549,131 @@
         });
       }
 
+      function persistDraftProgress() {
+        try {
+          const photoEntries = readUploadEntries('photos');
+          const photos = readUploadNames('photos');
+
+          // Don't show draft preview on blank sheet unless at least one photo exists.
+          if (!photos.length) {
+            sessionStorage.removeItem('owner-latest-vehicle-summary');
+            sessionStorage.removeItem('owner-latest-tourist-submission');
+            sessionStorage.removeItem('owner-latest-vehicle-status');
+            localStorage.removeItem('owner-latest-vehicle-summary');
+            localStorage.removeItem('owner-latest-tourist-submission');
+            localStorage.removeItem('owner-latest-vehicle-status');
+            return;
+          }
+
+          const rcEntries = readUploadEntries('rc');
+          const insuranceEntries = readUploadEntries('insurance');
+          const permitEntries = readUploadEntries('permit');
+          const modelVariant = String(readValue('modelVariant') || '').trim();
+          const busType = String(readValue('type') || '').trim();
+          const seats = String(readValue('seats') || '').trim();
+          const tv = String(readValue('tv') || '').trim();
+          const place = readPlace();
+          const permitType = readPermitType();
+          const primaryPhotoEntry = photoEntries[0] || null;
+          const photoPreviewMediaKey = primaryPhotoEntry ? String(primaryPhotoEntry.mediaKey || '').trim() : '';
+          const photoPreviewUrl = primaryPhotoEntry ? String(primaryPhotoEntry.previewDataUrl || '').trim() : '';
+          const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
+          const ownerName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || '').trim();
+          const storedWhatsappNumber = String(sessionStorage.getItem('owner-whatsapp-number') || localStorage.getItem('owner-whatsapp-number') || '').trim();
+          const whatsappNumber = storedWhatsappNumber || '+910000000000';
+
+          const latestVehicleSummary = {
+            vehicleLabel: 'Tourist Bus',
+            modelVariant: modelVariant,
+            type: busType,
+            seats: seats,
+            tv: tv,
+            place: place,
+            permitType: permitType,
+            photos: photoEntries.slice(),
+            photoPreviewMediaKey: photoPreviewMediaKey,
+            photoPreviewUrl: photoPreviewUrl,
+            photoCount: photos.length,
+            rcCount: readUploadNames('rc').length,
+            insuranceCount: readUploadNames('insurance').length,
+            permitCount: readUploadNames('permit').length,
+            statusLabel: 'Incomplete',
+            savedAt: new Date().toISOString()
+          };
+
+          const latestTouristSubmission = {
+            id: 'draft-' + Date.now() + '-' + Math.random().toString(16).slice(2),
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            status: 'incomplete',
+            whatsappNumber: whatsappNumber,
+            sourcePage: 'owner-add-vehicle-next.html',
+            sourceGroup: 'draft',
+            fields: {
+              'owner-company-name': companyName,
+              'owner-name': ownerName,
+              'owner-whatsapp-number': whatsappNumber,
+              'owner-categories': JSON.stringify(['Tourist Bus']),
+              'owner-vehicle-type': 'bus',
+              'owner-bus-model-variant': modelVariant,
+              'owner-bus-type': busType,
+              'owner-bus-seats': seats,
+              'owner-bus-tv': tv,
+              'owner-bus-place': place,
+              'owner-bus-permit-type': permitType,
+              'owner-bus-photos': photoEntries.slice(),
+              'owner-bus-rc': rcEntries.slice(),
+              'owner-bus-insurance': insuranceEntries.slice(),
+              'owner-bus-permit': permitEntries.slice()
+            },
+            summary: {
+              companyName: companyName,
+              ownerName: ownerName,
+              phone: whatsappNumber,
+              whatsappNumber: whatsappNumber,
+              categories: ['Tourist Bus'],
+              bus: {
+                modelVariant: modelVariant,
+                type: busType,
+                seats: seats,
+                tvMusic: tv,
+                place: place,
+                permitType: permitType,
+                photos: photoEntries.slice(),
+                photoPreviewMediaKey: photoPreviewMediaKey,
+                photoPreviewUrl: photoPreviewUrl,
+                rc: rcEntries.slice(),
+                insurance: insuranceEntries.slice(),
+                permit: permitEntries.slice()
+              }
+            },
+            bus: {
+              modelVariant: modelVariant,
+              type: busType,
+              seats: seats,
+              tvMusic: tv,
+              place: place,
+              permitType: permitType,
+              photos: photoEntries.slice(),
+              photoPreviewMediaKey: photoPreviewMediaKey,
+              photoPreviewUrl: photoPreviewUrl,
+              rc: rcEntries.slice(),
+              insurance: insuranceEntries.slice(),
+              permit: permitEntries.slice()
+            }
+          };
+
+          sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
+          sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
+          sessionStorage.setItem('owner-latest-vehicle-status', 'incomplete');
+          localStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
+          localStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
+          localStorage.setItem('owner-latest-vehicle-status', 'incomplete');
+        } catch (error) {
+          return;
+        }
+      }
+
       bindUploadSection('photos');
       bindUploadSection('rc');
       bindUploadSection('insurance');
@@ -1559,6 +1685,12 @@
       restoreSelections();
       applyEditableSectionsState();
       hydrateReuploadSubmission();
+
+      ['pagehide', 'beforeunload'].forEach(function (eventName) {
+        window.addEventListener(eventName, function () {
+          persistDraftProgress();
+        });
+      });
 
       if (submitButton) {
         submitButton.addEventListener('click', function () {
