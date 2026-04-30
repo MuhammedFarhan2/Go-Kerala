@@ -1454,6 +1454,39 @@ async function handleRequestOtp(request, response) {
   }
 }
 
+async function handleOtpDiagnostics(request, response) {
+  const token = String(request.headers['x-debug-token'] || '').trim();
+  const expected = String(process.env.DEBUG_ADMIN_TOKEN || '').trim();
+
+  if (!expected || token !== expected) {
+    sendJson(response, 401, { error: 'Unauthorized debug request.' });
+    return;
+  }
+
+  const diagnostics = {
+    gmailUserConfigured: Boolean(GMAIL_USER),
+    gmailAppPasswordConfigured: Boolean(GMAIL_APP_PASSWORD),
+    otpFromEmailConfigured: Boolean(OTP_FROM_EMAIL),
+    otpFromEmail: OTP_FROM_EMAIL ? OTP_FROM_EMAIL.replace(/(.{2}).+(@.+)/, '$1***$2') : '',
+    transporterCreated: Boolean(getMailTransporter()),
+    transporterVerified: mailTransporterVerified,
+    transporterVerifyError: mailTransporterVerifyError || ''
+  };
+
+  if (!diagnostics.transporterVerified && diagnostics.transporterCreated) {
+    try {
+      await ensureMailTransporterReady();
+      diagnostics.transporterVerified = true;
+      diagnostics.transporterVerifyError = '';
+    } catch (error) {
+      diagnostics.transporterVerified = false;
+      diagnostics.transporterVerifyError = String((error && error.message) || 'SMTP verification failed.');
+    }
+  }
+
+  sendJson(response, 200, { success: true, diagnostics: diagnostics });
+}
+
 async function handleVerifyOtp(request, response) {
   cleanupOtpSessions();
 
@@ -2220,6 +2253,11 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/auth/request-otp') {
     handleRequestOtp(request, response);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/api/debug/otp-status') {
+    handleOtpDiagnostics(request, response);
     return;
   }
 
