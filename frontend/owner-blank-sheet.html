@@ -876,9 +876,21 @@
                 }
 
                 const user = result.data.user;
+                const googleEmail = String(user.email || '').trim().toLowerCase();
+                const savedMethod = String(localStorage.getItem('owner-login-method') || '').trim().toLowerCase();
+                const savedEmail = String(localStorage.getItem('owner-login-email') || '').trim().toLowerCase();
+
+                // BlankSheet allows Google login only for the same Google account
+                // previously registered from the owner login flow.
+                if (savedMethod !== 'google' || !savedEmail) {
+                  throw new Error('Google login is not enabled for this page. Please use the owner website account first.');
+                }
+
+                if (!googleEmail || googleEmail !== savedEmail) {
+                  throw new Error('Only the same owner Google account can log in here.');
+                }
+
                 hideLoginError();
-                localStorage.setItem('owner-login-method', 'google');
-                localStorage.setItem('owner-login-email', user.email || '');
                 localStorage.setItem('owner-login-first-name', user.firstName || '');
                 localStorage.setItem('owner-login-last-name', user.lastName || '');
                 localStorage.removeItem('owner-login-password');
