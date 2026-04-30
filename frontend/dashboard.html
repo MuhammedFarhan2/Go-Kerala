@@ -1150,12 +1150,10 @@
       const apiBaseCandidates = Array.from(new Set([
         apiBaseUrl,
         'https://go-kerala-backend.onrender.com',
-        'https://mymusics.onrender.com',
-        window.location.origin
+        'https://mymusics.onrender.com'
       ].map(function (value) {
         return String(value || '').trim().replace(/\/$/, '');
       }).filter(Boolean)));
-      let activeApiBaseUrl = apiBaseUrl || apiBaseCandidates[0] || '';
       const SESSION_KEY = 'vect-own-session-token';
       const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
       const REJECT_INTRO_MESSAGE = 'Sorry, your valuation have rejected because';
@@ -1189,76 +1187,6 @@
       let draftReviewNotes = {};
       let reviewSelections = {};
       const LOCAL_TOURIST_SUBMISSION_KEY = 'owner-latest-tourist-submission';
-
-      const localMediaStore = (function () {
-        if (window.ownerMediaStore && typeof window.ownerMediaStore.getItem === 'function') {
-          return window.ownerMediaStore;
-        }
-
-        const DB_NAME = 'vectOwnerMedia';
-        const STORE_NAME = 'images';
-
-        function openDatabase() {
-          return new Promise(function (resolve, reject) {
-            if (!window.indexedDB) {
-              reject(new Error('IndexedDB is not supported on this device.'));
-              return;
-            }
-
-            const request = window.indexedDB.open(DB_NAME, 1);
-
-            request.onerror = function () {
-              reject(new Error('Unable to open local media storage.'));
-            };
-
-            request.onupgradeneeded = function () {
-              const database = request.result;
-
-              if (!database.objectStoreNames.contains(STORE_NAME)) {
-                database.createObjectStore(STORE_NAME);
-              }
-            };
-
-            request.onsuccess = function () {
-              resolve(request.result);
-            };
-          });
-        }
-
-        function runStoreOperation(mode, handler) {
-          return openDatabase().then(function (database) {
-            return new Promise(function (resolve, reject) {
-              const transaction = database.transaction(STORE_NAME, mode);
-              const store = transaction.objectStore(STORE_NAME);
-              const request = handler(store);
-
-              transaction.oncomplete = function () {
-                resolve(request && request.result);
-              };
-
-              transaction.onerror = function () {
-                reject(transaction.error || new Error('Media storage transaction failed.'));
-              };
-
-              transaction.onabort = function () {
-                reject(transaction.error || new Error('Media storage transaction was aborted.'));
-              };
-            }).finally(function () {
-              database.close();
-            });
-          });
-        }
-
-        return {
-          getItem: function (key) {
-            return runStoreOperation('readonly', function (store) {
-              return store.get(String(key || ''));
-            }).then(function (value) {
-              return typeof value === 'string' ? value : '';
-            });
-          }
-        };
-      })();
 
       if (!listNode || !detailNode || !emptyNode) {
         return;
@@ -1561,23 +1489,10 @@
           const parsed = JSON.parse(raw);
           return Array.isArray(parsed) ? parsed.map(function (item) {
             if (item && typeof item === 'object' && !Array.isArray(item)) {
-              const name = String(item.name || item.fileName || '').trim();
-              const mediaKey = String(item.mediaKey || '').trim();
-              const previewDataUrl = String(item.previewDataUrl || '').trim();
-
-              if (!name && !mediaKey && !previewDataUrl) {
-                return null;
-              }
-
-              return {
-                fileName: name,
-                mediaKey: mediaKey,
-                previewDataUrl: previewDataUrl
-              };
+              return String(item.name || item.fileName || '').trim();
             }
 
-            const text = String(item || '').trim();
-            return text ? text : null;
+            return String(item || '').trim();
           }).filter(Boolean) : [];
         } catch (error) {
           return [];
@@ -1596,11 +1511,7 @@
 
       function getLocalTouristSubmission() {
         try {
-          const raw = String(
-            sessionStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) ||
-            localStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) ||
-            ''
-          ).trim();
+          const raw = String(sessionStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) || '').trim();
 
           if (!raw) {
             return null;
@@ -1616,24 +1527,6 @@
         } catch (error) {
           return null;
         }
-      }
-
-      function mergeSubmissionWithLocalTouristMedia(submission) {
-        const localSubmission = getLocalTouristSubmission();
-        const safeSubmission = submission && typeof submission === 'object' ? submission : null;
-
-        if (!safeSubmission || !localSubmission) {
-          return submission;
-        }
-
-        if (String(safeSubmission.id || '').trim() !== String(localSubmission.id || '').trim()) {
-          return submission;
-        }
-
-        return Object.assign({}, safeSubmission, localSubmission, {
-          summary: Object.assign({}, safeSubmission.summary || {}, localSubmission.summary || {}),
-          bus: Object.assign({}, safeSubmission.bus || {}, localSubmission.bus || {})
-        });
       }
 
       function mergeLocalTouristSubmission(submissions) {
@@ -1700,12 +1593,10 @@
 
         if (value && typeof value === 'object') {
           return String(
-            value.fileUrl ||
-            value.previewDataUrl ||
+            value.url ||
             value.src ||
             value.path ||
-            value.url ||
-            value.viewUrl ||
+            value.fileUrl ||
             value.fileName ||
             value.filename ||
             value.name ||
@@ -1976,22 +1867,30 @@
       }
 
       function buildTouristImageCard(title, value, itemKey) {
-          const entry = value && typeof value === 'object' && !Array.isArray(value) ? value : null;
-          const mediaKey = String(entry && entry.mediaKey || '').trim();
-          const safeValue = entry
-            ? String(
-                entry.previewDataUrl ||
-                entry.fileUrl ||
-                entry.src ||
-                entry.path ||
-                entry.url ||
-                entry.viewUrl ||
-                entry.fileName ||
-                entry.filename ||
-                entry.name ||
-                ''
-              ).trim()
-            : String(extractImageSource(value) || '').trim();
+          const normalizeImageSource = typeof extractImageSource === 'function'
+            ? extractImageSource
+            : function (fallbackValue) {
+                if (Array.isArray(fallbackValue)) {
+                  return fallbackValue.length ? normalizeImageSource(fallbackValue[0]) : '';
+                }
+
+                if (fallbackValue && typeof fallbackValue === 'object') {
+                  return String(
+                    fallbackValue.previewDataUrl ||
+                    fallbackValue.url ||
+                    fallbackValue.src ||
+                    fallbackValue.path ||
+                    fallbackValue.fileUrl ||
+                    fallbackValue.fileName ||
+                    fallbackValue.filename ||
+                    fallbackValue.name ||
+                    ''
+                  ).trim();
+                }
+
+                return String(fallbackValue || '').trim();
+              };
+          const safeValue = normalizeImageSource(value);
           const imageUrl = resolveStoredUploadUrl(safeValue, safeValue) || getImageUrl(safeValue);
 
           if (!safeValue) {
@@ -2004,134 +1903,14 @@
         }
 
           return [
-            '<div class="vect-own-tourist-image-card"' +
-              (mediaKey ? ' data-vect-own-media-key="' + escapeHtml(mediaKey) + '"' : '') +
-              ' data-vect-own-media-label="' + escapeHtml(title) + '"' +
-              ' data-vect-own-image-value="' + escapeHtml(safeValue) + '">',
+            '<div class="vect-own-tourist-image-card">',
             '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
-            '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview"' + (imageUrl ? '' : ' hidden') + ' data-vect-own-media-image>',
-            '<p class="vect-own-tourist-file-empty" data-vect-own-media-fallback' + (imageUrl ? ' hidden' : '') + '>' + escapeHtml(valueToText(safeValue) || 'Loading image...') + '</p>',
-            '<button type="button" class="vect-own-tourist-image-link"' + (imageUrl ? '' : ' hidden') + ' data-vect-own-media-button data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>',
+            imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
+            imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
             buildReviewActionButtons(itemKey, title, getItemReviewState(selectedSubmissionId, itemKey), { position: 'bottom' }),
           '</div>'
           ].join('');
         }
-
-      function hydrateTouristImagePreviews(rootNode) {
-        if (!rootNode) {
-          return;
-        }
-
-        Array.from(rootNode.querySelectorAll('.vect-own-tourist-image-card')).forEach(function (card) {
-          const imageValue = String(card.getAttribute('data-vect-own-image-value') || '').trim();
-          const mediaKey = String(card.getAttribute('data-vect-own-media-key') || '').trim();
-          const label = String(card.getAttribute('data-vect-own-media-label') || '').trim() || 'Submitted image';
-          const imageNode = card.querySelector('[data-vect-own-media-image]');
-          const buttonNode = card.querySelector('[data-vect-own-media-button]');
-          const fallbackNode = card.querySelector('[data-vect-own-media-fallback]');
-          const initialUrl = resolveStoredUploadUrl(imageValue, imageValue) || getImageUrl(imageValue);
-
-          if (!imageNode) {
-            return;
-          }
-
-          function applyLoadedUrl(nextUrl) {
-            const safeUrl = String(nextUrl || '').trim();
-
-            if (!safeUrl) {
-              imageNode.hidden = true;
-              if (buttonNode) {
-                buttonNode.hidden = true;
-              }
-              if (fallbackNode) {
-                fallbackNode.hidden = false;
-                fallbackNode.textContent = 'No preview available.';
-              }
-              return;
-            }
-
-            imageNode.src = safeUrl;
-            imageNode.alt = label;
-            imageNode.hidden = false;
-
-            if (buttonNode) {
-              buttonNode.hidden = false;
-              buttonNode.setAttribute('data-vect-own-image-url', safeUrl);
-              buttonNode.setAttribute('data-vect-own-image-label', label);
-            }
-
-            if (fallbackNode) {
-              fallbackNode.hidden = true;
-            }
-          }
-
-          function tryLocalFallback() {
-            if (!mediaKey || !localMediaStore || typeof localMediaStore.getItem !== 'function') {
-              applyLoadedUrl('');
-              return;
-            }
-
-            localMediaStore.getItem(mediaKey).then(function (storedUrl) {
-              applyLoadedUrl(storedUrl);
-            }).catch(function () {
-              applyLoadedUrl('');
-            });
-          }
-
-          if (!initialUrl) {
-            tryLocalFallback();
-            return;
-          }
-
-          loadPreviewImageWithRetry(imageNode, initialUrl, 2).then(function (loadedUrl) {
-            applyLoadedUrl(loadedUrl || initialUrl);
-          }).catch(function () {
-            tryLocalFallback();
-          });
-        });
-      }
-
-      function hydrateLocalMediaPreviews(rootNode) {
-        if (!rootNode || !localMediaStore || typeof localMediaStore.getItem !== 'function') {
-          return;
-        }
-
-        Array.from(rootNode.querySelectorAll('[data-vect-own-media-key]')).forEach(function (card) {
-          const mediaKey = String(card.getAttribute('data-vect-own-media-key') || '').trim();
-          const label = String(card.getAttribute('data-vect-own-media-label') || '').trim() || 'Submitted image';
-          const imageNode = card.querySelector('[data-vect-own-media-image]');
-          const buttonNode = card.querySelector('[data-vect-own-media-button]');
-          const fallbackNode = card.querySelector('[data-vect-own-media-fallback]');
-
-          if (!mediaKey || !imageNode) {
-            return;
-          }
-
-          localMediaStore.getItem(mediaKey).then(function (storedUrl) {
-            const safeUrl = String(storedUrl || '').trim();
-
-            if (!safeUrl) {
-              return;
-            }
-
-            imageNode.src = safeUrl;
-            imageNode.alt = label;
-            imageNode.hidden = false;
-
-            if (buttonNode) {
-              buttonNode.hidden = false;
-              buttonNode.setAttribute('data-vect-own-image-url', safeUrl);
-              buttonNode.setAttribute('data-vect-own-image-label', label);
-            }
-
-            if (fallbackNode) {
-              fallbackNode.hidden = true;
-            }
-          }).catch(function () {
-            return;
-          });
-        });
-      }
 
       function buildTouristFileSection(title, values, itemKeyPrefix) {
         const safeValues = Array.isArray(values) ? values.filter(function (item) {
@@ -2198,8 +1977,6 @@
           '</div>'
         ].join('');
 
-        hydrateTouristImagePreviews(touristSubmissionContentNode);
-        hydrateLocalMediaPreviews(touristSubmissionContentNode);
         syncTouristBottomActionButtons(submission);
       }
 
@@ -2303,17 +2080,6 @@
         }
 
         if (/^https?:\/\//i.test(text)) {
-          try {
-            const absoluteUrl = new URL(text, window.location.href);
-            const uploadedFile = String(absoluteUrl.searchParams.get('file') || '').trim();
-
-            if (/owner-uploaded-photo\.html$/i.test(absoluteUrl.pathname) && uploadedFile) {
-              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
-            }
-          } catch (error) {
-            // Keep the original URL when parsing fails.
-          }
-
           return text;
         }
 
@@ -2323,42 +2089,14 @@
           'Aadhaar-Card.png',
           'yellow-hydraulic-excavator.png',
           'modern-white-box-truck.png',
-          'white-flatbed-truck.png',
-          'heavy-driving-licence-reference.png',
-          'heavy-driving-licence-reference-v2.png',
-          'images-3.jpg',
-          'profile-photo-reference.avif'
+          'white-flatbed-truck.png'
         ]);
-
-        if (/^owner-uploaded-photo\.html\?/i.test(text)) {
-          try {
-            const uploadedPhotoUrl = new URL(text, window.location.href);
-            const uploadedFile = String(uploadedPhotoUrl.searchParams.get('file') || '').trim();
-
-            if (uploadedFile) {
-              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
-            }
-          } catch (error) {
-            // Fall through to the remaining handlers below.
-          }
-        }
 
         if (staticAssetFiles.has(text)) {
           return new URL('../' + text, window.location.href).toString();
         }
 
         if (/^\//.test(text)) {
-          try {
-            const relativeUrl = new URL(text, window.location.origin);
-            const uploadedFile = String(relativeUrl.searchParams.get('file') || '').trim();
-
-            if (/owner-uploaded-photo\.html$/i.test(relativeUrl.pathname) && uploadedFile) {
-              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
-            }
-          } catch (error) {
-            // Fall through to the normal relative path handling below.
-          }
-
           return getApiUrl(text);
         }
 
@@ -2367,15 +2105,7 @@
           return getApiUrl('/' + text);
         }
 
-        if (/^[^\/?#]+\.(png|jpe?g|webp|gif)$/i.test(text)) {
-          return getApiUrl('/uploads/' + encodeURIComponent(text));
-        }
-
-        if (/^[a-f0-9]{24,}-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
-          return getApiUrl('/uploads/' + encodeURIComponent(text));
-        }
-
-        if (/^Screenshot-.*-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
+        if (/\.(png|jpe?g|webp|gif|svg)$/i.test(text)) {
           return getApiUrl('/uploads/' + encodeURIComponent(text));
         }
 
@@ -2383,32 +2113,6 @@
       }
 
       const imageObjectUrlCache = new Map();
-
-      function getUploadUrlCandidates(imageUrl) {
-        const safeUrl = String(imageUrl || '').trim();
-
-        if (!safeUrl || /^data:image\//i.test(safeUrl)) {
-          return safeUrl ? [safeUrl] : [];
-        }
-
-        let parsedUrl;
-
-        try {
-          parsedUrl = new URL(safeUrl, window.location.href);
-        } catch (error) {
-          return [safeUrl];
-        }
-
-        if (!/^\/uploads\//i.test(parsedUrl.pathname)) {
-          return [parsedUrl.toString()];
-        }
-
-        return Array.from(new Set(
-          [parsedUrl.pathname + parsedUrl.search].concat(apiBaseCandidates.map(function (baseUrl) {
-            return getApiUrlForBase(baseUrl, parsedUrl.pathname + parsedUrl.search);
-          }))
-        ));
-      }
 
       function resolveRenderableImageUrl(value) {
         const directUrl = getImageUrl(value);
@@ -2418,8 +2122,7 @@
         }
 
         if (!/^data:image\//i.test(directUrl)) {
-          const imageCandidates = getUploadUrlCandidates(directUrl);
-          return Promise.resolve(imageCandidates[0] || directUrl);
+          return Promise.resolve(directUrl);
         }
 
         if (imageObjectUrlCache.has(directUrl)) {
@@ -2442,31 +2145,18 @@
 
       function loadPreviewImageWithRetry(imageNode, imageUrl, maxAttempts) {
         return new Promise(function (resolve, reject) {
-          const candidateBases = getUploadUrlCandidates(imageUrl);
           const maxTry = Math.max(1, Number(maxAttempts) || 1);
           let attempt = 0;
-          let baseIndex = 0;
 
           function tryLoad() {
-            if (baseIndex >= candidateBases.length) {
-              reject(new Error('Image preview failed to load.'));
-              return;
-            }
-
             attempt += 1;
-            const baseUrl = candidateBases[baseIndex];
             const candidateUrl = attempt === 1
-              ? baseUrl
-              : baseUrl + (baseUrl.indexOf('?') === -1 ? '?' : '&') + '_img_retry=' + Date.now() + '_' + attempt;
+              ? imageUrl
+              : imageUrl + (imageUrl.indexOf('?') === -1 ? '?' : '&') + '_img_retry=' + Date.now() + '_' + attempt;
 
             imageNode.onload = function () {
               imageNode.onload = null;
               imageNode.onerror = null;
-              try {
-                activeApiBaseUrl = new URL(candidateUrl, window.location.href).origin;
-              } catch (error) {
-                // Keep the previously working base.
-              }
               resolve(candidateUrl);
             };
 
@@ -2479,9 +2169,7 @@
                 return;
               }
 
-              attempt = 0;
-              baseIndex += 1;
-              tryLoad();
+              reject(new Error('Image preview failed to load.'));
             };
 
             imageNode.src = candidateUrl;
@@ -2587,18 +2275,6 @@
 
         if (!/\.(png|jpe?g|webp|gif)$/i.test(safeFileName)) {
           return '';
-        }
-
-        if (
-          !/^[a-f0-9]{24,}-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(safeFileName) &&
-          !/^Screenshot-.*-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(safeFileName) &&
-          !/^(uploads\/).+/i.test(safeFileName)
-        ) {
-          return '';
-        }
-
-        if (/^(uploads\/).+/i.test(safeFileName)) {
-          return getApiUrl('/' + safeFileName.replace(/^\/+/, ''));
         }
 
         return getApiUrl('/uploads/' + encodeURIComponent(safeFileName));
@@ -2861,10 +2537,7 @@
               viewButton.setAttribute('data-vect-own-image-label', item.label);
 
               return loadPreviewImageWithRetry(imageNode, imageUrl, 2)
-                .then(function (loadedUrl) {
-                  if (loadedUrl) {
-                    viewButton.setAttribute('data-vect-own-image-url', loadedUrl);
-                  }
+                .then(function () {
                   imageNode.hidden = false;
                   fallbackNode.hidden = true;
                 })
@@ -2883,7 +2556,7 @@
       }
 
       function getApiUrl(pathName) {
-        return activeApiBaseUrl ? activeApiBaseUrl + pathName : pathName;
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
       function getApiUrlForBase(baseUrl, pathName) {
@@ -2918,10 +2591,6 @@
               bases.length
             ) {
               return tryNext();
-            }
-
-            if (response.ok) {
-              activeApiBaseUrl = baseUrl;
             }
 
             return response;
@@ -3804,7 +3473,7 @@
           .then(function (payload) {
             console.log('Detail payload received:', payload);
             console.log('Submission to render:', payload.submission);
-            renderDetail(mergeSubmissionWithLocalTouristMedia(payload.submission));
+            renderDetail(payload.submission);
           })
           .catch(function (error) {
             console.log('Error loading details, using cached:', error);

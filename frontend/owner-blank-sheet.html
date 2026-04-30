@@ -7,9 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="style.css?v=20260414-2">
   <style>
     .owner-blank-header .user-icon {
@@ -534,24 +532,25 @@
     }
 
     .owner-blank-google-button {
-      width: auto;
+      width: 100%;
       max-width: 100%;
-      min-height: 0;
-      display: inline-flex;
+      min-height: 58px;
+      display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid #111111;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #ffffff;
+      border: 1px dashed #d4d4d8;
+      border-radius: 16px;
+      background: #fafafa;
       box-sizing: border-box;
-      padding: 1px;
+      padding: 14px 18px;
+      color: #52525b;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
     }
 
-    .owner-blank-google-button > div {
-      margin: 0 auto !important;
-      border-radius: 9px;
-      overflow: hidden;
+    .owner-blank-google-button.is-hidden {
+      display: none;
     }
 
     .owner-blank-login-error {
@@ -631,9 +630,9 @@
         <button type="submit" class="owner-blank-login-submit">Log in to BlankSheet</button>
       </form>
 
-      <div class="owner-blank-login-divider">Or log in with</div>
+      <div class="owner-blank-login-divider">Other sign-in</div>
       <div class="owner-blank-google-wrap">
-        <div class="owner-blank-google-button" id="owner-blank-google-button" aria-label="Google login"></div>
+        <div class="owner-blank-google-button" id="owner-blank-google-button" aria-live="polite">Google sign-in is unavailable on this page. Please use your saved email and password above.</div>
       </div>
 
       <p class="owner-blank-login-note">Account creation is disabled on this page. Only existing owner accounts can log in.</p>
@@ -789,9 +788,7 @@
       const loginPasswordInput = document.getElementById('owner-blank-login-password');
       const loginErrorNode = document.getElementById('owner-blank-login-error');
       const googleButton = document.getElementById('owner-blank-google-button');
-      const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
-      const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://go-kerala-backend.onrender.com';
       const savedLoginEmail = String(localStorage.getItem('owner-login-email') || '').trim();
       const savedLoginPassword = String(localStorage.getItem('owner-login-password') || '');
@@ -832,96 +829,19 @@
         localStorage.setItem('owner-authenticated', 'true');
       }
 
-      function initializeGoogleLogin() {
-        if (!googleButton || !googleClientId || !window.google || !window.google.accounts || !window.google.accounts.id) {
+      function updateGoogleNotice() {
+        if (!googleButton) {
           return;
         }
 
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: function (response) {
-            if (!response || !response.credential) {
-              showLoginError('Google login failed. Please try again.');
-              return;
-            }
+        const savedMethod = String(localStorage.getItem('owner-login-method') || '').trim().toLowerCase();
 
-            fetch(apiBaseUrl + '/api/auth/google', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                credential: response.credential
-              })
-            })
-              .then(function (response) {
-                return response.text().then(function (text) {
-                  let data = {};
+        if (savedMethod === 'google') {
+          googleButton.textContent = 'This BlankSheet page currently supports email-password sign-in only. Please log in above using the email linked to your owner account.';
+          return;
+        }
 
-                  try {
-                    data = text ? JSON.parse(text) : {};
-                  } catch (error) {
-                    data = {};
-                  }
-
-                  return {
-                    ok: response.ok,
-                    data: data
-                  };
-                });
-              })
-              .then(function (result) {
-                if (!result.ok || !result.data || !result.data.user) {
-                  throw new Error((result.data && result.data.error) || 'Google login failed.');
-                }
-
-                const user = result.data.user;
-                const googleEmail = String(user.email || '').trim().toLowerCase();
-                const savedMethod = String(localStorage.getItem('owner-login-method') || '').trim().toLowerCase();
-                const savedEmail = String(localStorage.getItem('owner-login-email') || '').trim().toLowerCase();
-
-                // BlankSheet allows Google login only for the same Google account
-                // previously registered from the owner login flow.
-                if (savedMethod !== 'google' || !savedEmail) {
-                  throw new Error('Google login is not enabled for this page. Please use the owner website account first.');
-                }
-
-                if (!googleEmail || googleEmail !== savedEmail) {
-                  throw new Error('Only the same owner Google account can log in here.');
-                }
-
-                hideLoginError();
-                localStorage.setItem('owner-login-first-name', user.firstName || '');
-                localStorage.setItem('owner-login-last-name', user.lastName || '');
-                localStorage.removeItem('owner-login-password');
-                storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
-                unlockBlankSheet();
-              })
-              .catch(function (error) {
-                showLoginError(error.message || 'Google login failed.');
-              });
-          }
-        });
-
-        const containerWidth = Math.floor((googleButton.parentElement && googleButton.parentElement.getBoundingClientRect().width) || 320);
-        const buttonWidth = Math.max(280, Math.min(390, containerWidth - 4));
-        googleButton.innerHTML = '';
-        window.google.accounts.id.renderButton(googleButton, {
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with',
-          shape: 'rectangular',
-          width: buttonWidth
-        });
-
-        window.requestAnimationFrame(function () {
-          const inner = googleButton.firstElementChild;
-          if (!inner) {
-            return;
-          }
-          const tightWidth = Math.ceil(inner.getBoundingClientRect().width) + 2;
-          googleButton.style.width = tightWidth + 'px';
-        });
+        googleButton.textContent = 'Google sign-in is unavailable on this page. Please use your saved email and password above.';
       }
 
       if (savedLoginEmail && loginEmailInput) {
@@ -976,7 +896,7 @@
         });
       }
 
-      initializeGoogleLogin();
+      updateGoogleNotice();
 
       const pageParams = new URLSearchParams(window.location.search);
       const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
