@@ -534,22 +534,23 @@
     }
 
     .owner-blank-google-button {
-      width: min(100%, 420px);
-      min-height: 46px;
-      display: flex;
+      width: auto;
+      max-width: 100%;
+      min-height: 0;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       border: 1px solid #111111;
-      border-radius: 12px;
+      border-radius: 10px;
       overflow: hidden;
       background: #ffffff;
       box-sizing: border-box;
-      padding: 2px;
+      padding: 1px;
     }
 
     .owner-blank-google-button > div {
       margin: 0 auto !important;
-      border-radius: 10px;
+      border-radius: 9px;
       overflow: hidden;
     }
 
@@ -890,13 +891,24 @@
           }
         });
 
-        const buttonWidth = Math.max(300, Math.floor(googleButton.getBoundingClientRect().width || googleButton.clientWidth || 300));
+        const containerWidth = Math.floor((googleButton.parentElement && googleButton.parentElement.getBoundingClientRect().width) || 320);
+        const buttonWidth = Math.max(280, Math.min(390, containerWidth - 4));
+        googleButton.innerHTML = '';
         window.google.accounts.id.renderButton(googleButton, {
           theme: 'outline',
           size: 'large',
           text: 'signin_with',
           shape: 'rectangular',
           width: buttonWidth
+        });
+
+        window.requestAnimationFrame(function () {
+          const inner = googleButton.firstElementChild;
+          if (!inner) {
+            return;
+          }
+          const tightWidth = Math.ceil(inner.getBoundingClientRect().width) + 2;
+          googleButton.style.width = tightWidth + 'px';
         });
       }
 
