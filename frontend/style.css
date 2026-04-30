@@ -1040,6 +1040,26 @@ html {
   .owner-auth-panel {
     min-height: clamp(560px, 74vh, 860px);
   }
+
+  .owner-auth-banner {
+    height: 100%;
+    min-height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .owner-auth-banner .swiper-wrapper,
+  .owner-auth-banner .swiper-slide,
+  .owner-auth-banner-card,
+  .owner-auth-banner-img {
+    height: 100%;
+    min-height: 100%;
+    border-radius: 18px;
+  }
+
+  .owner-auth-banner-img {
+    object-fit: cover;
+    object-position: center;
+  }
 }
 
 .owner-auth-shell {

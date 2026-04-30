@@ -236,6 +236,7 @@
         Boolean(String(localStorage.getItem('owner-login-email') || '').trim());
       const isEmailReview = reviewItem === 'owner-email';
       let authMode = 'register';
+      let authSubmitInFlight = false;
 
       if (isEmailReview) {
         authMode = 'register';
@@ -388,9 +389,21 @@
         });
       }
 
+      function fetchWithTimeout(url, options, timeoutMs) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(function () {
+          controller.abort();
+        }, timeoutMs || 15000);
+        const nextOptions = Object.assign({}, options || {}, { signal: controller.signal });
+
+        return fetch(url, nextOptions).finally(function () {
+          window.clearTimeout(timeout);
+        });
+      }
+
       async function fetchJsonWithRetry(url, options, retryDelays) {
         try {
-          const response = await fetch(url, options);
+          const response = await fetchWithTimeout(url, options, 15000);
           const text = await response.text();
           let data = {};
 
@@ -406,6 +419,9 @@
             data: data
           };
         } catch (error) {
+          if (error && error.name === 'AbortError') {
+            throw new Error('Request timed out. Please try again.');
+          }
           console.error('Fetch error:', error);
           throw error;
         }
@@ -514,6 +530,9 @@
 
       form.addEventListener('submit', function (event) {
         event.preventDefault();
+        if (authSubmitInFlight) {
+          return;
+        }
 
         const contact = emailInput.value.trim();
         const isLogin = authMode === 'login';
@@ -569,9 +588,19 @@
         }
 
         if (submitButton) {
+          authSubmitInFlight = true;
           submitButton.disabled = true;
           submitButton.textContent = 'Please wait...';
         }
+
+        const submitGuardTimer = window.setTimeout(function () {
+          authSubmitInFlight = false;
+          if (!submitButton) {
+            return;
+          }
+          submitButton.disabled = false;
+          syncAuthMode();
+        }, 20000);
 
         fetchJsonFromApi('/api/auth/request-otp', {
           method: 'POST',
@@ -604,6 +633,8 @@
             showError(error && error.message ? error.message : 'Unable to send OTP right now. Please try again.');
           })
           .finally(function () {
+            window.clearTimeout(submitGuardTimer);
+            authSubmitInFlight = false;
             if (!submitButton) {
               return;
             }
