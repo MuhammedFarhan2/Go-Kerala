@@ -130,6 +130,70 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (function () {
+      const SHARED_BANNER_STORAGE_KEY = 'vect-shared-banner-images-v1';
+      const ownerBannerImages = Array.from(document.querySelectorAll('#ownerBanner .owner-auth-banner-img'));
+      const defaultBannerImages = ownerBannerImages.map(function (imageNode, index) {
+        return {
+          src: String(imageNode.getAttribute('src') || '').trim(),
+          alt: String(imageNode.getAttribute('alt') || ('Banner slide ' + String(index + 1))).trim()
+        };
+      }).filter(function (item) {
+        return Boolean(item.src);
+      });
+
+      function loadSharedBannerImages() {
+        try {
+          const savedValue = localStorage.getItem(SHARED_BANNER_STORAGE_KEY);
+          const parsedValue = savedValue ? JSON.parse(savedValue) : [];
+          const normalizedValue = Array.isArray(parsedValue)
+            ? parsedValue.map(function (item, index) {
+                return {
+                  src: String(item && item.src || '').trim(),
+                  alt: String(item && item.alt || ('Banner slide ' + String(index + 1))).trim()
+                };
+              }).filter(function (item) {
+                return Boolean(item.src);
+              })
+            : [];
+
+          return normalizedValue.length ? normalizedValue : defaultBannerImages;
+        } catch (error) {
+          return defaultBannerImages;
+        }
+      }
+
+      function saveSharedBannerImages(imageList) {
+        try {
+          localStorage.setItem(SHARED_BANNER_STORAGE_KEY, JSON.stringify(imageList));
+        } catch (error) {
+          // Ignore storage issues.
+        }
+      }
+
+      function applyBannerImages(imageList) {
+        ownerBannerImages.forEach(function (imageNode, index) {
+          const nextImage = imageList[index % imageList.length];
+
+          if (!nextImage) {
+            return;
+          }
+
+          imageNode.src = nextImage.src;
+          imageNode.alt = nextImage.alt || ('Banner slide ' + String(index + 1));
+        });
+      }
+
+      const sharedBannerImages = loadSharedBannerImages();
+      applyBannerImages(sharedBannerImages);
+      saveSharedBannerImages(sharedBannerImages);
+      window.addEventListener('storage', function (event) {
+        if (event.key !== SHARED_BANNER_STORAGE_KEY) {
+          return;
+        }
+
+        applyBannerImages(loadSharedBannerImages());
+      });
+
       const form = document.querySelector('[data-owner-auth-form]');
       const emailInput = document.querySelector('[data-owner-email]');
       const passwordField = document.querySelector('[data-owner-password-field]');
