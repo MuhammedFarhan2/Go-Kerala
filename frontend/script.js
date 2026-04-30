@@ -176,12 +176,6 @@
         }
 
         const inputMimeType = String(file.type || '').trim().toLowerCase();
-        // Many phones (especially iPhones) produce HEIC/HEIF. Browsers often can't decode these
-        // into a canvas without extra codecs/libraries, so fail with a clear message.
-        if (inputMimeType === 'image/heic' || inputMimeType === 'image/heif') {
-          reject(new Error('This photo format (HEIC) cannot be processed here. Please select a JPEG or PNG image.'));
-          return;
-        }
 
         const reader = new FileReader();
 
@@ -190,10 +184,22 @@
         };
 
         reader.onload = function () {
+          // HEIC/HEIF often cannot be decoded into a canvas in mobile browsers/WebViews.
+          // We still accept it by returning the original data URL as-is (no resize/compress).
+          if (inputMimeType === 'image/heic' || inputMimeType === 'image/heif') {
+            const rawDataUrl = String(reader.result || '');
+            if (!rawDataUrl) {
+              reject(new Error('Unable to read image file.'));
+              return;
+            }
+            resolve(rawDataUrl);
+            return;
+          }
+
           const image = new Image();
 
           image.onerror = function () {
-            reject(new Error('Unable to process image file. Please select a JPEG or PNG image.'));
+            reject(new Error('Unable to process image file.'));
           };
 
           image.onload = function () {
@@ -215,7 +221,7 @@
             canvas.height = Math.max(1, Math.round(image.height * scale));
 
             if (!context) {
-              reject(new Error('Unable to process image file. Please select a JPEG or PNG image.'));
+              reject(new Error('Unable to process image file.'));
               return;
             }
 
@@ -223,7 +229,7 @@
             try {
               resolve(canvas.toDataURL(settings.mimeType, settings.quality));
             } catch (error) {
-              reject(new Error('Unable to process image file. Please select a JPEG or PNG image.'));
+              reject(new Error('Unable to process image file.'));
             }
           };
 
