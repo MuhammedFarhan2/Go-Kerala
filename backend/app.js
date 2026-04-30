@@ -1176,7 +1176,9 @@ function handleUpload(request, response) {
   request.on('data', function (chunk) {
     body += chunk;
 
-    if (body.length > 3 * 1024 * 1024) {
+    // Accept larger image payloads (base64 expands size ~33%).
+    // Frontend will try to optimize/compress, but we keep this generous.
+    if (body.length > 15 * 1024 * 1024) {
       request.destroy();
     }
   });
@@ -1194,7 +1196,7 @@ function handleUpload(request, response) {
     const fileName = String(payload.fileName || '').trim();
     const mimeType = String(payload.mimeType || '').trim();
     const data = String(payload.data || '');
-    const allowedTypes = ['image/jpeg', 'image/png'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     if (!fileName || !allowedTypes.includes(mimeType) || !data) {
       sendJson(response, 400, { error: 'Invalid upload data.' });
@@ -1204,12 +1206,17 @@ function handleUpload(request, response) {
     try {
       const buffer = Buffer.from(data, 'base64');
 
-      if (buffer.length > 5 * 1024 * 1024) {
-        sendJson(response, 400, { error: 'Image size must be 5MB or less.' });
+      if (buffer.length > 10 * 1024 * 1024) {
+        sendJson(response, 400, { error: 'Image size must be 10MB or less.' });
         return;
       }
 
-      const extension = mimeType === 'image/png' ? '.png' : '.jpg';
+      const extension =
+        mimeType === 'image/png'
+          ? '.png'
+          : mimeType === 'image/webp'
+          ? '.webp'
+          : '.jpg';
       const safeBaseName = path.basename(fileName, path.extname(fileName)).replace(/[^a-zA-Z0-9-_]/g, '-').slice(0, 40) || 'licence-photo';
       const finalFileName = safeBaseName + '-' + Date.now() + extension;
       const outputPath = path.join(UPLOADS_DIR, finalFileName);
