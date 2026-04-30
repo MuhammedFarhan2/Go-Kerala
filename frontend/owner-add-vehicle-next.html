@@ -830,6 +830,19 @@
         function toUploadPayload() {
           const mimeType = String(safeFile.type || '').trim();
           const isSupported = mimeType === 'image/jpeg' || mimeType === 'image/png' || mimeType === 'image/webp';
+          const isHeic = mimeType === 'image/heic' || mimeType === 'image/heif';
+
+          // HEIC/HEIF often cannot be decoded in-browser on Android/iOS WebViews.
+          // Upload the original file as-is and let the server store it.
+          if (isHeic) {
+            return readFileAsBase64(safeFile).then(function (base64Data) {
+              return {
+                fileName: safeFile.name,
+                mimeType: mimeType,
+                data: base64Data
+              };
+            });
+          }
 
           // If the file is not directly supported, or it is very large, try to compress to JPEG first.
           if (

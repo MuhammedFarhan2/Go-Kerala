@@ -232,8 +232,12 @@
           let fileName = selectedFile.name;
           let mimeType = selectedFile.type;
           const isSupported = mimeType === 'image/jpeg' || mimeType === 'image/png' || mimeType === 'image/webp';
+          const isHeic = mimeType === 'image/heic' || mimeType === 'image/heif';
 
-          if (
+          if (isHeic) {
+            // Upload HEIC/HEIF as-is (many browsers can't decode it for compression).
+            base64Data = await readFileAsBase64(selectedFile);
+          } else if (
             (!isSupported || selectedFile.size > 5 * 1024 * 1024) &&
             window.ownerMediaTools &&
             typeof window.ownerMediaTools.readOptimizedImage === 'function'
