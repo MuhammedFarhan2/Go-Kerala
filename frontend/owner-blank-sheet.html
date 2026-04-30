@@ -7,6 +7,9 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
+  <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="style.css?v=20260414-2">
   <style>
     .owner-blank-header .user-icon {
@@ -433,12 +436,11 @@
 
     .owner-blank-login-card {
       width: min(100%, 430px);
-      padding: 28px 22px;
-      border-radius: 28px;
+      padding: 24px 20px;
+      border-radius: 22px;
       border: 1px solid rgba(148, 163, 184, 0.28);
-      background: rgba(255, 255, 255, 0.94);
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
-      backdrop-filter: blur(12px);
+      background: #ffffff;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
     }
 
     .owner-blank-login-kicker {
@@ -459,16 +461,16 @@
     }
 
     .owner-blank-login-copy {
-      margin: 14px 0 0;
-      font-size: 0.98rem;
-      line-height: 1.55;
+      margin: 12px 0 0;
+      font-size: 0.95rem;
+      line-height: 1.5;
       color: #475569;
     }
 
     .owner-blank-login-form {
       display: grid;
-      gap: 14px;
-      margin-top: 24px;
+      gap: 12px;
+      margin-top: 20px;
     }
 
     .owner-blank-login-label {
@@ -487,7 +489,7 @@
       min-height: 52px;
       padding: 0 16px;
       border: 1px solid #cbd5e1;
-      border-radius: 16px;
+      border-radius: 14px;
       background: #ffffff;
       color: #0f172a;
       font-size: 1rem;
@@ -505,13 +507,40 @@
     .owner-blank-login-submit {
       min-height: 54px;
       border: 0;
-      border-radius: 18px;
+      border-radius: 14px;
       background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
       color: #ffffff;
       font-size: 1rem;
       font-weight: 800;
       cursor: pointer;
       box-shadow: 0 16px 32px rgba(15, 23, 42, 0.22);
+    }
+
+    .owner-blank-login-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0 14px;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .owner-blank-login-divider::before,
+    .owner-blank-login-divider::after {
+      content: "";
+      flex: 1 1 auto;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    .owner-blank-google-button {
+      min-height: 44px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
     }
 
     .owner-blank-login-error {
@@ -567,6 +596,9 @@
         <p class="owner-blank-login-error" id="owner-blank-login-error" hidden>Please enter your login details.</p>
         <button type="submit" class="owner-blank-login-submit">Log in to BlankSheet</button>
       </form>
+
+      <div class="owner-blank-login-divider">or continue with</div>
+      <div class="owner-blank-google-button" id="owner-blank-google-button" aria-label="Google login"></div>
 
       <p class="owner-blank-login-note">Only existing owner accounts can use this page. If login details were not created earlier, access needs to be arranged from the owner account setup flow.</p>
     </div>
@@ -720,6 +752,11 @@
       const loginEmailInput = document.getElementById('owner-blank-login-email');
       const loginPasswordInput = document.getElementById('owner-blank-login-password');
       const loginErrorNode = document.getElementById('owner-blank-login-error');
+      const googleButton = document.getElementById('owner-blank-google-button');
+      const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
+      const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://go-kerala-backend.onrender.com';
       const savedLoginEmail = String(localStorage.getItem('owner-login-email') || '').trim();
       const savedLoginPassword = String(localStorage.getItem('owner-login-password') || '');
       const savedFirstName = String(localStorage.getItem('owner-login-first-name') || '').trim();
@@ -746,6 +783,85 @@
 
       function unlockBlankSheet() {
         document.body.classList.remove('owner-blank-auth-locked');
+      }
+
+      function storeOwnerSession(firstName, lastName, email) {
+        const ownerName = [firstName, lastName].filter(Boolean).join(' ').trim();
+        sessionStorage.setItem('owner-email', email);
+        sessionStorage.setItem('owner-first-name', firstName);
+        sessionStorage.setItem('owner-last-name', lastName);
+        if (ownerName) {
+          sessionStorage.setItem('owner-name', ownerName);
+        }
+        localStorage.setItem('owner-authenticated', 'true');
+      }
+
+      function initializeGoogleLogin() {
+        if (!googleButton || !googleClientId || !window.google || !window.google.accounts || !window.google.accounts.id) {
+          return;
+        }
+
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: function (response) {
+            if (!response || !response.credential) {
+              showLoginError('Google login failed. Please try again.');
+              return;
+            }
+
+            fetch(apiBaseUrl + '/api/auth/google', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                credential: response.credential
+              })
+            })
+              .then(function (response) {
+                return response.text().then(function (text) {
+                  let data = {};
+
+                  try {
+                    data = text ? JSON.parse(text) : {};
+                  } catch (error) {
+                    data = {};
+                  }
+
+                  return {
+                    ok: response.ok,
+                    data: data
+                  };
+                });
+              })
+              .then(function (result) {
+                if (!result.ok || !result.data || !result.data.user) {
+                  throw new Error((result.data && result.data.error) || 'Google login failed.');
+                }
+
+                const user = result.data.user;
+                hideLoginError();
+                localStorage.setItem('owner-login-method', 'google');
+                localStorage.setItem('owner-login-email', user.email || '');
+                localStorage.setItem('owner-login-first-name', user.firstName || '');
+                localStorage.setItem('owner-login-last-name', user.lastName || '');
+                localStorage.removeItem('owner-login-password');
+                storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
+                unlockBlankSheet();
+              })
+              .catch(function (error) {
+                showLoginError(error.message || 'Google login failed.');
+              });
+          }
+        });
+
+        window.google.accounts.id.renderButton(googleButton, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'rectangular',
+          width: 390
+        });
       }
 
       if (savedLoginEmail && loginEmailInput) {
@@ -794,15 +910,13 @@
             return;
           }
 
-          localStorage.setItem('owner-authenticated', 'true');
-          sessionStorage.setItem('owner-email', savedLoginEmail);
-          if (savedOwnerName) {
-            sessionStorage.setItem('owner-name', savedOwnerName);
-          }
+          storeOwnerSession(savedFirstName, savedLastName, savedLoginEmail);
           hideLoginError();
           unlockBlankSheet();
         });
       }
+
+      initializeGoogleLogin();
 
       const pageParams = new URLSearchParams(window.location.search);
       const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
