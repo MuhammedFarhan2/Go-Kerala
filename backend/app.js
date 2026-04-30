@@ -64,6 +64,8 @@ try {
 let googleOAuthClient = null;
 let appleKeysCache = null;
 let mailTransporter = null;
+let mailTransporterVerified = false;
+let mailTransporterVerifyError = '';
 const profilePhotoSessions = new Map();
 const otpSessions = new Map();
 const vectOwnSessions = new Map();
@@ -112,6 +114,29 @@ function getMailTransporter() {
     return mailTransporter;
   } catch (error) {
     return null;
+  }
+}
+
+async function ensureMailTransporterReady() {
+  const transporter = getMailTransporter();
+
+  if (!transporter || !OTP_FROM_EMAIL) {
+    throw new Error('Email OTP is not configured on the server. Set GMAIL_USER, GMAIL_APP_PASSWORD and OTP_FROM_EMAIL.');
+  }
+
+  if (mailTransporterVerified) {
+    return transporter;
+  }
+
+  try {
+    await transporter.verify();
+    mailTransporterVerified = true;
+    mailTransporterVerifyError = '';
+    return transporter;
+  } catch (error) {
+    mailTransporterVerified = false;
+    mailTransporterVerifyError = String((error && error.message) || 'SMTP verification failed.');
+    throw new Error('OTP email service is unavailable: ' + mailTransporterVerifyError);
   }
 }
 
@@ -188,18 +213,20 @@ function generateOtp() {
 }
 
 async function sendOtpEmail(contact, otpCode) {
-  const transporter = getMailTransporter();
+  const transporter = await ensureMailTransporterReady();
 
-  if (!transporter || !OTP_FROM_EMAIL) {
-    throw new Error('Email OTP is not configured on the server.');
-  }
-
-  await transporter.sendMail({
+  const mailInfo = await transporter.sendMail({
     from: OTP_FROM_EMAIL,
     to: contact,
     subject: 'VECT MOVERS verification code',
     text: 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.'
   });
+
+  if (!mailInfo || !mailInfo.accepted || !mailInfo.accepted.length) {
+    throw new Error('OTP email was not accepted by the mail server.');
+  }
+
+  return mailInfo;
 }
 
 async function sendOtpSms(contact, otpCode) {
@@ -1412,13 +1439,15 @@ async function handleRequestOtp(request, response) {
   });
 
   try {
-    await sendOtpEmail(normalizedContact, otpCode);
+    const mailInfo = await sendOtpEmail(normalizedContact, otpCode);
     sendJson(response, 200, {
       success: true,
-      contact: normalizedContact
+      contact: normalizedContact,
+      messageId: String((mailInfo && mailInfo.messageId) || '')
     });
   } catch (error) {
     otpSessions.delete(normalizedContact);
+    console.error('OTP email send failed for', normalizedContact, '-', error && error.message ? error.message : error);
     sendJson(response, 500, {
       error: error.message || 'Unable to send OTP email.'
     });
