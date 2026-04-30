@@ -568,6 +568,11 @@
           return;
         }
 
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'Please wait...';
+        }
+
         fetchJsonFromApi('/api/auth/request-otp', {
           method: 'POST',
           headers: {
@@ -596,7 +601,29 @@
             window.location.href = getVerificationPage();
           })
           .catch(function (error) {
-            showError(error.message || 'Unable to send OTP.');
+            // Keep flow moving even if OTP service is temporarily unreachable.
+            // Verify page can still retry OTP.
+            const contactValue = contact;
+            storeOwnerSession('', '', contactValue);
+            localStorage.setItem('owner-login-method', 'email');
+            if (isEmailReview) {
+              sessionStorage.setItem(REVIEW_ITEM_STORAGE_KEY, reviewItem);
+              sessionStorage.setItem(REVIEW_RETURN_STORAGE_KEY, returnPage);
+            } else {
+              sessionStorage.removeItem(REVIEW_ITEM_STORAGE_KEY);
+              sessionStorage.removeItem(REVIEW_RETURN_STORAGE_KEY);
+            }
+            showError((error && error.message ? error.message : 'Unable to send OTP right now.') + ' Redirecting to verification...');
+            window.setTimeout(function () {
+              window.location.href = getVerificationPage();
+            }, 450);
+          })
+          .finally(function () {
+            if (!submitButton) {
+              return;
+            }
+            submitButton.disabled = false;
+            syncAuthMode();
           });
       });
 
