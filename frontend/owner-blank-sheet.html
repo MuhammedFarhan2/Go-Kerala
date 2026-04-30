@@ -1065,6 +1065,7 @@
 
       function openLatestVehicleSubmission() {
         let latestTouristSubmission = null;
+        let previewData = null;
 
         try {
           latestTouristSubmission = JSON.parse(
@@ -1076,15 +1077,29 @@
           latestTouristSubmission = null;
         }
 
+        try {
+          previewData = JSON.parse(
+            sessionStorage.getItem(latestVehicleKey) ||
+            localStorage.getItem(latestVehicleKey) ||
+            'null'
+          );
+        } catch (error) {
+          previewData = null;
+        }
+
         const storedStatus = normalizeVehicleStatus(
           sessionStorage.getItem(latestVehicleStatusKey) ||
           localStorage.getItem(latestVehicleStatusKey) ||
+          (previewData && (previewData.status || previewData.statusLabel)) ||
           (latestTouristSubmission && latestTouristSubmission.status) ||
           ''
         );
 
         // For drafts, continue the upload page instead of opening the review dashboard.
-        if (storedStatus === 'incomplete') {
+        const statusText = addPreviewStatusNode ? String(addPreviewStatusNode.textContent || '') : '';
+        const statusLooksIncomplete = /incomplete/i.test(statusText);
+
+        if (storedStatus === 'incomplete' || statusLooksIncomplete) {
           window.location.href = 'owner-add-vehicle-next.html?resume=1';
           return;
         }
