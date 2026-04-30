@@ -945,6 +945,14 @@ html {
   }
 }
 
+/* Laptop/Desktop: always keep auth shells centered */
+@media (min-width: 920px) {
+  .owner-auth-shell {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
 .account-panel-backdrop {
   position: fixed;
   top: var(--header-height);
