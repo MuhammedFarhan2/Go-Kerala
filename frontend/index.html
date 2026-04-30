@@ -3,241 +3,161 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VECT Movers - Home</title>
-  <script>
-    document.documentElement.classList.add('show-page-loader');
-  </script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-  <link rel="stylesheet" href="style.css?v=20260406-2">
+  <title>Go Kerala</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page-bg: #f4f7f2;
+      --card-bg: #ffffff;
+      --text: #163024;
+      --muted: #557164;
+      --accent: #0f8a5f;
+      --border: rgba(15, 48, 36, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(15, 138, 95, 0.14), transparent 32%),
+        linear-gradient(180deg, #f8fbf7 0%, var(--page-bg) 100%);
+      color: var(--text);
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .shell {
+      min-height: 100vh;
+      padding: 18px;
+    }
+
+    .frame-card {
+      width: 100%;
+      height: calc(100vh - 36px);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+      background: var(--card-bg);
+      box-shadow: 0 24px 60px rgba(9, 31, 23, 0.12);
+    }
+
+    .site-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: #ffffff;
+    }
+
+    .fallback {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(244, 247, 242, 0.96);
+    }
+
+    .fallback.is-visible {
+      display: flex;
+    }
+
+    .fallback-card {
+      max-width: 560px;
+      padding: 28px;
+      border-radius: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      text-align: center;
+      box-shadow: 0 18px 40px rgba(9, 31, 23, 0.14);
+    }
+
+    .fallback-card h1 {
+      margin: 0 0 12px;
+      font-size: 1.7rem;
+    }
+
+    .fallback-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .fallback-card a {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      .shell {
+        padding: 10px;
+      }
+
+      .frame-card {
+        height: calc(100vh - 20px);
+        border-radius: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="page-loader" id="page-loader" aria-hidden="true">
-    <div class="page-loader-content">
-      <div class="page-loader-spinner" aria-hidden="true">
-        <span class="page-loader-ring page-loader-ring-outer"></span>
-        <span class="page-loader-ring page-loader-ring-middle"></span>
-        <span class="page-loader-ring page-loader-ring-inner"></span>
-      </div>
-      <p class="page-loader-text">Loading</p>
+  <div class="shell">
+    <div class="frame-card">
+      <iframe
+        class="site-frame"
+        id="site-frame"
+        src="https://go-kerala-frontend.onrender.com"
+        title="Go Kerala"
+        loading="eager"
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
     </div>
   </div>
 
-  <header class="header">
-    <div class="brand-lockup">
-      <h1 class="logo">VECT</h1>
-      <p class="logo-sub">MOVERS</p>
+  <div class="fallback" id="iframe-fallback" aria-hidden="true">
+    <div class="fallback-card">
+      <h1>Open Go Kerala</h1>
+      <p>
+        If the website does not allow itself to be shown inside this page, use the button below to open it directly.
+      </p>
+      <a href="https://go-kerala-frontend.onrender.com">Open website</a>
     </div>
-    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
-      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
-        <defs>
-          <clipPath id="circle-clip">
-            <circle cx="12" cy="12" r="11.75"/>
-          </clipPath>
-        </defs>
-        <g clip-path="url(#circle-clip)">
-          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#fff"/>
-        </g>
-      </svg>
-    </button>
-    <aside class="account-panel" id="account-panel" aria-hidden="true">
-      <nav class="account-panel-nav">
-        <a href="owner.html" class="account-option">Owner Login</a>
-        <a href="#" class="account-option">History</a>
-        <a href="#" class="account-option">About</a>
-        <a href="#" class="account-option">Feedback</a>
-      </nav>
-    </aside>
-    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
-  </header>
+  </div>
 
-  <main class="main">
-    <section class="container" aria-label="Featured vehicle slides">
-      <div class="swiper owner-auth-banner" id="flipBanner" aria-label="Homepage banner slider">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide">
-              <div class="owner-auth-banner-card">
-              <img src="https://picsum.photos/id/1011/1400/700" alt="Banner slide 1" class="owner-auth-banner-img" loading="lazy">
-              </div>
-            </div>
-            <div class="swiper-slide">
-              <div class="owner-auth-banner-card">
-              <img src="https://picsum.photos/id/1025/1400/700" alt="Banner slide 2" class="owner-auth-banner-img" loading="lazy">
-              </div>
-            </div>
-            <div class="swiper-slide">
-              <div class="owner-auth-banner-card">
-              <img src="https://picsum.photos/id/1035/1400/700" alt="Banner slide 3" class="owner-auth-banner-img" loading="lazy">
-              </div>
-            </div>
-            <div class="swiper-slide">
-              <div class="owner-auth-banner-card">
-              <img src="https://picsum.photos/id/1011/1400/700" alt="Banner slide 1" class="owner-auth-banner-img" loading="lazy">
-              </div>
-            </div>
-            <div class="swiper-slide">
-              <div class="owner-auth-banner-card">
-              <img src="https://picsum.photos/id/1025/1400/700" alt="Banner slide 2" class="owner-auth-banner-img" loading="lazy">
-              </div>
-            </div>
-        </div>
-        <div class="swiper-pagination owner-auth-banner-pagination" aria-label="Slider navigation dots"></div>
-      </div>
-    </section>
-
-    <section class="container" aria-label="Vehicle categories">
-      <h2 class="vehicle-prompt">Select a Vehicle Category</h2>
-
-      <div class="product-container" aria-label="Available vehicle categories">
-        <a href="route.html?service=tourist" class="product-box product-box-featured">
-          <span class="product-icon" aria-hidden="true">
-            <img src="tour-bus.png" alt="Tour bus" class="product-icon-image-featured">
-          </span>
-          <span class="product-copy">
-            <strong>TOURIST BUS</strong>
-            <span>Include all types of buses</span>
-          </span>
-          <span class="product-arrow" aria-hidden="true">&gt;</span>
-        </a>
-
-        <a href="route.html?service=truck" class="product-box">
-          <span class="product-icon" aria-hidden="true">
-            <img src="modern-white-box-truck.png" alt="Closed body truck" class="product-icon-image-vehicle">
-          </span>
-          <span class="product-copy">
-            <strong>Closed Body Trucks</strong>
-            <span>Includes closed body pickups, lorries, etc.</span>
-          </span>
-          <span class="product-arrow" aria-hidden="true">&gt;</span>
-        </a>
-
-        <a href="route.html?service=open-truck" class="product-box">
-          <span class="product-icon" aria-hidden="true">
-            <img src="white-flatbed-truck.png" alt="Open body truck" class="product-icon-image-vehicle">
-          </span>
-          <span class="product-copy">
-            <strong>Open Body Trucks</strong>
-            <span>Includes open body pickups, lorries, etc.</span>
-          </span>
-          <span class="product-arrow" aria-hidden="true">&gt;</span>
-        </a>
-
-        <a href="route.html?service=backhoe" class="product-box">
-          <span class="product-icon" aria-hidden="true">
-            <img src="yellow-backhoe-loader.png" alt="Backhoe loader" class="product-icon-image-vehicle">
-          </span>
-          <span class="product-copy">
-            <strong>Backhoe Loaders</strong>
-            <span>Includes all types of backhoe loaders like JCB and CAT.</span>
-          </span>
-          <span class="product-arrow" aria-hidden="true">&gt;</span>
-        </a>
-
-        <a href="route.html?service=excavator" class="product-box">
-          <span class="product-icon" aria-hidden="true">
-            <img src="yellow-hydraulic-excavator.png" alt="Excavator" class="product-icon-image-vehicle product-icon-image-excavator">
-          </span>
-          <span class="product-copy">
-            <strong>Excavators</strong>
-            <span>Includes all types of excavators like Hitachi and Komatsu.</span>
-          </span>
-          <span class="product-arrow" aria-hidden="true">&gt;</span>
-        </a>
-      </div>
-    </section>
-  </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script src="script.js?v=20260413-1"></script>
   <script>
     (function () {
-      const bannerNode = document.getElementById('flipBanner');
-      const bannerImages = Array.from(document.querySelectorAll('#flipBanner .owner-auth-banner-img'));
-      const SHARED_BANNER_STORAGE_KEY = 'vect-shared-banner-images-v1';
-      const defaultBannerImages = [
-        { src: 'https://picsum.photos/id/1011/1400/700', alt: 'Banner slide 1' },
-        { src: 'https://picsum.photos/id/1025/1400/700', alt: 'Banner slide 2' },
-        { src: 'https://picsum.photos/id/1035/1400/700', alt: 'Banner slide 3' }
-      ];
+      var frame = document.getElementById('site-frame');
+      var fallback = document.getElementById('iframe-fallback');
+      var hasLoaded = false;
 
-      if (!bannerNode || typeof Swiper === 'undefined') {
+      if (!frame || !fallback) {
         return;
       }
 
-      function markBannerReady() {
-        window.__homeBannerReady = true;
-        window.dispatchEvent(new Event('home-banner-ready'));
-      }
-
-      function loadSharedBannerImages() {
-        try {
-          const savedValue = localStorage.getItem(SHARED_BANNER_STORAGE_KEY);
-          const parsedValue = savedValue ? JSON.parse(savedValue) : [];
-          const normalizedValue = Array.isArray(parsedValue)
-            ? parsedValue.map(function (item, index) {
-                return {
-                  src: String(item && item.src || '').trim(),
-                  alt: String(item && item.alt || ('Banner slide ' + String(index + 1))).trim()
-                };
-              }).filter(function (item) {
-                return Boolean(item.src);
-              })
-            : [];
-
-          return normalizedValue.length ? normalizedValue : defaultBannerImages;
-        } catch (error) {
-          return defaultBannerImages;
-        }
-      }
-
-      function applyBannerImages(imageList) {
-        bannerImages.forEach(function (imageNode, index) {
-          const nextImage = imageList[index % imageList.length];
-
-          if (!nextImage) {
-            return;
-          }
-
-          imageNode.src = nextImage.src;
-          imageNode.alt = nextImage.alt || ('Banner slide ' + String(index + 1));
-        });
-      }
-
-      applyBannerImages(loadSharedBannerImages());
-
-      window.addEventListener('storage', function (event) {
-        if (event.key !== SHARED_BANNER_STORAGE_KEY) {
-          return;
-        }
-
-        applyBannerImages(loadSharedBannerImages());
+      frame.addEventListener('load', function () {
+        hasLoaded = true;
       });
 
-      Promise.resolve().finally(function () {
-        const bannerSwiper = new Swiper(bannerNode, {
-          loop: true,
-          speed: 700,
-          autoplay: {
-            delay: 3000,
-            disableOnInteraction: false
-          },
-          slidesPerView: 1,
-          pagination: {
-            el: '.owner-auth-banner-pagination',
-            clickable: true
-          },
-          on: {
-            init: function () {
-              markBannerReady();
-            },
-            imagesReady: function () {
-              markBannerReady();
-            }
-          }
-        });
-
-        window.homeBannerSwiper = bannerSwiper;
-      });
+      window.setTimeout(function () {
+        if (!hasLoaded) {
+          fallback.classList.add('is-visible');
+          fallback.setAttribute('aria-hidden', 'false');
+        }
+      }, 5000);
     })();
   </script>
 </body>
