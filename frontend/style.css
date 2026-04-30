@@ -915,6 +915,36 @@ html {
   transform: translateX(0);
 }
 
+/* Desktop/Laptop: keep the account slide panel centered instead of spanning full width */
+@media (min-width: 1024px) {
+  .account-panel {
+    width: min(420px, calc(100% - 48px)) !important;
+    left: 50% !important;
+    right: auto !important;
+    top: calc(var(--header-height) + 18px) !important;
+    height: auto !important;
+    max-height: calc(100dvh - var(--header-height) - 36px) !important;
+    border-radius: 18px !important;
+    overflow: auto !important;
+    transform: translate(-50%, 0) translateX(120%) !important;
+  }
+
+  .account-panel.is-open {
+    transform: translate(-50%, 0) translateX(0) !important;
+  }
+
+  .account-panel-nav {
+    width: 100%;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .account-option {
+    text-align: center;
+  }
+}
+
 .account-panel-backdrop {
   position: fixed;
   top: var(--header-height);
