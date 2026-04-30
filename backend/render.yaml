@@ -10,12 +10,18 @@ services:
         sync: false
       - key: APPLE_CLIENT_ID
         sync: false
+      - key: EMAIL_PROVIDER
+        value: brevo
+      - key: BREVO_API_KEY
+        sync: false
       - key: GMAIL_USER
         sync: false
       - key: GMAIL_APP_PASSWORD
         sync: false
       - key: OTP_FROM_EMAIL
         sync: false
+      - key: OTP_FROM_NAME
+        value: VECT MOVERS
       - key: RENDER_DISK_ROOT
         value: /opt/render/project/src/data
     disk:

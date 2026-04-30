@@ -8,6 +8,8 @@ const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT) || 3000;
 const GOOGLE_CLIENT_ID = String(process.env.GOOGLE_CLIENT_ID || '').trim();
 const APPLE_CLIENT_ID = String(process.env.APPLE_CLIENT_ID || '').trim();
+const EMAIL_PROVIDER = String(process.env.EMAIL_PROVIDER || '').trim().toLowerCase();
+const BREVO_API_KEY = String(process.env.BREVO_API_KEY || '').trim();
 const GMAIL_USER = String(process.env.GMAIL_USER || '').trim();
 const GMAIL_APP_PASSWORD = String(process.env.GMAIL_APP_PASSWORD || '').trim();
 const OTP_FROM_EMAIL = String(process.env.OTP_FROM_EMAIL || GMAIL_USER || '').trim();
@@ -67,6 +69,7 @@ let appleKeysCache = null;
 let mailTransporter = null;
 let mailTransporterVerified = false;
 let mailTransporterVerifyError = '';
+let emailProviderVerifyError = '';
 const profilePhotoSessions = new Map();
 const otpSessions = new Map();
 const vectOwnSessions = new Map();
@@ -118,6 +121,22 @@ function getMailTransporter() {
   }
 }
 
+function getEffectiveEmailProvider() {
+  if (EMAIL_PROVIDER === 'brevo' || EMAIL_PROVIDER === 'smtp') {
+    return EMAIL_PROVIDER;
+  }
+
+  if (BREVO_API_KEY) {
+    return 'brevo';
+  }
+
+  if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+    return 'smtp';
+  }
+
+  return '';
+}
+
 function formatFromAddress(name, email) {
   const safeName = String(name || '').trim();
   const safeEmail = String(email || '').trim();
@@ -154,6 +173,15 @@ async function ensureMailTransporterReady() {
     mailTransporterVerifyError = String((error && error.message) || 'SMTP verification failed.');
     throw new Error('OTP email service is unavailable: ' + mailTransporterVerifyError);
   }
+}
+
+async function ensureBrevoReady() {
+  if (!BREVO_API_KEY || !OTP_FROM_EMAIL) {
+    throw new Error('Email OTP is not configured on the server. Set BREVO_API_KEY, OTP_FROM_EMAIL and OTP_FROM_NAME.');
+  }
+
+  emailProviderVerifyError = '';
+  return true;
 }
 
 function isEmail(value) {
@@ -229,21 +257,84 @@ function generateOtp() {
 }
 
 async function sendOtpEmail(contact, otpCode) {
-  const transporter = await ensureMailTransporterReady();
   const fromAddress = formatFromAddress(OTP_FROM_NAME, OTP_FROM_EMAIL);
+  const provider = getEffectiveEmailProvider();
+  const otpHtml = '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">' +
+    '<h2 style="margin:0 0 12px">VECT MOVERS verification code</h2>' +
+    '<p style="margin:0 0 12px">Your verification code is:</p>' +
+    '<p style="margin:0 0 16px;font-size:28px;font-weight:700;letter-spacing:6px">' + otpCode + '</p>' +
+    '<p style="margin:0">This code expires in 5 minutes.</p>' +
+    '</div>';
+  const otpText = 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.';
+
+  if (provider === 'brevo') {
+    await ensureBrevoReady();
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: {
+          name: OTP_FROM_NAME,
+          email: OTP_FROM_EMAIL
+        },
+        to: [
+          {
+            email: contact
+          }
+        ],
+        replyTo: {
+          email: OTP_FROM_EMAIL,
+          name: OTP_FROM_NAME
+        },
+        subject: 'VECT MOVERS verification code',
+        textContent: otpText,
+        htmlContent: otpHtml
+      })
+    });
+
+    const responseText = await response.text();
+    let responseData = {};
+
+    try {
+      responseData = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+      responseData = {};
+    }
+
+    if (!response.ok) {
+      const detail = String(
+        (responseData && (responseData.message || responseData.code)) ||
+        responseText ||
+        ('Brevo API request failed with status ' + response.status)
+      ).trim();
+      emailProviderVerifyError = detail;
+      throw new Error('OTP email service is unavailable: ' + detail);
+    }
+
+    emailProviderVerifyError = '';
+    return {
+      accepted: [contact],
+      messageId: String(responseData.messageId || '')
+    };
+  }
+
+  if (provider !== 'smtp') {
+    throw new Error('Email OTP is not configured on the server. Set BREVO_API_KEY or Gmail SMTP credentials.');
+  }
+
+  const transporter = await ensureMailTransporterReady();
 
   const mailInfo = await transporter.sendMail({
     from: fromAddress || OTP_FROM_EMAIL,
     replyTo: OTP_FROM_EMAIL,
     to: contact,
     subject: 'VECT MOVERS verification code',
-    text: 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.',
-    html: '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">' +
-      '<h2 style="margin:0 0 12px">VECT MOVERS verification code</h2>' +
-      '<p style="margin:0 0 12px">Your verification code is:</p>' +
-      '<p style="margin:0 0 16px;font-size:28px;font-weight:700;letter-spacing:6px">' + otpCode + '</p>' +
-      '<p style="margin:0">This code expires in 5 minutes.</p>' +
-      '</div>'
+    text: otpText,
+    html: otpHtml
   });
 
   if (!mailInfo || !mailInfo.accepted || !mailInfo.accepted.length) {
@@ -1488,6 +1579,8 @@ async function handleOtpDiagnostics(request, response) {
   }
 
   const diagnostics = {
+    emailProvider: getEffectiveEmailProvider() || 'unconfigured',
+    brevoApiKeyConfigured: Boolean(BREVO_API_KEY),
     gmailUserConfigured: Boolean(GMAIL_USER),
     gmailAppPasswordConfigured: Boolean(GMAIL_APP_PASSWORD),
     otpFromEmailConfigured: Boolean(OTP_FROM_EMAIL),
@@ -1496,10 +1589,20 @@ async function handleOtpDiagnostics(request, response) {
     otpFromEmail: OTP_FROM_EMAIL ? OTP_FROM_EMAIL.replace(/(.{2}).+(@.+)/, '$1***$2') : '',
     transporterCreated: Boolean(getMailTransporter()),
     transporterVerified: mailTransporterVerified,
-    transporterVerifyError: mailTransporterVerifyError || ''
+    transporterVerifyError: mailTransporterVerifyError || '',
+    emailProviderVerifyError: emailProviderVerifyError || ''
   };
 
-  if (!diagnostics.transporterVerified && diagnostics.transporterCreated) {
+  if (diagnostics.emailProvider === 'brevo' && diagnostics.brevoApiKeyConfigured) {
+    try {
+      await ensureBrevoReady();
+      diagnostics.emailProviderVerifyError = '';
+    } catch (error) {
+      diagnostics.emailProviderVerifyError = String((error && error.message) || 'Brevo verification failed.');
+    }
+  }
+
+  if (diagnostics.emailProvider === 'smtp' && !diagnostics.transporterVerified && diagnostics.transporterCreated) {
     try {
       await ensureMailTransporterReady();
       diagnostics.transporterVerified = true;
