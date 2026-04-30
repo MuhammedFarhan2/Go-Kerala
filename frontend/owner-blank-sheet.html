@@ -526,11 +526,30 @@
       font-weight: 500;
     }
 
-    .owner-blank-google-button {
-      min-height: 52px;
-      width: 100%;
+    .owner-blank-google-wrap {
       display: flex;
+      align-items: stretch;
       justify-content: center;
+      width: 100%;
+    }
+
+    .owner-blank-google-button {
+      width: min(100%, 420px);
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #111111;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #ffffff;
+      box-sizing: border-box;
+    }
+
+    .owner-blank-google-button > div {
+      margin: 0 auto !important;
+      border-radius: 14px;
+      overflow: hidden;
     }
 
     .owner-blank-login-error {
@@ -611,7 +630,9 @@
       </form>
 
       <div class="owner-blank-login-divider">Or log in with</div>
-      <div class="owner-blank-google-button" id="owner-blank-google-button" aria-label="Google login"></div>
+      <div class="owner-blank-google-wrap">
+        <div class="owner-blank-google-button" id="owner-blank-google-button" aria-label="Google login"></div>
+      </div>
 
       <p class="owner-blank-login-note">Account creation is disabled on this page. Only existing owner accounts can log in.</p>
     </div>
@@ -868,12 +889,13 @@
           }
         });
 
+        const buttonWidth = Math.max(300, Math.floor(googleButton.getBoundingClientRect().width || googleButton.clientWidth || 300));
         window.google.accounts.id.renderButton(googleButton, {
           theme: 'outline',
           size: 'large',
           text: 'signin_with',
           shape: 'rectangular',
-          width: 390
+          width: buttonWidth
         });
       }
 
