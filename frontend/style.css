@@ -1114,6 +1114,26 @@ html {
   gap: 6px;
 }
 
+/* Very wide screens: keep the whole card visually centered and balanced */
+@media (min-width: 1200px) {
+  .owner-auth-shell:not(.owner-auth-shell--single) {
+    grid-template-areas: "owner-auth-panel owner-auth-visual";
+    grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
+    gap: 28px;
+    align-items: stretch;
+  }
+
+  .owner-auth-panel {
+    grid-area: owner-auth-panel;
+    justify-content: flex-start;
+    padding-top: 56px;
+  }
+
+  .owner-auth-visual {
+    grid-area: owner-auth-visual;
+  }
+}
+
 .owner-auth-shell.owner-auth-shell--single {
   grid-template-columns: 1fr;
   justify-items: center;
