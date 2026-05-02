@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Email</title>
     <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <link rel="stylesheet" href="style.css?v=20260430-2">
   </head>
   <body>
@@ -16,7 +17,45 @@
     </header>
 
     <main class="owner-main owner-auth-main">
-      <section class="owner-auth-shell owner-auth-shell--single" aria-label="Verify account">
+      <section class="owner-auth-shell owner-auth-shell--verify" aria-label="Verify account">
+        <div class="owner-auth-visual" aria-hidden="true">
+          <div class="swiper owner-auth-banner" id="verifyBanner" aria-label="Verification page banner slider">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide">
+                <div class="owner-auth-banner-card">
+                  <img
+                    class="owner-auth-banner-img"
+                    src="https://picsum.photos/id/1011/1400/700"
+                    alt="Banner slide 1"
+                    loading="lazy"
+                  >
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="owner-auth-banner-card">
+                  <img
+                    class="owner-auth-banner-img"
+                    src="https://picsum.photos/id/1025/1400/700"
+                    alt="Banner slide 2"
+                    loading="lazy"
+                  >
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="owner-auth-banner-card">
+                  <img
+                    class="owner-auth-banner-img"
+                    src="https://picsum.photos/id/1035/1400/700"
+                    alt="Banner slide 3"
+                    loading="lazy"
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="swiper-pagination owner-auth-banner-pagination" aria-label="Slider navigation dots"></div>
+          </div>
+        </div>
+
         <div class="owner-auth-panel owner-auth-verify-panel">
           <div class="owner-auth-panel-head">
             <h1 class="owner-auth-title">Email verification</h1>
@@ -46,8 +85,10 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
       (function () {
+        const verifyBannerNode = document.getElementById('verifyBanner');
         const verifyForm = document.querySelector('[data-verify-form]');
         const otpInput = document.querySelector('[data-verify-otp]');
         const errorNode = document.querySelector('[data-verify-error]');
@@ -67,6 +108,21 @@
 
         if (!verifyForm || !otpInput || !errorNode) {
           return;
+        }
+
+        if (verifyBannerNode && typeof window.Swiper === 'function') {
+          new window.Swiper(verifyBannerNode, {
+            loop: true,
+            speed: 900,
+            autoplay: {
+              delay: 3000,
+              disableOnInteraction: false
+            },
+            pagination: {
+              el: '.owner-auth-banner-pagination',
+              clickable: true
+            }
+          });
         }
 
         function getApiUrl(pathName) {
