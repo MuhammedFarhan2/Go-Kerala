@@ -1123,6 +1123,7 @@ html {
     align-content: center;
     align-items: center;
     gap: 44px;
+    min-height: auto;
     padding: 40px 48px 56px;
   }
 
@@ -1140,7 +1141,7 @@ html {
     align-self: center;
     min-height: auto;
     margin-top: 0;
-    transform: translateY(176px);
+    transform: translateY(96px);
   }
 
   .owner-auth-banner,
