@@ -918,18 +918,18 @@ html {
 /* Desktop/Laptop: keep the account slide panel centered instead of spanning full width */
 @media (min-width: 1024px) {
   .account-panel {
-    width: min(420px, calc(100% - 48px)) !important;
-    left: 50% !important;
+    width: min(420px, calc(100% - 28px)) !important;
+    left: 0 !important;
     right: auto !important;
-    top: calc(var(--header-height) + 18px) !important;
-    height: auto !important;
-    max-height: calc(100dvh - var(--header-height) - 36px) !important;
-    border-radius: 18px !important;
+    top: var(--header-height) !important;
+    height: calc(100dvh - var(--header-height)) !important;
+    max-height: calc(100dvh - var(--header-height)) !important;
+    border-radius: 0 18px 18px 0 !important;
     overflow: auto !important;
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
-    transform: translate(-50%, -10px) !important;
+    transform: translateX(-110%) !important;
     transition: transform 0.32s ease, opacity 0.24s ease, visibility 0.24s ease !important;
   }
 
@@ -937,7 +937,7 @@ html {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
-    transform: translate(-50%, 0) !important;
+    transform: translateX(0) !important;
   }
 
   .account-panel-nav {
@@ -3360,20 +3360,20 @@ h1 {
     width: 25vw;
     min-width: 280px;
     max-width: 380px;
-    left: 50%;
+    left: 0;
     right: auto;
     height: calc(100% - var(--header-height));
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translate(-50%, -10px);
+    transform: translateX(-110%);
   }
 
   .account-panel.is-open {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transform: translate(-50%, 0);
+    transform: translateX(0);
   }
 }
 
