@@ -919,17 +919,17 @@ html {
 @media (min-width: 1024px) {
   .account-panel {
     width: min(420px, calc(100% - 28px)) !important;
-    left: 0 !important;
-    right: auto !important;
+    left: auto !important;
+    right: 0 !important;
     top: var(--header-height) !important;
     height: calc(100dvh - var(--header-height)) !important;
     max-height: calc(100dvh - var(--header-height)) !important;
-    border-radius: 0 18px 18px 0 !important;
+    border-radius: 18px 0 0 18px !important;
     overflow: auto !important;
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
-    transform: translateX(-110%) !important;
+    transform: translateX(110%) !important;
     transition: transform 0.32s ease, opacity 0.24s ease, visibility 0.24s ease !important;
   }
 
@@ -3360,13 +3360,13 @@ h1 {
     width: 25vw;
     min-width: 280px;
     max-width: 380px;
-    left: 0;
-    right: auto;
+    left: auto;
+    right: 0;
     height: calc(100% - var(--header-height));
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateX(-110%);
+    transform: translateX(110%);
   }
 
   .account-panel.is-open {
