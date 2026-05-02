@@ -1141,7 +1141,7 @@ html {
     align-self: center;
     min-height: auto;
     margin-top: 0;
-    transform: translateY(64px);
+    transform: translateY(40px);
   }
 
   .owner-auth-banner,
