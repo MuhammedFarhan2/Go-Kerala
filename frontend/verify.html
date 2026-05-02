@@ -255,6 +255,8 @@
                 }
 
                 hideError();
+                otpInput.value = '';
+                otpInput.focus();
               })
               .catch(function (error) {
                 showError(error.message || 'Unable to resend OTP.');

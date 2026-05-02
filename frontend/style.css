@@ -1176,6 +1176,10 @@ html {
   border-width: 0.5px;
 }
 
+.owner-auth-shell.owner-auth-shell--account-setup {
+  border-width: 0.5px;
+}
+
 @media (min-width: 1024px) {
   .owner-auth-shell.owner-auth-shell--verify {
     grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
@@ -1197,6 +1201,27 @@ html {
     transform: translateY(0);
     margin-top: 0;
   }
+
+  .owner-auth-shell.owner-auth-shell--account-setup {
+    grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
+    gap: 26px;
+    align-items: center;
+    min-height: auto;
+  }
+
+  .owner-auth-shell.owner-auth-shell--account-setup .owner-auth-panel {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: auto;
+  }
+
+  .owner-auth-shell.owner-auth-shell--account-setup .owner-auth-visual {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: auto;
+    transform: translateY(0);
+    margin-top: 0;
+  }
 }
 
 @media (max-width: 920px) {
@@ -1205,6 +1230,14 @@ html {
   }
 
   .owner-auth-shell.owner-auth-shell--verify .owner-auth-visual {
+    order: -1;
+  }
+
+  .owner-auth-shell.owner-auth-shell--account-setup {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-auth-shell.owner-auth-shell--account-setup .owner-auth-visual {
     order: -1;
   }
 }
