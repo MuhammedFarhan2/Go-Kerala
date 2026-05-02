@@ -1124,14 +1124,14 @@ html {
     align-items: center;
     gap: 44px;
     min-height: auto;
-    padding: 40px 48px 56px;
+    padding: 40px 12px 56px;
   }
 
   .owner-auth-panel {
     grid-area: owner-auth-panel;
     align-self: center;
     justify-content: center;
-    max-width: 560px;
+    max-width: 5600px;
     min-height: auto;
     padding: 44px 18px 24px;
   }
@@ -1141,7 +1141,7 @@ html {
     align-self: center;
     min-height: auto;
     margin-top: 0;
-    transform: translateY(96px);
+    transform: translateY(64px);
   }
 
   .owner-auth-banner,
