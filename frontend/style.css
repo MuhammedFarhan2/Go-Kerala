@@ -1139,7 +1139,8 @@ html {
     grid-area: owner-auth-visual;
     align-self: center;
     min-height: auto;
-    margin-top: 176px;
+    margin-top: 0;
+    transform: translateY(176px);
   }
 
   .owner-auth-banner,
