@@ -1114,6 +1114,15 @@ html {
   gap: 6px;
 }
 
+.owner-auth-shell.owner-auth-shell--single {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.owner-auth-shell.owner-auth-shell--single .owner-auth-panel {
+  width: min(640px, 100%);
+}
+
 .owner-auth-visual {
   position: relative;
   overflow: hidden;
