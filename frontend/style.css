@@ -1069,14 +1069,14 @@ html {
 
   .owner-auth-shell {
     width: min(1280px, 100%);
-    min-height: calc(100dvh - var(--header-height) - 52px);
+    min-height: auto;
     margin: 0 auto;
     align-items: stretch;
   }
 
   .owner-auth-visual,
   .owner-auth-panel {
-    min-height: clamp(560px, 74vh, 860px);
+    min-height: auto;
   }
 
   .owner-auth-banner {
