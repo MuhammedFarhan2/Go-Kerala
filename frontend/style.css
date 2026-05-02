@@ -1118,19 +1118,46 @@ html {
 @media (min-width: 1200px) {
   .owner-auth-shell:not(.owner-auth-shell--single) {
     grid-template-areas: "owner-auth-panel owner-auth-visual";
-    grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
-    gap: 28px;
-    align-items: stretch;
+    grid-template-columns: minmax(420px, 560px) minmax(420px, 700px);
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    gap: 44px;
+    padding: 40px 48px 56px;
   }
 
   .owner-auth-panel {
     grid-area: owner-auth-panel;
-    justify-content: flex-start;
-    padding-top: 56px;
+    align-self: center;
+    justify-content: center;
+    max-width: 560px;
+    min-height: auto;
+    padding: 44px 18px 24px;
   }
 
   .owner-auth-visual {
     grid-area: owner-auth-visual;
+    align-self: center;
+    min-height: auto;
+    margin-top: 18px;
+  }
+
+  .owner-auth-banner,
+  .owner-auth-banner-card {
+    min-height: 0;
+    aspect-ratio: 1.7 / 1;
+  }
+
+  .owner-auth-panel-head {
+    margin-bottom: 28px;
+  }
+
+  .owner-auth-form {
+    gap: 18px;
+  }
+
+  .owner-auth-divider {
+    margin-top: 20px;
   }
 }
 
