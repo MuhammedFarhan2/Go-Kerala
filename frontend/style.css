@@ -1308,6 +1308,20 @@ html {
   background: #ffffff;
 }
 
+@media (min-width: 1200px) {
+  .owner-auth-shell:not(.owner-auth-shell--single) {
+    min-height: auto;
+    padding-bottom: 24px;
+  }
+
+  .owner-auth-visual,
+  .owner-auth-banner,
+  .owner-auth-banner-card,
+  .owner-auth-panel {
+    min-height: auto;
+  }
+}
+
 .owner-auth-panel-head {
   margin-bottom: 24px;
 }
