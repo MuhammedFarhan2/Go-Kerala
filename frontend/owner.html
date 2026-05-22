@@ -10,7 +10,7 @@
   <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-  <link rel="stylesheet" href="style.css?v=20260406-2">
+  <link rel="stylesheet" href="style.css?v=20260430-2">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -130,6 +130,70 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (function () {
+      const SHARED_BANNER_STORAGE_KEY = 'vect-shared-banner-images-v1';
+      const ownerBannerImages = Array.from(document.querySelectorAll('#ownerBanner .owner-auth-banner-img'));
+      const defaultBannerImages = ownerBannerImages.map(function (imageNode, index) {
+        return {
+          src: String(imageNode.getAttribute('src') || '').trim(),
+          alt: String(imageNode.getAttribute('alt') || ('Banner slide ' + String(index + 1))).trim()
+        };
+      }).filter(function (item) {
+        return Boolean(item.src);
+      });
+
+      function loadSharedBannerImages() {
+        try {
+          const savedValue = localStorage.getItem(SHARED_BANNER_STORAGE_KEY);
+          const parsedValue = savedValue ? JSON.parse(savedValue) : [];
+          const normalizedValue = Array.isArray(parsedValue)
+            ? parsedValue.map(function (item, index) {
+                return {
+                  src: String(item && item.src || '').trim(),
+                  alt: String(item && item.alt || ('Banner slide ' + String(index + 1))).trim()
+                };
+              }).filter(function (item) {
+                return Boolean(item.src);
+              })
+            : [];
+
+          return normalizedValue.length ? normalizedValue : defaultBannerImages;
+        } catch (error) {
+          return defaultBannerImages;
+        }
+      }
+
+      function saveSharedBannerImages(imageList) {
+        try {
+          localStorage.setItem(SHARED_BANNER_STORAGE_KEY, JSON.stringify(imageList));
+        } catch (error) {
+          // Ignore storage issues.
+        }
+      }
+
+      function applyBannerImages(imageList) {
+        ownerBannerImages.forEach(function (imageNode, index) {
+          const nextImage = imageList[index % imageList.length];
+
+          if (!nextImage) {
+            return;
+          }
+
+          imageNode.src = nextImage.src;
+          imageNode.alt = nextImage.alt || ('Banner slide ' + String(index + 1));
+        });
+      }
+
+      const sharedBannerImages = loadSharedBannerImages();
+      applyBannerImages(sharedBannerImages);
+      saveSharedBannerImages(sharedBannerImages);
+      window.addEventListener('storage', function (event) {
+        if (event.key !== SHARED_BANNER_STORAGE_KEY) {
+          return;
+        }
+
+        applyBannerImages(loadSharedBannerImages());
+      });
+
       const form = document.querySelector('[data-owner-auth-form]');
       const emailInput = document.querySelector('[data-owner-email]');
       const passwordField = document.querySelector('[data-owner-password-field]');
@@ -172,6 +236,7 @@
         Boolean(String(localStorage.getItem('owner-login-email') || '').trim());
       const isEmailReview = reviewItem === 'owner-email';
       let authMode = 'register';
+      let authSubmitInFlight = false;
 
       if (isEmailReview) {
         authMode = 'register';
@@ -324,9 +389,21 @@
         });
       }
 
+      function fetchWithTimeout(url, options, timeoutMs) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(function () {
+          controller.abort();
+        }, timeoutMs || 15000);
+        const nextOptions = Object.assign({}, options || {}, { signal: controller.signal });
+
+        return fetch(url, nextOptions).finally(function () {
+          window.clearTimeout(timeout);
+        });
+      }
+
       async function fetchJsonWithRetry(url, options, retryDelays) {
         try {
-          const response = await fetch(url, options);
+          const response = await fetchWithTimeout(url, options, 15000);
           const text = await response.text();
           let data = {};
 
@@ -342,6 +419,9 @@
             data: data
           };
         } catch (error) {
+          if (error && error.name === 'AbortError') {
+            throw new Error('Request timed out. Please try again.');
+          }
           console.error('Fetch error:', error);
           throw error;
         }
@@ -450,6 +530,9 @@
 
       form.addEventListener('submit', function (event) {
         event.preventDefault();
+        if (authSubmitInFlight) {
+          return;
+        }
 
         const contact = emailInput.value.trim();
         const isLogin = authMode === 'login';
@@ -504,6 +587,21 @@
           return;
         }
 
+        if (submitButton) {
+          authSubmitInFlight = true;
+          submitButton.disabled = true;
+          submitButton.textContent = 'Please wait...';
+        }
+
+        const submitGuardTimer = window.setTimeout(function () {
+          authSubmitInFlight = false;
+          if (!submitButton) {
+            return;
+          }
+          submitButton.disabled = false;
+          syncAuthMode();
+        }, 20000);
+
         fetchJsonFromApi('/api/auth/request-otp', {
           method: 'POST',
           headers: {
@@ -532,7 +630,16 @@
             window.location.href = getVerificationPage();
           })
           .catch(function (error) {
-            showError(error.message || 'Unable to send OTP.');
+            showError(error && error.message ? error.message : 'Unable to send OTP right now. Please try again.');
+          })
+          .finally(function () {
+            window.clearTimeout(submitGuardTimer);
+            authSubmitInFlight = false;
+            if (!submitButton) {
+              return;
+            }
+            submitButton.disabled = false;
+            syncAuthMode();
           });
       });
 

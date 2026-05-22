@@ -827,17 +827,69 @@
           return Promise.reject(new Error('Please choose a valid file.'));
         }
 
-        return readFileAsBase64(safeFile).then(function (base64Data) {
+        function toUploadPayload() {
+          const mimeType = String(safeFile.type || '').trim();
+          const isSupported = mimeType === 'image/jpeg' || mimeType === 'image/png' || mimeType === 'image/webp';
+          const isHeic = mimeType === 'image/heic' || mimeType === 'image/heif';
+
+          // HEIC/HEIF often cannot be decoded in-browser on Android/iOS WebViews.
+          // Upload the original file as-is and let the server store it.
+          if (isHeic) {
+            return readFileAsBase64(safeFile).then(function (base64Data) {
+              return {
+                fileName: safeFile.name,
+                mimeType: mimeType,
+                data: base64Data
+              };
+            });
+          }
+
+          // If the file is not directly supported, or it is very large, try to compress to JPEG first.
+          if (
+            (!isSupported || safeFile.size > 5 * 1024 * 1024) &&
+            window.ownerMediaTools &&
+            typeof window.ownerMediaTools.readOptimizedImage === 'function'
+          ) {
+            return window.ownerMediaTools.readOptimizedImage(safeFile, {
+              maxWidth: 1600,
+              maxHeight: 1600,
+              quality: 0.82,
+              mimeType: 'image/jpeg'
+            }).then(function (dataUrl) {
+              const safeDataUrl = String(dataUrl || '');
+              const commaIndex = safeDataUrl.indexOf(',');
+              const base64Data = commaIndex > -1 ? safeDataUrl.slice(commaIndex + 1) : '';
+              const normalizedName = (String(safeFile.name || 'image').replace(/\.[^/.]+$/, '') || 'image') + '.jpg';
+
+              if (!base64Data) {
+                throw new Error('Unable to process image file.');
+              }
+
+              return {
+                fileName: normalizedName,
+                mimeType: 'image/jpeg',
+                data: base64Data
+              };
+            });
+          }
+
+          // Default: upload the original file.
+          return readFileAsBase64(safeFile).then(function (base64Data) {
+            return {
+              fileName: safeFile.name,
+              mimeType: safeFile.type,
+              data: base64Data
+            };
+          });
+        }
+
+        return toUploadPayload().then(function (payload) {
           return fetchWithApiFallback('/api/upload-heavy-licence', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-              fileName: safeFile.name,
-              mimeType: safeFile.type,
-              data: base64Data
-            })
+            body: JSON.stringify(payload)
           });
         }).then(function (response) {
           return response.text().then(function (responseText) {
@@ -1454,6 +1506,7 @@
             return;
           }
 
+          // Backend accepts jpeg/png/webp; other formats will be auto-converted to jpeg when possible.
           const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
           const maxSize = 25 * 1024 * 1024;
           const invalid = files.find(function (file) {
@@ -1482,15 +1535,175 @@
               saveUploadEntries(section, existingEntries.concat(newEntries));
               renderUploadSection(section);
               setError(section, '');
+              persistDraftProgress();
             })
-            .catch(function () {
-              window.alert('Unable to save the selected image.');
+            .catch(function (error) {
+              // Give a more actionable message when we can.
+              const message = error && error.message ? String(error.message) : '';
+              window.alert(message && message !== 'Failed to fetch' ? message : 'Unable to save the selected image.');
             })
             .finally(function () {
               trigger.disabled = false;
               input.value = '';
             });
         });
+      }
+
+      function persistDraftProgress() {
+        try {
+          const photoEntries = readUploadEntries('photos');
+          const photos = readUploadNames('photos');
+
+          // Don't show draft preview on blank sheet unless at least one photo exists.
+          if (!photos.length) {
+            sessionStorage.removeItem('owner-latest-vehicle-summary');
+            sessionStorage.removeItem('owner-latest-tourist-submission');
+            sessionStorage.removeItem('owner-latest-vehicle-status');
+            localStorage.removeItem('owner-latest-vehicle-summary');
+            localStorage.removeItem('owner-latest-tourist-submission');
+            localStorage.removeItem('owner-latest-vehicle-status');
+            return;
+          }
+
+          const rcEntries = readUploadEntries('rc');
+          const insuranceEntries = readUploadEntries('insurance');
+          const permitEntries = readUploadEntries('permit');
+          const modelVariant = String(readValue('modelVariant') || '').trim();
+          const busType = String(readValue('type') || '').trim();
+          const seats = String(readValue('seats') || '').trim();
+          const tv = String(readValue('tv') || '').trim();
+          const place = readPlace();
+          const permitType = readPermitType();
+          const primaryPhotoEntry = photoEntries[0] || null;
+          const photoPreviewMediaKey = primaryPhotoEntry ? String(primaryPhotoEntry.mediaKey || '').trim() : '';
+          const photoPreviewUrl = primaryPhotoEntry ? String(primaryPhotoEntry.previewDataUrl || '').trim() : '';
+          const companyName = String(localStorage.getItem('owner-company-name') || sessionStorage.getItem('owner-company-name') || 'VECT MOVERS').trim();
+          const ownerName = String(sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || '').trim();
+          const storedWhatsappNumber = String(sessionStorage.getItem('owner-whatsapp-number') || localStorage.getItem('owner-whatsapp-number') || '').trim();
+          const whatsappNumber = storedWhatsappNumber || '+910000000000';
+
+          const latestVehicleSummary = {
+            vehicleLabel: 'Tourist Bus',
+            modelVariant: modelVariant,
+            type: busType,
+            seats: seats,
+            tv: tv,
+            place: place,
+            permitType: permitType,
+            photos: photoEntries.slice(),
+            photoPreviewMediaKey: photoPreviewMediaKey,
+            photoPreviewUrl: photoPreviewUrl,
+            photoCount: photos.length,
+            rcCount: readUploadNames('rc').length,
+            insuranceCount: readUploadNames('insurance').length,
+            permitCount: readUploadNames('permit').length,
+            statusLabel: 'Incomplete',
+            savedAt: new Date().toISOString()
+          };
+
+          const latestTouristSubmission = {
+            id: 'draft-' + Date.now() + '-' + Math.random().toString(16).slice(2),
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            status: 'incomplete',
+            whatsappNumber: whatsappNumber,
+            sourcePage: 'owner-add-vehicle-next.html',
+            sourceGroup: 'draft',
+            fields: {
+              'owner-company-name': companyName,
+              'owner-name': ownerName,
+              'owner-whatsapp-number': whatsappNumber,
+              'owner-categories': JSON.stringify(['Tourist Bus']),
+              'owner-vehicle-type': 'bus',
+              'owner-bus-model-variant': modelVariant,
+              'owner-bus-type': busType,
+              'owner-bus-seats': seats,
+              'owner-bus-tv': tv,
+              'owner-bus-place': place,
+              'owner-bus-permit-type': permitType,
+              'owner-bus-photos': photoEntries.slice(),
+              'owner-bus-rc': rcEntries.slice(),
+              'owner-bus-insurance': insuranceEntries.slice(),
+              'owner-bus-permit': permitEntries.slice()
+            },
+            summary: {
+              companyName: companyName,
+              ownerName: ownerName,
+              phone: whatsappNumber,
+              whatsappNumber: whatsappNumber,
+              categories: ['Tourist Bus'],
+              bus: {
+                modelVariant: modelVariant,
+                type: busType,
+                seats: seats,
+                tvMusic: tv,
+                place: place,
+                permitType: permitType,
+                photos: photoEntries.slice(),
+                photoPreviewMediaKey: photoPreviewMediaKey,
+                photoPreviewUrl: photoPreviewUrl,
+                rc: rcEntries.slice(),
+                insurance: insuranceEntries.slice(),
+                permit: permitEntries.slice()
+              }
+            },
+            bus: {
+              modelVariant: modelVariant,
+              type: busType,
+              seats: seats,
+              tvMusic: tv,
+              place: place,
+              permitType: permitType,
+              photos: photoEntries.slice(),
+              photoPreviewMediaKey: photoPreviewMediaKey,
+              photoPreviewUrl: photoPreviewUrl,
+              rc: rcEntries.slice(),
+              insurance: insuranceEntries.slice(),
+              permit: permitEntries.slice()
+            }
+          };
+
+          sessionStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
+          sessionStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
+          sessionStorage.setItem('owner-latest-vehicle-status', 'incomplete');
+          localStorage.setItem('owner-latest-vehicle-summary', JSON.stringify(latestVehicleSummary));
+          localStorage.setItem('owner-latest-tourist-submission', JSON.stringify(latestTouristSubmission));
+          localStorage.setItem('owner-latest-vehicle-status', 'incomplete');
+        } catch (error) {
+          return;
+        }
+      }
+
+      function hydrateDraftIfAvailable() {
+        if (reuploadSubmissionId) {
+          return;
+        }
+
+        // If the user closed the tab, sessionStorage can be empty. Restore a local draft
+        // (saved while uploading) so they can continue where they left off.
+        let latestDraft = null;
+
+        try {
+          latestDraft = JSON.parse(
+            localStorage.getItem('owner-latest-tourist-submission') ||
+            'null'
+          );
+        } catch (error) {
+          latestDraft = null;
+        }
+
+        if (!latestDraft || typeof latestDraft !== 'object') {
+          return;
+        }
+
+        const status = String(latestDraft.status || '').trim().toLowerCase();
+        const isDraft = status === 'incomplete' || status === 'draft';
+
+        if (!isDraft) {
+          return;
+        }
+
+        hydrateSubmissionValues(latestDraft);
       }
 
       bindUploadSection('photos');
@@ -1501,9 +1714,16 @@
       renderUploadSection('rc');
       renderUploadSection('insurance');
       renderUploadSection('permit');
+      hydrateDraftIfAvailable();
       restoreSelections();
       applyEditableSectionsState();
       hydrateReuploadSubmission();
+
+      ['pagehide', 'beforeunload'].forEach(function (eventName) {
+        window.addEventListener(eventName, function () {
+          persistDraftProgress();
+        });
+      });
 
       if (submitButton) {
         submitButton.addEventListener('click', function () {

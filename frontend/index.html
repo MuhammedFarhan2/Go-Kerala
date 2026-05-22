@@ -7,7 +7,6 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
@@ -53,315 +52,193 @@
   </header>
 
   <main class="main">
-    <!-- Banner Slider -->
-    <section class="home-banner" aria-label="Featured routes">
-      <div class="swiper home-banner-slider" id="homeBanner">
+    <section class="container" aria-label="Featured vehicle slides">
+      <div class="swiper owner-auth-banner" id="flipBanner" aria-label="Homepage banner slider">
         <div class="swiper-wrapper">
-          <div class="swiper-slide">
-            <div class="home-banner-card">
-              <img src="https://picsum.photos/id/1011/1400/700" alt="Kerala backwaters" class="home-banner-img" loading="lazy">
-              <div class="home-banner-content">
-                <h2>Kerala Backwaters</h2>
-                <p>Explore the serene waterways</p>
+            <div class="swiper-slide">
+              <div class="owner-auth-banner-card">
+              <img src="https://picsum.photos/id/1011/1400/700" alt="Banner slide 1" class="owner-auth-banner-img" loading="lazy">
               </div>
             </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="home-banner-card">
-              <img src="https://picsum.photos/id/1025/1400/700" alt="Mountain routes" class="home-banner-img" loading="lazy">
-              <div class="home-banner-content">
-                <h2>Mountain Adventures</h2>
-                <p>Travel through the misty hills</p>
+            <div class="swiper-slide">
+              <div class="owner-auth-banner-card">
+              <img src="https://picsum.photos/id/1025/1400/700" alt="Banner slide 2" class="owner-auth-banner-img" loading="lazy">
               </div>
             </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="home-banner-card">
-              <img src="https://picsum.photos/id/1035/1400/700" alt="Beach destinations" class="home-banner-img" loading="lazy">
-              <div class="home-banner-content">
-                <h2>Beach Getaways</h2>
-                <p>Relax on pristine beaches</p>
+            <div class="swiper-slide">
+              <div class="owner-auth-banner-card">
+              <img src="https://picsum.photos/id/1035/1400/700" alt="Banner slide 3" class="owner-auth-banner-img" loading="lazy">
               </div>
             </div>
-          </div>
+            <div class="swiper-slide">
+              <div class="owner-auth-banner-card">
+              <img src="https://picsum.photos/id/1011/1400/700" alt="Banner slide 1" class="owner-auth-banner-img" loading="lazy">
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="owner-auth-banner-card">
+              <img src="https://picsum.photos/id/1025/1400/700" alt="Banner slide 2" class="owner-auth-banner-img" loading="lazy">
+              </div>
+            </div>
         </div>
-        <div class="swiper-pagination home-banner-pagination"></div>
+        <div class="swiper-pagination owner-auth-banner-pagination" aria-label="Slider navigation dots"></div>
       </div>
     </section>
 
-    <!-- Product Cards -->
-    <section class="home-products" aria-label="Available services">
-      <h2 class="home-section-title">Our Services</h2>
-      <div class="home-product-grid">
-        <a href="route.html?service=tour" class="home-product-card">
-          <div class="home-product-image">
-            <img src="https://picsum.photos/id/111/400/300" alt="Tour Bus" loading="lazy">
-          </div>
-          <div class="home-product-info">
-            <h3>Tour Bus</h3>
-            <p>Comfortable travel for groups</p>
-            <span class="home-product-price">From ₹12,000/day</span>
-          </div>
+    <section class="container" aria-label="Vehicle categories">
+      <h2 class="vehicle-prompt">Select a Vehicle Category</h2>
+
+      <div class="product-container" aria-label="Available vehicle categories">
+        <a href="route.html?service=tourist" class="product-box product-box-featured">
+          <span class="product-icon" aria-hidden="true">
+            <img src="tour-bus.png" alt="Tour bus" class="product-icon-image-featured">
+          </span>
+          <span class="product-copy">
+            <strong>TOURIST BUS</strong>
+            <span>Include all types of buses</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&gt;</span>
         </a>
-        <a href="route.html?service=wedding" class="home-product-card">
-          <div class="home-product-image">
-            <img src="https://picsum.photos/id/112/400/300" alt="Wedding Bus" loading="lazy">
-          </div>
-          <div class="home-product-info">
-            <h3>Wedding Bus</h3>
-            <p>Luxury for special occasions</p>
-            <span class="home-product-price">From ₹15,000/day</span>
-          </div>
+
+        <a href="route.html?service=truck" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="modern-white-box-truck.png" alt="Closed body truck" class="product-icon-image-vehicle">
+          </span>
+          <span class="product-copy">
+            <strong>Closed Body Trucks</strong>
+            <span>Includes closed body pickups, lorries, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&gt;</span>
         </a>
-        <a href="route.html?service=airport" class="home-product-card">
-          <div class="home-product-image">
-            <img src="https://picsum.photos/id/113/400/300" alt="Airport Transfer" loading="lazy">
-          </div>
-          <div class="home-product-info">
-            <h3>Airport Transfer</h3>
-            <p>Reliable pickup & drop</p>
-            <span class="home-product-price">From ₹3,500/trip</span>
-          </div>
+
+        <a href="route.html?service=open-truck" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="white-flatbed-truck.png" alt="Open body truck" class="product-icon-image-vehicle">
+          </span>
+          <span class="product-copy">
+            <strong>Open Body Trucks</strong>
+            <span>Includes open body pickups, lorries, etc.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&gt;</span>
         </a>
-        <a href="route.html?service=corporate" class="home-product-card">
-          <div class="home-product-image">
-            <img src="https://picsum.photos/id/114/400/300" alt="Corporate Travel" loading="lazy">
-          </div>
-          <div class="home-product-info">
-            <h3>Corporate Travel</h3>
-            <p>Professional transport solutions</p>
-            <span class="home-product-price">From ₹8,000/day</span>
-          </div>
+
+        <a href="route.html?service=backhoe" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="yellow-backhoe-loader.png" alt="Backhoe loader" class="product-icon-image-vehicle">
+          </span>
+          <span class="product-copy">
+            <strong>Backhoe Loaders</strong>
+            <span>Includes all types of backhoe loaders like JCB and CAT.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&gt;</span>
         </a>
-        <a href="route.html?service=truck" class="home-product-card">
-          <div class="home-product-image">
-            <img src="https://picsum.photos/id/115/400/300" alt="Goods Transport" loading="lazy">
-          </div>
-          <div class="home-product-info">
-            <h3>Goods Transport</h3>
-            <p>Safe & timely delivery</p>
-            <span class="home-product-price">From ₹8,500/day</span>
-          </div>
+
+        <a href="route.html?service=excavator" class="product-box">
+          <span class="product-icon" aria-hidden="true">
+            <img src="yellow-hydraulic-excavator.png" alt="Excavator" class="product-icon-image-vehicle product-icon-image-excavator">
+          </span>
+          <span class="product-copy">
+            <strong>Excavators</strong>
+            <span>Includes all types of excavators like Hitachi and Komatsu.</span>
+          </span>
+          <span class="product-arrow" aria-hidden="true">&gt;</span>
         </a>
       </div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="script.js?v=20260413-1"></script>
   <script>
-    // Initialize banner slider
-    new Swiper('.home-banner-slider', {
-      loop: true,
-      autoplay: {
-        delay: 4000,
-        disableOnInteraction: false
-      },
-      pagination: {
-        el: '.home-banner-pagination',
-        clickable: true
+    (function () {
+      const bannerNode = document.getElementById('flipBanner');
+      const bannerImages = Array.from(document.querySelectorAll('#flipBanner .owner-auth-banner-img'));
+      const SHARED_BANNER_STORAGE_KEY = 'vect-shared-banner-images-v1';
+      const defaultBannerImages = [
+        { src: 'https://picsum.photos/id/1011/1400/700', alt: 'Banner slide 1' },
+        { src: 'https://picsum.photos/id/1025/1400/700', alt: 'Banner slide 2' },
+        { src: 'https://picsum.photos/id/1035/1400/700', alt: 'Banner slide 3' }
+      ];
+
+      if (!bannerNode || typeof Swiper === 'undefined') {
+        return;
       }
-    });
 
-    // Account panel toggle
-    const accountBtn = document.getElementById('account-btn');
-    const accountPanel = document.getElementById('account-panel');
-    const accountBackdrop = document.getElementById('account-backdrop');
+      function markBannerReady() {
+        window.__homeBannerReady = true;
+        window.dispatchEvent(new Event('home-banner-ready'));
+      }
 
-    if (accountBtn && accountPanel) {
-      accountBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const isHidden = accountPanel.getAttribute('aria-hidden') === 'true';
-        accountPanel.setAttribute('aria-hidden', !isHidden);
-        accountBackdrop.setAttribute('aria-hidden', !isHidden);
+      function loadSharedBannerImages() {
+        try {
+          const savedValue = localStorage.getItem(SHARED_BANNER_STORAGE_KEY);
+          const parsedValue = savedValue ? JSON.parse(savedValue) : [];
+          const normalizedValue = Array.isArray(parsedValue)
+            ? parsedValue.map(function (item, index) {
+                return {
+                  src: String(item && item.src || '').trim(),
+                  alt: String(item && item.alt || ('Banner slide ' + String(index + 1))).trim()
+                };
+              }).filter(function (item) {
+                return Boolean(item.src);
+              })
+            : [];
+
+          return normalizedValue.length ? normalizedValue : defaultBannerImages;
+        } catch (error) {
+          return defaultBannerImages;
+        }
+      }
+
+      function applyBannerImages(imageList) {
+        bannerImages.forEach(function (imageNode, index) {
+          const nextImage = imageList[index % imageList.length];
+
+          if (!nextImage) {
+            return;
+          }
+
+          imageNode.src = nextImage.src;
+          imageNode.alt = nextImage.alt || ('Banner slide ' + String(index + 1));
+        });
+      }
+
+      applyBannerImages(loadSharedBannerImages());
+
+      window.addEventListener('storage', function (event) {
+        if (event.key !== SHARED_BANNER_STORAGE_KEY) {
+          return;
+        }
+
+        applyBannerImages(loadSharedBannerImages());
       });
 
-      if (accountBackdrop) {
-        accountBackdrop.addEventListener('click', function() {
-          accountPanel.setAttribute('aria-hidden', 'true');
-          accountBackdrop.setAttribute('aria-hidden', 'true');
-        });
-      }
-    }
-
-    // Remove page loader when ready
-    window.addEventListener('load', function() {
-      document.documentElement.classList.remove('show-page-loader');
-    });
-  </script>
-</body>
-</html>
-
-      function hideError() {
-        errorNode.hidden = true;
-        errorNode.textContent = '';
-      }
-
-      function getSessionHeaders() {
-        const token = String(localStorage.getItem(SESSION_KEY) || '').trim();
-        return token ? { 'X-Vect-Own-Session': token } : {};
-      }
-
-      function renderGoogleButton() {
-        if (!googleAuthButton || !googleClientId || googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
-          return;
-        }
-
-        if (!window.google || !window.google.accounts || !window.google.accounts.id) {
-          return;
-        }
-
-        const buttonWidth = Math.max(280, Math.floor(googleAuthButton.getBoundingClientRect().width || googleAuthButton.clientWidth || 280));
-        googleAuthButton.innerHTML = '';
-
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: function (response) {
-            if (!response || !response.credential) {
-              showError('Google sign-in did not return a valid credential.');
-              return;
-            }
-
-            fetchWithApiFallback('/api/vect-own/login-google', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                credential: response.credential
-              })
-            })
-              .then(function (apiResponse) {
-                return apiResponse.text().then(function (text) {
-                  let data = {};
-
-                  try {
-                    data = text ? JSON.parse(text) : {};
-                  } catch (error) {
-                    data = {
-                      error: text || 'Unexpected server response.'
-                    };
-                  }
-
-                  return {
-                    ok: apiResponse.ok,
-                    data: data
-                  };
-                });
-              })
-              .then(function (result) {
-                if (!result.ok) {
-                  throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
-                }
-
-                if (result.data && result.data.token) {
-                  localStorage.setItem(SESSION_KEY, String(result.data.token));
-                }
-
-                window.location.href = 'dashboard.html';
-              })
-              .catch(function (error) {
-                showError(error.message || 'Google sign-in failed.');
-              });
-          }
-        });
-
-        window.google.accounts.id.renderButton(googleAuthButton, {
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with',
-          shape: 'rectangular',
-          width: buttonWidth
-        });
-      }
-
-      fetchWithApiFallback('/api/vect-own/me', {
-        headers: getSessionHeaders()
-      })
-        .then(function (response) {
-          if (!response.ok) {
-            throw new Error('Not authenticated');
-          }
-
-          return response.json();
-        })
-        .then(function () {
-          window.location.replace('dashboard.html');
-        })
-        .catch(function () {
-          // Stay on the login page.
-        });
-
-      form.addEventListener('submit', function (event) {
-        event.preventDefault();
-        hideError();
-
-        const password = String(passwordInput.value || '').trim();
-
-        if (!password) {
-          showError('Please enter the password.');
-          passwordInput.focus();
-          return;
-        }
-
-        const submitButton = form.querySelector('.vect-own-button');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Checking...';
-
-        fetchWithApiFallback('/api/vect-own/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+      Promise.resolve().finally(function () {
+        const bannerSwiper = new Swiper(bannerNode, {
+          loop: true,
+          speed: 700,
+          autoplay: {
+            delay: 3000,
+            disableOnInteraction: false
           },
-          body: JSON.stringify({
-            password: password
-          })
-        })
-          .then(function (response) {
-            return response.text().then(function (text) {
-              let data = {};
-
-              try {
-                data = text ? JSON.parse(text) : {};
-              } catch (error) {
-                data = { error: text || 'Unexpected server response.' };
-              }
-
-              return {
-                ok: response.ok,
-                data: data
-              };
-            });
-          })
-          .then(function (result) {
-            if (!result.ok) {
-              throw new Error((result.data && result.data.error) || 'Login failed.');
+          slidesPerView: 1,
+          pagination: {
+            el: '.owner-auth-banner-pagination',
+            clickable: true
+          },
+          on: {
+            init: function () {
+              markBannerReady();
+            },
+            imagesReady: function () {
+              markBannerReady();
             }
-
-            if (result.data && result.data.token) {
-              localStorage.setItem(SESSION_KEY, String(result.data.token));
-            }
-
-            window.location.href = 'dashboard.html';
-          })
-          .catch(function (error) {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Enter Portal';
-            if (error && error.message === 'Failed to fetch') {
-              showError('Server not reachable. Check the backend URL in this page and make sure your backend is running.');
-              return;
-            }
-
-          showError(error.message || 'Login failed.');
+          }
         });
-      });
 
-      if (window.google && window.google.accounts && window.google.accounts.id) {
-        renderGoogleButton();
-      } else {
-        window.addEventListener('load', renderGoogleButton);
-      }
+        window.homeBannerSwiper = bannerSwiper;
+      });
     })();
   </script>
-  <script src="../script.js?v=20260414-2"></script>
 </body>
 </html>

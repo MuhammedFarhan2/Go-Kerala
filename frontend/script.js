@@ -175,6 +175,8 @@
           return;
         }
 
+        const inputMimeType = String(file.type || '').trim().toLowerCase();
+
         const reader = new FileReader();
 
         reader.onerror = function () {
@@ -182,6 +184,18 @@
         };
 
         reader.onload = function () {
+          // HEIC/HEIF often cannot be decoded into a canvas in mobile browsers/WebViews.
+          // We still accept it by returning the original data URL as-is (no resize/compress).
+          if (inputMimeType === 'image/heic' || inputMimeType === 'image/heif') {
+            const rawDataUrl = String(reader.result || '');
+            if (!rawDataUrl) {
+              reject(new Error('Unable to read image file.'));
+              return;
+            }
+            resolve(rawDataUrl);
+            return;
+          }
+
           const image = new Image();
 
           image.onerror = function () {
@@ -212,7 +226,11 @@
             }
 
             context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL(settings.mimeType, settings.quality));
+            try {
+              resolve(canvas.toDataURL(settings.mimeType, settings.quality));
+            } catch (error) {
+              reject(new Error('Unable to process image file.'));
+            }
           };
 
           image.src = String(reader.result || '');

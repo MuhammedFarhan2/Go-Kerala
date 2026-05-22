@@ -8,9 +8,12 @@ const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT) || 3000;
 const GOOGLE_CLIENT_ID = String(process.env.GOOGLE_CLIENT_ID || '').trim();
 const APPLE_CLIENT_ID = String(process.env.APPLE_CLIENT_ID || '').trim();
+const EMAIL_PROVIDER = String(process.env.EMAIL_PROVIDER || '').trim().toLowerCase();
+const BREVO_API_KEY = String(process.env.BREVO_API_KEY || '').trim();
 const GMAIL_USER = String(process.env.GMAIL_USER || '').trim();
 const GMAIL_APP_PASSWORD = String(process.env.GMAIL_APP_PASSWORD || '').trim();
 const OTP_FROM_EMAIL = String(process.env.OTP_FROM_EMAIL || GMAIL_USER || '').trim();
+const OTP_FROM_NAME = String(process.env.OTP_FROM_NAME || 'VECT MOVERS').trim();
 const TWILIO_ACCOUNT_SID = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
 const TWILIO_AUTH_TOKEN = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
 const TWILIO_FROM_NUMBER = String(process.env.TWILIO_FROM_NUMBER || '').trim();
@@ -64,6 +67,9 @@ try {
 let googleOAuthClient = null;
 let appleKeysCache = null;
 let mailTransporter = null;
+let mailTransporterVerified = false;
+let mailTransporterVerifyError = '';
+let emailProviderVerifyError = '';
 const profilePhotoSessions = new Map();
 const otpSessions = new Map();
 const vectOwnSessions = new Map();
@@ -113,6 +119,69 @@ function getMailTransporter() {
   } catch (error) {
     return null;
   }
+}
+
+function getEffectiveEmailProvider() {
+  if (EMAIL_PROVIDER === 'brevo' || EMAIL_PROVIDER === 'smtp') {
+    return EMAIL_PROVIDER;
+  }
+
+  if (BREVO_API_KEY) {
+    return 'brevo';
+  }
+
+  if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+    return 'smtp';
+  }
+
+  return '';
+}
+
+function formatFromAddress(name, email) {
+  const safeName = String(name || '').trim();
+  const safeEmail = String(email || '').trim();
+
+  if (!safeEmail) {
+    return '';
+  }
+
+  if (!safeName) {
+    return safeEmail;
+  }
+
+  return '"' + safeName.replace(/"/g, '\\"') + '" <' + safeEmail + '>';
+}
+
+async function ensureMailTransporterReady() {
+  const transporter = getMailTransporter();
+
+  if (!transporter || !OTP_FROM_EMAIL) {
+    throw new Error('Email OTP is not configured on the server. Set GMAIL_USER, GMAIL_APP_PASSWORD and OTP_FROM_EMAIL.');
+  }
+
+  if (mailTransporterVerified) {
+    return transporter;
+  }
+
+  try {
+    await transporter.verify();
+    mailTransporterVerified = true;
+    mailTransporterVerifyError = '';
+    return transporter;
+  } catch (error) {
+    mailTransporterVerified = false;
+    mailTransporterVerifyError = String((error && error.message) || 'SMTP verification failed.');
+    throw new Error('OTP email service is unavailable: ' + mailTransporterVerifyError);
+  }
+}
+
+async function ensureBrevoReady() {
+  if (!BREVO_API_KEY || !OTP_FROM_EMAIL) {
+    throw new Error('Email OTP is not configured on the server. Set BREVO_API_KEY, OTP_FROM_EMAIL and OTP_FROM_NAME.');
+  }
+
+  emailProviderVerifyError = '';
+  return true;
 }
 
 function isEmail(value) {
@@ -188,18 +257,91 @@ function generateOtp() {
 }
 
 async function sendOtpEmail(contact, otpCode) {
-  const transporter = getMailTransporter();
+  const fromAddress = formatFromAddress(OTP_FROM_NAME, OTP_FROM_EMAIL);
+  const provider = getEffectiveEmailProvider();
+  const otpHtml = '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">' +
+    '<h2 style="margin:0 0 12px">VECT MOVERS verification code</h2>' +
+    '<p style="margin:0 0 12px">Your verification code is:</p>' +
+    '<p style="margin:0 0 16px;font-size:28px;font-weight:700;letter-spacing:6px">' + otpCode + '</p>' +
+    '<p style="margin:0">This code expires in 5 minutes.</p>' +
+    '</div>';
+  const otpText = 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.';
 
-  if (!transporter || !OTP_FROM_EMAIL) {
-    throw new Error('Email OTP is not configured on the server.');
+  if (provider === 'brevo') {
+    await ensureBrevoReady();
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: {
+          name: OTP_FROM_NAME,
+          email: OTP_FROM_EMAIL
+        },
+        to: [
+          {
+            email: contact
+          }
+        ],
+        replyTo: {
+          email: OTP_FROM_EMAIL,
+          name: OTP_FROM_NAME
+        },
+        subject: 'VECT MOVERS verification code',
+        textContent: otpText,
+        htmlContent: otpHtml
+      })
+    });
+
+    const responseText = await response.text();
+    let responseData = {};
+
+    try {
+      responseData = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+      responseData = {};
+    }
+
+    if (!response.ok) {
+      const detail = String(
+        (responseData && (responseData.message || responseData.code)) ||
+        responseText ||
+        ('Brevo API request failed with status ' + response.status)
+      ).trim();
+      emailProviderVerifyError = detail;
+      throw new Error('OTP email service is unavailable: ' + detail);
+    }
+
+    emailProviderVerifyError = '';
+    return {
+      accepted: [contact],
+      messageId: String(responseData.messageId || '')
+    };
   }
 
-  await transporter.sendMail({
-    from: OTP_FROM_EMAIL,
+  if (provider !== 'smtp') {
+    throw new Error('Email OTP is not configured on the server. Set BREVO_API_KEY or Gmail SMTP credentials.');
+  }
+
+  const transporter = await ensureMailTransporterReady();
+
+  const mailInfo = await transporter.sendMail({
+    from: fromAddress || OTP_FROM_EMAIL,
+    replyTo: OTP_FROM_EMAIL,
     to: contact,
     subject: 'VECT MOVERS verification code',
-    text: 'Your VECT MOVERS verification code is ' + otpCode + '. It expires in 5 minutes.'
+    text: otpText,
+    html: otpHtml
   });
+
+  if (!mailInfo || !mailInfo.accepted || !mailInfo.accepted.length) {
+    throw new Error('OTP email was not accepted by the mail server.');
+  }
+
+  return mailInfo;
 }
 
 async function sendOtpSms(contact, otpCode) {
@@ -1176,7 +1318,9 @@ function handleUpload(request, response) {
   request.on('data', function (chunk) {
     body += chunk;
 
-    if (body.length > 3 * 1024 * 1024) {
+    // Accept larger image payloads (base64 expands size ~33%).
+    // Frontend will try to optimize/compress, but we keep this generous.
+    if (body.length > 15 * 1024 * 1024) {
       request.destroy();
     }
   });
@@ -1194,7 +1338,7 @@ function handleUpload(request, response) {
     const fileName = String(payload.fileName || '').trim();
     const mimeType = String(payload.mimeType || '').trim();
     const data = String(payload.data || '');
-    const allowedTypes = ['image/jpeg', 'image/png'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
     if (!fileName || !allowedTypes.includes(mimeType) || !data) {
       sendJson(response, 400, { error: 'Invalid upload data.' });
@@ -1204,12 +1348,21 @@ function handleUpload(request, response) {
     try {
       const buffer = Buffer.from(data, 'base64');
 
-      if (buffer.length > 5 * 1024 * 1024) {
-        sendJson(response, 400, { error: 'Image size must be 5MB or less.' });
+      if (buffer.length > 10 * 1024 * 1024) {
+        sendJson(response, 400, { error: 'Image size must be 10MB or less.' });
         return;
       }
 
-      const extension = mimeType === 'image/png' ? '.png' : '.jpg';
+      const extension =
+        mimeType === 'image/png'
+          ? '.png'
+          : mimeType === 'image/webp'
+          ? '.webp'
+          : mimeType === 'image/heif'
+          ? '.heif'
+          : mimeType === 'image/heic'
+          ? '.heic'
+          : '.jpg';
       const safeBaseName = path.basename(fileName, path.extname(fileName)).replace(/[^a-zA-Z0-9-_]/g, '-').slice(0, 40) || 'licence-photo';
       const finalFileName = safeBaseName + '-' + Date.now() + extension;
       const outputPath = path.join(UPLOADS_DIR, finalFileName);
@@ -1401,17 +1554,66 @@ async function handleRequestOtp(request, response) {
   });
 
   try {
-    await sendOtpEmail(normalizedContact, otpCode);
+    const mailInfo = await sendOtpEmail(normalizedContact, otpCode);
     sendJson(response, 200, {
       success: true,
-      contact: normalizedContact
+      contact: normalizedContact,
+      messageId: String((mailInfo && mailInfo.messageId) || '')
     });
   } catch (error) {
     otpSessions.delete(normalizedContact);
+    console.error('OTP email send failed for', normalizedContact, '-', error && error.message ? error.message : error);
     sendJson(response, 500, {
       error: error.message || 'Unable to send OTP email.'
     });
   }
+}
+
+async function handleOtpDiagnostics(request, response) {
+  const token = String(request.headers['x-debug-token'] || '').trim();
+  const expected = String(process.env.DEBUG_ADMIN_TOKEN || '').trim();
+
+  if (!expected || token !== expected) {
+    sendJson(response, 401, { error: 'Unauthorized debug request.' });
+    return;
+  }
+
+  const diagnostics = {
+    emailProvider: getEffectiveEmailProvider() || 'unconfigured',
+    brevoApiKeyConfigured: Boolean(BREVO_API_KEY),
+    gmailUserConfigured: Boolean(GMAIL_USER),
+    gmailAppPasswordConfigured: Boolean(GMAIL_APP_PASSWORD),
+    otpFromEmailConfigured: Boolean(OTP_FROM_EMAIL),
+    otpFromNameConfigured: Boolean(OTP_FROM_NAME),
+    gmailUser: GMAIL_USER ? GMAIL_USER.replace(/(.{2}).+(@.+)/, '$1***$2') : '',
+    otpFromEmail: OTP_FROM_EMAIL ? OTP_FROM_EMAIL.replace(/(.{2}).+(@.+)/, '$1***$2') : '',
+    transporterCreated: Boolean(getMailTransporter()),
+    transporterVerified: mailTransporterVerified,
+    transporterVerifyError: mailTransporterVerifyError || '',
+    emailProviderVerifyError: emailProviderVerifyError || ''
+  };
+
+  if (diagnostics.emailProvider === 'brevo' && diagnostics.brevoApiKeyConfigured) {
+    try {
+      await ensureBrevoReady();
+      diagnostics.emailProviderVerifyError = '';
+    } catch (error) {
+      diagnostics.emailProviderVerifyError = String((error && error.message) || 'Brevo verification failed.');
+    }
+  }
+
+  if (diagnostics.emailProvider === 'smtp' && !diagnostics.transporterVerified && diagnostics.transporterCreated) {
+    try {
+      await ensureMailTransporterReady();
+      diagnostics.transporterVerified = true;
+      diagnostics.transporterVerifyError = '';
+    } catch (error) {
+      diagnostics.transporterVerified = false;
+      diagnostics.transporterVerifyError = String((error && error.message) || 'SMTP verification failed.');
+    }
+  }
+
+  sendJson(response, 200, { success: true, diagnostics: diagnostics });
 }
 
 async function handleVerifyOtp(request, response) {
@@ -2180,6 +2382,11 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'POST' && requestUrl.pathname === '/api/auth/request-otp') {
     handleRequestOtp(request, response);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/api/debug/otp-status') {
+    handleOtpDiagnostics(request, response);
     return;
   }
 
