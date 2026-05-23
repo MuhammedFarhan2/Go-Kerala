@@ -380,7 +380,7 @@
   const searchInputs = Array.from(document.querySelectorAll('.route-search-input'));
   const counterLabel = document.querySelector('[data-bus-counter-label]');
   const pageParams = new URLSearchParams(window.location.search);
-  const routeScope = pageParams.get('scope');
+  const routeScope = pageParams.get('scope') || pageParams.get('service');
   const fromFieldLabel = document.querySelector('[data-route-label="from"]');
   const toField = document.querySelector('[data-route-field="to"]');
   const fromInput = document.querySelector('[data-route-input="from"]');
@@ -2502,7 +2502,7 @@
   const submitLocationFrom = document.querySelector('[data-submit-location-from]');
   const submitLocationTo = document.querySelector('[data-submit-location-to]');
   const submitDates = document.querySelector('[data-submit-dates]');
-  const submitScope = pageParams.get('scope') || sessionStorage.getItem('route-scope');
+  const submitScope = pageParams.get('scope') || pageParams.get('service') || sessionStorage.getItem('route-scope');
   const singleLocationScopes = new Set(['excavator', 'backhoe']);
   const isSingleLocationScope = singleLocationScopes.has(submitScope);
 
@@ -2600,10 +2600,13 @@
 
   if (submitButton) {
     submitButton.addEventListener('click', function () {
-      sessionStorage.setItem('submit-location-from', getSafeLocationValue(fromInput));
-      sessionStorage.setItem('submit-location-to', getSafeLocationValue(toInput));
-      sessionStorage.setItem('route-location-from', getSafeLocationValue(fromInput) === '- -' ? '' : getSafeLocationValue(fromInput));
-      sessionStorage.setItem('route-location-to', getSafeLocationValue(toInput) === '- -' ? '' : getSafeLocationValue(toInput));
+      const fromValue = getSafeLocationValue(fromInput);
+      const toValue = isSingleLocationScope ? '- -' : getSafeLocationValue(toInput);
+
+      sessionStorage.setItem('submit-location-from', fromValue);
+      sessionStorage.setItem('submit-location-to', toValue);
+      sessionStorage.setItem('route-location-from', fromValue === '- -' ? '' : fromValue);
+      sessionStorage.setItem('route-location-to', toValue === '- -' ? '' : toValue);
       if (submitScope) {
         sessionStorage.setItem('route-scope', submitScope);
       }

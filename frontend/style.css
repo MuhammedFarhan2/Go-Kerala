@@ -3863,10 +3863,12 @@ h1 {
      Options (pick one value): 960px | 1180px | min(1280px, 100%) | 100% */
   --submit-row-max-width: 640px;
   min-height: calc(100dvh - var(--header-height));
+  height: calc(100dvh - var(--header-height));
   background: #fff;
   padding: 24px 10px 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Submit page: prevent main page scrolling (vehicles pane scrolls instead) */
@@ -3915,6 +3917,7 @@ body.submit-page {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .submit-filter-nav {
@@ -3927,7 +3930,7 @@ body.submit-page {
   border: 1px solid #f3f3f3;
   border-radius: 999px;
   box-shadow: 0 10px 24px rgba(17, 17, 17, 0.08);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .submit-filter-tab {
@@ -4041,6 +4044,7 @@ body.submit-page {
   flex: 1 1 auto;
   min-height: 0;
   height: 100%;
+  overflow: hidden;
 }
 
 /* Laptop/Desktop: show Filter (1/4) + Vehicles (3/4), hide the tabs */
@@ -4104,10 +4108,10 @@ body.submit-page {
     background: #fff;
     border-top: 1px solid #111;
     margin-top: auto;
-    position: static;
+    position: sticky;
+    bottom: 12px;
     flex: 0 0 auto;
-    /* keep visible without scrolling, but not flush to bottom */
-    margin-bottom: 48px;
+    margin-bottom: 0;
   }
 
   .submit-filter-footer .submit-filter-action {
@@ -4138,7 +4142,7 @@ body.submit-page {
 
 .submit-filter-pane#submit-pane-name.is-active {
   overflow-y: auto;
-  padding-bottom: calc(17vh + 8px);
+  padding-bottom: 0;
 }
 
 .submit-layout {
@@ -4201,6 +4205,18 @@ body.submit-page {
   color: #4c4c4c;
 }
 
+.submit-box-hint {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.submit-box-hint-location {
+  padding-left: 34px;
+}
+
 [data-submit-dates] {
   text-align: center;
   font-size: 1.05rem;
@@ -4210,11 +4226,21 @@ body.submit-page {
 }
 
 @media (min-width: 1024px) {
+  :root {
+    --submit-location-shift-x: 260px;
+  }
+
   .submit-box-location-row {
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: clip;
+    transform: translateX(var(--submit-location-shift-x));
+    text-align: left;
+    padding-left: 34px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .submit-box-location {
+    min-height: 76px;
   }
 
   .submit-box-location-row.is-marquee {
@@ -4249,6 +4275,7 @@ body.submit-page {
   justify-content: center;
   gap: 1px;
   position: relative;
+  height: auto;
 }
 
 .submit-box-location .submit-box-text-centered {
@@ -4426,7 +4453,7 @@ body.submit-page {
   transition: background-color 0.15s ease, color 0.15s ease;
   display: none;
   position: fixed;
-  bottom: calc(17vh + 6px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
   z-index: 340;
   width: min(420px, calc(50vw - 20px));
 }
@@ -4463,7 +4490,16 @@ body.submit-page {
 .submit-demo-list {
   display: grid;
   gap: 14px;
-  padding-bottom: 48px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: 18px;
+  padding-right: 12px;
+  margin-right: -12px;
+  width: calc(100% + 12px);
+  box-sizing: border-box;
 }
 
 .submit-demo-card {
@@ -4966,7 +5002,7 @@ body.submit-page {
   }
 
   .submit-filter-pane#submit-pane-name.is-active {
-    padding-bottom: calc(17vh + 6px);
+    padding-bottom: 0;
   }
 
   .submit-filter-group.is-active {
@@ -4980,13 +5016,13 @@ body.submit-page {
   }
 
   .submit-filter-action.is-clear {
-    bottom: calc(17vh + 6px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
     left: 50%;
     transform: translateX(calc(-100% - 4px));
   }
 
   .submit-filter-action.is-apply {
-    bottom: calc(17vh + 6px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
     left: calc(50% + 4px);
   }
 
@@ -4996,7 +5032,7 @@ body.submit-page {
   }
 
   .submit-demo-list {
-    padding-bottom: 14px;
+    padding-bottom: 18px;
   }
 
   .submit-demo-card-main {

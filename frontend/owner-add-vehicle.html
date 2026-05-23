@@ -205,6 +205,16 @@
     @media (max-width: 640px) {
       .add-vehicle-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding-right: 6px;
+        max-height: calc(100dvh - var(--header-height) - 220px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .add-vehicle-main {
+        align-items: flex-start;
+        padding-top: 12px;
       }
     }
 
