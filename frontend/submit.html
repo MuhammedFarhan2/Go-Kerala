@@ -9,7 +9,7 @@
   </script>
   <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
-<body>
+<body class="submit-page">
   <div class="page-loader" id="page-loader" aria-hidden="true">
     <div class="page-loader-content">
       <div class="page-loader-spinner" aria-hidden="true">
@@ -274,18 +274,6 @@
           </div>
         </div>
 
-        <div class="submit-demo-sheet is-open" aria-hidden="false" data-demo-sheet>
-          <div class="submit-demo-sheet-grid" aria-hidden="true">
-            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
-            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
-            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
-            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
-          </div>
-          <p class="submit-demo-sheet-selected-title">Selected</p>
-          <p class="submit-demo-sheet-selected-location" data-demo-selected-location></p>
-          <button type="button" class="submit-demo-sheet-book-btn">Book</button>
-        </div>
-
         <div
           class="submit-filter-pane"
           id="submit-pane-filter"
@@ -384,10 +372,12 @@
               </div>
             </div>
           </div>
+          <div class="submit-filter-footer" aria-label="Filter actions">
+            <button type="button" class="submit-filter-action is-clear" data-filter-action="clear">CLEAR ALL</button>
+            <button type="button" class="submit-filter-action is-apply" data-filter-action="apply">APPLY</button>
+          </div>
         </div>
       </div>
-      <button type="button" class="submit-filter-action is-clear" data-filter-action="clear">CLEAR ALL</button>
-      <button type="button" class="submit-filter-action is-apply" data-filter-action="apply">APPLY</button>
     </section>
   </main>
 

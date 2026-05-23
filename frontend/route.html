@@ -75,9 +75,11 @@
             </svg>
           </span>
         </div>
+        <p class="route-field-hint">Enter Village Name only</p>
         <div class="route-dropdown-list" id="from-list" hidden>
           <button type="button" class="route-dropdown-item is-placeholder">Waiting for your From list</button>
         </div>
+        <p class="route-field-error" id="route-from-error" hidden>Select Pickup Location</p>
       </div>
 
       <div class="route-field" data-route-field="to">
@@ -107,6 +109,7 @@
         <div class="route-dropdown-list" id="to-list" hidden>
           <button type="button" class="route-dropdown-item is-placeholder">Waiting for your To list</button>
         </div>
+        <p class="route-field-error" id="route-to-error" hidden>Select Dropoff Location</p>
       </div>
 
       <div class="route-field">
@@ -135,15 +138,7 @@
           </button>
           <div class="route-calendar-months" data-calendar-months></div>
         </section>
-        <div class="route-bus-counter" aria-label="Required buses selector">
-          <span class="route-bus-counter-text">Required</span>
-          <div class="route-bus-counter-controls">
-            <button type="button" class="route-bus-counter-btn" data-bus-counter="decrease" aria-label="Decrease required buses">-</button>
-            <span class="route-bus-counter-value" data-bus-counter-value>1</span>
-            <button type="button" class="route-bus-counter-btn" data-bus-counter="increase" aria-label="Increase required buses">+</button>
-          </div>
-          <span class="route-bus-counter-text" data-bus-counter-label>Bus/Busses</span>
-        </div>
+        <p class="route-field-error" id="route-date-error" hidden>Select Date or Dates</p>
         <div class="route-select-action">
           <a href="submit.html" class="route-select-btn">SUBMIT</a>
         </div>

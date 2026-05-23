@@ -918,7 +918,7 @@ html {
 /* Desktop/Laptop: keep the account slide panel centered instead of spanning full width */
 @media (min-width: 1024px) {
   .account-panel {
-    width: min(420px, calc(100% - 28px)) !important;
+    width: min(320px, calc(100% - 28px)) !important;
     left: auto !important;
     right: 0 !important;
     top: var(--header-height) !important;
@@ -942,7 +942,7 @@ html {
 
   .account-panel-nav {
     width: 100%;
-    max-width: 360px;
+    max-width: 280px;
     margin-left: auto;
     margin-right: auto;
   }
@@ -3069,6 +3069,28 @@ html {
   }
 }
 
+/* Homepage (customer site): reduce slider height on laptop/desktop */
+@media (min-width: 1024px) {
+  #flipBanner {
+    height: 600px !important;
+    min-height: 0 !important;
+  }
+
+  #flipBanner .swiper-wrapper,
+  #flipBanner .swiper-slide,
+  #flipBanner .owner-auth-banner-card,
+  #flipBanner .owner-auth-banner-img {
+    height: 100%;
+  }
+
+  #flipBanner .owner-auth-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+
 .banner {
   width: 100%;
   overflow: hidden; /* prevents any overflow artifacts */
@@ -3407,6 +3429,17 @@ h1 {
   color: #8a8a8a;
 }
 
+.route-dropdown-toggle + .route-field-hint {
+  margin-top: 10px;
+}
+
+.route-field-error {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #d92d20;
+}
+
 .route-bus-counter {
   display: flex;
   align-items: center;
@@ -3741,6 +3774,12 @@ h1 {
   pointer-events: none;
 }
 
+.route-calendar-day.is-disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
 
 @media (max-width: 768px) {
   .route-main {
@@ -3828,6 +3867,44 @@ h1 {
   padding: 24px 10px 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Submit page: prevent main page scrolling (vehicles pane scrolls instead) */
+html,
+body {
+  height: 100%;
+}
+
+body.submit-page {
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .submit-main {
+    --submit-row-max-width: 100%;
+    padding: 28px 10px 0;
+    overflow: hidden;
+  }
+
+  .submit-filter-panel {
+    height: calc(100dvh - var(--header-height));
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+  }
+
+  .submit-layout {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #fff;
+    padding-bottom: 10px;
+  }
+
+  .submit-filter-content {
+    min-height: 0;
+    overflow: hidden;
+  }
 }
 
 .submit-filter-panel {
@@ -3966,6 +4043,94 @@ h1 {
   height: 100%;
 }
 
+/* Laptop/Desktop: show Filter (1/4) + Vehicles (3/4), hide the tabs */
+@media (min-width: 1024px) {
+  :root {
+    --submit-filter-sticky-top: calc(var(--header-height) + 12px);
+  }
+
+  .submit-filter-panel {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .submit-filter-nav {
+    display: none;
+  }
+
+  .submit-filter-content {
+    display: grid;
+    grid-template-columns: minmax(320px, 380px) 1fr;
+    gap: 18px;
+    align-items: start;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .submit-filter-pane,
+  .submit-filter-pane.is-active,
+  .submit-filter-pane[hidden] {
+    display: flex !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .submit-filter-pane#submit-pane-filter {
+    grid-column: 1;
+    position: sticky;
+    top: var(--submit-filter-sticky-top);
+    height: calc(100dvh - var(--submit-filter-sticky-top) - 5px) !important;
+    overflow: hidden;
+    padding-bottom: 0;
+    display: flex !important;
+    flex-direction: column;
+    height: 100% !important;
+  }
+
+  .submit-filter-pane#submit-pane-filter .submit-filter-drawer {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding-bottom: 0;
+  }
+
+
+  .submit-filter-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 10px 0 0;
+    background: #fff;
+    border-top: 1px solid #111;
+    margin-top: auto;
+    position: static;
+    flex: 0 0 auto;
+    /* keep visible without scrolling, but not flush to bottom */
+    margin-bottom: 48px;
+  }
+
+  .submit-filter-footer .submit-filter-action {
+    position: static !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    z-index: auto !important;
+  }
+
+  .submit-filter-pane#submit-pane-name {
+    grid-column: 2;
+    height: 100% !important;
+    overflow-y: auto;
+    padding-bottom: 0 !important;
+    max-height: none;
+  }
+}
+
 .submit-filter-pane#submit-pane-filter.is-active {
   min-height: calc(100dvh - var(--header-height));
   height: calc(100dvh - var(--header-height));
@@ -4044,6 +4209,35 @@ h1 {
   color: #111;
 }
 
+@media (min-width: 1024px) {
+  .submit-box-location-row {
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+
+  .submit-box-location-row.is-marquee {
+    text-overflow: clip;
+  }
+
+  .submit-box-location-row.is-marquee > span {
+    display: inline-block;
+    padding-left: 100%;
+    animation: submitLocationMarquee 10s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes submitLocationMarquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+}
+
 .submit-box-text-centered {
   text-align: center;
 }
@@ -4060,6 +4254,10 @@ h1 {
 .submit-box-location .submit-box-text-centered {
   text-align: left;
   padding-left:6px;
+}
+
+.submit-box-location-row {
+  text-align: center;
 }
 
 .submit-box-location::before {
@@ -4265,7 +4463,7 @@ h1 {
 .submit-demo-list {
   display: grid;
   gap: 14px;
-  padding-bottom: 16px;
+  padding-bottom: 48px;
 }
 
 .submit-demo-card {
@@ -4858,6 +5056,32 @@ h1 {
   .submit-demo-sheet-selected-location {
     margin: 1px 10px 6px;
     font-size: 0.74rem;
+  }
+}
+
+/* Ensure laptop layout always keeps Filter beside Vehicles (even when panes are marked hidden) */
+@media (min-width: 1024px) {
+  .submit-filter-content {
+    display: grid !important;
+    grid-template-columns: 1fr 3fr !important;
+    align-items: start !important;
+  }
+
+  .submit-filter-pane[hidden] {
+    display: flex !important;
+  }
+
+  #submit-pane-filter,
+  #submit-pane-name {
+    width: 100% !important;
+  }
+
+  #submit-pane-filter {
+    order: 0;
+  }
+
+  #submit-pane-name {
+    order: 1;
   }
 }
 

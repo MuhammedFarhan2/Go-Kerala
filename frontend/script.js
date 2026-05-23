@@ -385,6 +385,9 @@
   const toField = document.querySelector('[data-route-field="to"]');
   const fromInput = document.querySelector('[data-route-input="from"]');
   const toInput = document.querySelector('[data-route-input="to"]');
+  const fromError = document.getElementById('route-from-error');
+  const toError = document.getElementById('route-to-error');
+  const dateError = document.getElementById('route-date-error');
   const routeFromKey = 'route-location-from';
   const routeToKey = 'route-location-to';
   let suppressedToggle = null;
@@ -424,6 +427,60 @@
   const submitLink = document.querySelector('.route-select-btn');
   if (submitLink && routeScope) {
     submitLink.href = `submit.html?scope=${encodeURIComponent(routeScope)}`;
+  }
+
+  function getSelectedDates() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('submit-selected-dates') || '[]');
+      return Array.isArray(saved) ? saved.filter(Boolean) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function setErrorVisible(node, isVisible) {
+    if (!node) {
+      return;
+    }
+
+    node.hidden = !isVisible;
+  }
+
+  function validateRouteForm() {
+    const fromValue = String(fromInput && fromInput.value || '').trim();
+    const toValue = String(toInput && toInput.value || '').trim();
+    const needsTo = toField && !toField.hidden;
+    const dates = getSelectedDates();
+
+    const isFromValid = Boolean(fromValue);
+    const isToValid = !needsTo || Boolean(toValue);
+    const isDatesValid = dates.length > 0;
+
+    setErrorVisible(fromError, !isFromValid);
+    setErrorVisible(toError, needsTo && !isToValid);
+    setErrorVisible(dateError, !isDatesValid);
+
+    return isFromValid && isToValid && isDatesValid;
+  }
+
+  if (submitLink) {
+    submitLink.addEventListener('click', function (event) {
+      if (!validateRouteForm()) {
+        event.preventDefault();
+      }
+    });
+  }
+
+  if (fromInput) {
+    fromInput.addEventListener('input', function () {
+      setErrorVisible(fromError, false);
+    });
+  }
+
+  if (toInput) {
+    toInput.addEventListener('input', function () {
+      setErrorVisible(toError, false);
+    });
   }
 
   const touristData = [
@@ -2557,6 +2614,33 @@
     submitLocationFrom.textContent = formatSubmitLocationValue(sessionStorage.getItem('submit-location-from') || '- -');
     submitLocationTo.textContent = formatSubmitLocationValue(sessionStorage.getItem('submit-location-to') || '- -');
 
+    function applyLocationMarquee(node) {
+      if (!node) {
+        return;
+      }
+
+      node.classList.remove('is-marquee');
+
+      const rawText = String(node.textContent || '').trim();
+      node.textContent = '';
+      const inner = document.createElement('span');
+      inner.textContent = rawText;
+      node.appendChild(inner);
+
+      if (window.innerWidth < 1024) {
+        return;
+      }
+
+      requestAnimationFrame(function () {
+        if (inner.scrollWidth > node.clientWidth + 2) {
+          node.classList.add('is-marquee');
+        }
+      });
+    }
+
+    applyLocationMarquee(submitLocationFrom);
+    applyLocationMarquee(submitLocationTo);
+
     if (isSingleLocationScope) {
       submitLocationBox && submitLocationBox.classList.add('submit-box-location-single');
       submitLocationTo.hidden = true;
@@ -3705,7 +3789,8 @@
     const firstWeekday = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
-    const todayKey = getDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayKey = getDateKey(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate());
     const monthWrap = document.createElement('section');
     const header = document.createElement('div');
     const title = document.createElement('h2');
@@ -3736,6 +3821,8 @@
 
     for (let day = 1; day <= daysInMonth; day += 1) {
       const key = getDateKey(year, month, day);
+      const candidateDate = new Date(year, month, day);
+      const isPastDate = candidateDate.getTime() < todayStart.getTime();
       const button = document.createElement('button');
 
       button.type = 'button';
@@ -3749,6 +3836,11 @@
         month: 'long',
         year: 'numeric'
       }));
+
+      if (isPastDate) {
+        button.disabled = true;
+        button.classList.add('is-disabled');
+      }
 
       if (key === todayKey) {
         button.classList.add('is-today');
@@ -3773,9 +3865,16 @@
   calendars.forEach(function (calendar) {
     const monthsHost = calendar.querySelector('[data-calendar-months]');
     const savedDateKeys = JSON.parse(sessionStorage.getItem('submit-selected-dates') || '[]');
+    const today = new Date();
+    const todayKey = getDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    const normalizedSavedKeys = Array.isArray(savedDateKeys)
+      ? savedDateKeys.filter(function (key) {
+          return typeof key === 'string' && key >= todayKey;
+        })
+      : [];
     const state = {
       monthCursor: startOfMonth(new Date()),
-      selectedDates: new Set(Array.isArray(savedDateKeys) ? savedDateKeys : [])
+      selectedDates: new Set(normalizedSavedKeys)
     };
     const swipeState = {
       startX: 0,
@@ -3787,8 +3886,8 @@
       return;
     }
 
-    if (savedDateKeys.length) {
-      const firstSavedDate = new Date(savedDateKeys.slice().sort()[0]);
+    if (normalizedSavedKeys.length) {
+      const firstSavedDate = new Date(normalizedSavedKeys.slice().sort()[0]);
 
       if (!Number.isNaN(firstSavedDate.getTime())) {
         state.monthCursor = startOfMonth(firstSavedDate);
@@ -3816,6 +3915,10 @@
         return;
       }
 
+      if (dayButton.disabled) {
+        return;
+      }
+
       const dateKey = dayButton.dataset.dateKey;
 
       if (!dateKey) {
@@ -3826,6 +3929,11 @@
         state.selectedDates.delete(dateKey);
       } else {
         state.selectedDates.add(dateKey);
+      }
+
+      const dateError = document.getElementById('route-date-error');
+      if (dateError) {
+        dateError.hidden = true;
       }
 
       refresh();
