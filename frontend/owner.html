@@ -11,6 +11,11 @@
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="style.css?v=20260430-2">
+  <script>
+    if (new URLSearchParams(window.location.search).get('embed') === 'true') {
+      document.documentElement.classList.add('is-embedded');
+    }
+  </script>
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -488,6 +493,24 @@
                 storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
                 localStorage.setItem('owner-login-method', 'google');
                 localStorage.setItem('owner-login-email', user.email || '');
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                credential: response.credential
+              })
+            })
+              .then(function (result) {
+                if (!result.ok || !result.data || !result.data.user) {
+                  throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
+                }
+
+                const user = result.data.user;
+                hideError();
+                storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
+                localStorage.setItem('owner-login-method', 'google');
+                localStorage.setItem('owner-login-email', user.email || '');
                 localStorage.setItem('owner-login-first-name', user.firstName || '');
                 localStorage.setItem('owner-login-last-name', user.lastName || '');
                 localStorage.removeItem('owner-login-password');
@@ -496,11 +519,11 @@
                   if (localStorage.getItem('owner-account-created') !== 'true') {
                     throw new Error('No account found. Please create an account first.');
                   }
-                  window.location.href = 'owner-details.html';
+                  (window.top || window).location.href = 'owner-details.html';
                   return;
                 }
 
-                window.location.href = 'owner-account-setup.html';
+                (window.top || window).location.href = 'owner-account-setup.html';
               })
               .catch(function (error) {
                 showError(error.message || 'Google sign-in failed.');
@@ -583,7 +606,7 @@
           sessionStorage.setItem('owner-email', contact);
           localStorage.setItem('owner-authenticated', 'true');
           hideError();
-          window.location.href = 'owner-details.html';
+          (window.top || window).location.href = 'owner-details.html';
           return;
         }
 
@@ -627,7 +650,7 @@
               sessionStorage.removeItem(REVIEW_ITEM_STORAGE_KEY);
               sessionStorage.removeItem(REVIEW_RETURN_STORAGE_KEY);
             }
-            window.location.href = getVerificationPage();
+            (window.top || window).location.href = getVerificationPage();
           })
           .catch(function (error) {
             showError(error && error.message ? error.message : 'Unable to send OTP right now. Please try again.');

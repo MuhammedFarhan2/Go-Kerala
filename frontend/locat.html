@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Live Location Tracker</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <style>
+
+    body{
+      margin:0;
+      font-family:Arial;
+    }
+
+    #map{
+      height:100vh;
+      width:100%;
+    }
+
+    .info-box{
+      position:absolute;
+      top:10px;
+      left:10px;
+      z-index:999;
+      background:white;
+      padding:15px;
+      border-radius:12px;
+      box-shadow:0 0 15px rgba(0,0,0,0.2);
+      width:320px;
+    }
+
+    .info-box h2{
+      margin:0 0 10px;
+      font-size:18px;
+    }
+
+    .info-box p{
+      margin:6px 0;
+      font-size:14px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- Info Box -->
+  <div class="info-box">
+
+    <h2>📍 Live Location</h2>
+
+    <p><b>Latitude:</b> <span id="lat">Loading...</span></p>
+
+    <p><b>Longitude:</b> <span id="lon">Loading...</span></p>
+
+    <p><b>Village:</b> <span id="village">Loading...</span></p>
+
+    <p><b>Town:</b> <span id="town">Loading...</span></p>
+
+    <p><b>City/Region:</b> <span id="city">Loading...</span></p>
+
+    <p><b>Full Address:</b></p>
+
+    <p id="address">Loading...</p>
+
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+
+    if(navigator.geolocation){
+
+      navigator.geolocation.getCurrentPosition(
+
+        async function(position){
+
+          let lat = position.coords.latitude;
+          let lon = position.coords.longitude;
+
+          document.getElementById("lat").innerText = lat;
+          document.getElementById("lon").innerText = lon;
+
+          // Create map
+          var map = L.map('map').setView([lat, lon], 16);
+
+          // OpenStreetMap tiles
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+          }).addTo(map);
+
+          // Reverse geocoding
+          let response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+          );
+
+          let data = await response.json();
+
+          // Smart fallback system
+          let village =
+            data.address.village ||
+            data.address.suburb ||
+            data.address.hamlet ||
+            data.address.neighbourhood ||
+            "Not Available";
+
+          let town =
+            data.address.town ||
+            data.address.municipality ||
+            "Not Available";
+
+          let city =
+            data.address.city ||
+            data.address.county ||
+            data.address.state_district ||
+            "Not Available";
+
+          let state = data.address.state || "Not Available";
+          let country = data.address.country || "Not Available";
+
+          let fullAddress = data.display_name;
+
+          // Show in box
+          document.getElementById("village").innerText = village;
+          document.getElementById("town").innerText = town;
+          document.getElementById("city").innerText = city;
+          document.getElementById("address").innerText = fullAddress;
+
+          // Marker popup
+          L.marker([lat, lon]).addTo(map)
+            .bindPopup(`
+              <b>📍 You are here</b><br><br>
+              <b>Village:</b> ${village}<br>
+              <b>Town:</b> ${town}<br>
+              <b>City:</b> ${city}<br>
+              <b>State:</b> ${state}<br>
+              <b>Country:</b> ${country}<br><br>
+              ${fullAddress}
+            `)
+            .openPopup();
+
+        },
+
+        function(){
+          alert("Please allow location access");
+        }
+
+      );
+
+    } else {
+      alert("Geolocation not supported");
+    }
+
+  </script>
+
+</body>
+</html>

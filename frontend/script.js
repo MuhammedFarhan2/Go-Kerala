@@ -387,6 +387,8 @@
   const toInput = document.querySelector('[data-route-input="to"]');
   const fromError = document.getElementById('route-from-error');
   const toError = document.getElementById('route-to-error');
+  const fromInvalidError = document.getElementById('route-from-invalid');
+  const toInvalidError = document.getElementById('route-to-invalid');
   const dateError = document.getElementById('route-date-error');
   const routeFromKey = 'route-location-from';
   const routeToKey = 'route-location-to';
@@ -460,7 +462,9 @@
     setErrorVisible(toError, needsTo && !isToValid);
     setErrorVisible(dateError, !isDatesValid);
 
-    return isFromValid && isToValid && isDatesValid;
+    const selectionValid = validateRouteSelection(true);
+
+    return isFromValid && isToValid && isDatesValid && selectionValid;
   }
 
   if (submitLink) {
@@ -474,12 +478,14 @@
   if (fromInput) {
     fromInput.addEventListener('input', function () {
       setErrorVisible(fromError, false);
+      setErrorVisible(fromInvalidError, false);
     });
   }
 
   if (toInput) {
     toInput.addEventListener('input', function () {
       setErrorVisible(toError, false);
+      setErrorVisible(toInvalidError, false);
     });
   }
 
@@ -2269,6 +2275,48 @@
     return;
   }
 
+  function buildAllowedSet(sourceData) {
+    const set = new Set();
+
+    sourceData.forEach(function (item) {
+      const displayName = normalizeDisplayName(item);
+      set.add(displayName.trim().toLowerCase());
+      set.add(displayName.split(',')[0].trim().toLowerCase());
+    });
+
+    return set;
+  }
+
+  const allowedFromSet = buildAllowedSet(uniqueDistrictData);
+  const allowedToSet = buildAllowedSet(uniqueTouristData);
+
+  function isSelectionAllowed(fieldName, value) {
+    const normalized = String(value || '').trim().toLowerCase();
+
+    if (!normalized) {
+      return true;
+    }
+
+    const allowed = fieldName === 'to' ? allowedToSet : allowedFromSet;
+    return allowed.has(normalized);
+  }
+
+  function validateRouteSelection(updateUi) {
+    const fromValue = String(fromInput && fromInput.value || '').trim();
+    const toValue = String(toInput && toInput.value || '').trim();
+    const needsTo = toField && !toField.hidden;
+
+    const fromOk = isSelectionAllowed('from', fromValue);
+    const toOk = !needsTo || isSelectionAllowed('to', toValue);
+
+    if (updateUi) {
+      setErrorVisible(fromInvalidError, Boolean(fromValue) && !fromOk);
+      setErrorVisible(toInvalidError, needsTo && Boolean(toValue) && !toOk);
+    }
+
+    return fromOk && toOk;
+  }
+
   function persistRouteInputs() {
     if (fromInput) {
       sessionStorage.setItem(routeFromKey, fromInput.value.trim());
@@ -2287,6 +2335,46 @@
     toInput.value = sessionStorage.getItem(routeToKey) || '';
   }
 
+  function applyPickedMapLocation(fieldName, fullAddress) {
+    const normalizedAddress = String(fullAddress || '').trim();
+
+    if (!normalizedAddress) {
+      return;
+    }
+
+    const targetInput = fieldName === 'to' ? toInput : fromInput;
+    const sourceData = fieldName === 'to' ? uniqueTouristData : uniqueDistrictData;
+    const parts = normalizedAddress.split(',').map(function (part) {
+      return part.trim();
+    }).filter(Boolean);
+    const ignoredTailCount = 4;
+    const trimmedParts = parts.length > ignoredTailCount ? parts.slice(0, Math.max(0, parts.length - ignoredTailCount)) : parts;
+    const placeGuess = trimmedParts.length ? trimmedParts[trimmedParts.length - 1] : '';
+    const matched = findMatchingOption(placeGuess, sourceData, normalizedAddress);
+
+    if (targetInput) {
+      targetInput.value = matched || normalizedAddress;
+    }
+
+    persistRouteInputs();
+  }
+
+  try {
+    const pickedFrom = sessionStorage.getItem('route-map-picked-from') || '';
+    if (pickedFrom && fromInput) {
+      applyPickedMapLocation('from', pickedFrom);
+    }
+    sessionStorage.removeItem('route-map-picked-from');
+  } catch (error) {}
+
+  try {
+    const pickedTo = sessionStorage.getItem('route-map-picked-to') || '';
+    if (pickedTo && toInput) {
+      applyPickedMapLocation('to', pickedTo);
+    }
+    sessionStorage.removeItem('route-map-picked-to');
+  } catch (error) {}
+
   function renderList(toggle, query) {
     const listId = toggle.getAttribute('aria-controls');
     const list = listId ? document.getElementById(listId) : null;
@@ -2298,6 +2386,27 @@
     const normalizedQuery = (query || '').trim().toLowerCase();
     const fieldName = toggle.getAttribute('data-dropdown') || 'from';
     const sourceData = fieldName === 'to' ? uniqueTouristData : uniqueDistrictData;
+
+    const utilityItems = [
+      '<button type="button" class="route-dropdown-item route-dropdown-item-utility" data-action="use-current-location" data-field="' + fieldName + '">' +
+        '<span class="route-dropdown-item-icon" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none"><path d="M12 2v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 19v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M2 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.2" stroke="currentColor" stroke-width="1.8"/></svg>' +
+        '</span>' +
+        '<span class="route-dropdown-item-text">' +
+          '<span class="route-dropdown-item-title">Allow location access</span>' +
+          '<span class="route-dropdown-item-subtitle">It provides your ' + (fieldName === 'to' ? 'dropoff' : 'pickup') + ' address</span>' +
+        '</span>' +
+      '</button>' +
+      '<button type="button" class="route-dropdown-item route-dropdown-item-utility" data-action="choose-on-map" data-field="' + fieldName + '">' +
+        '<span class="route-dropdown-item-icon" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.2 7-12.1A7 7 0 0 0 5 8.9C5 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg>' +
+        '</span>' +
+        '<span class="route-dropdown-item-text">' +
+          '<span class="route-dropdown-item-title">Choose on Map</span>' +
+        '</span>' +
+      '</button>'
+    ];
+
     const matches = sourceData.filter(function (item) {
       const displayName = normalizeDisplayName(item);
 
@@ -2310,14 +2419,117 @@
     });
 
     if (!matches.length) {
-      list.innerHTML = '<button type="button" class="route-dropdown-item is-placeholder">No places found</button>';
+      list.innerHTML = utilityItems.join('') + '<button type="button" class="route-dropdown-item is-placeholder">No places found</button>';
       return;
     }
 
-    list.innerHTML = matches.map(function (item) {
+    list.innerHTML = utilityItems.join('') + matches.map(function (item) {
       const displayName = normalizeDisplayName(item);
       return '<button type="button" class="route-dropdown-item" data-select-value="' + displayName + '">' + displayName + '</button>';
     }).join('');
+  }
+
+  function getBrowserLocation() {
+    return new Promise(function (resolve, reject) {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation not supported'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(function (position) {
+        resolve({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude
+        });
+      }, function () {
+        reject(new Error('Enable location permission'));
+      }, {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 2000
+      });
+    });
+  }
+
+  function reverseGeocode(lat, lon) {
+    const url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' +
+      encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon);
+
+    return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (response) {
+      if (!response.ok) {
+        throw new Error('Unable to read address');
+      }
+
+      return response.json();
+    });
+  }
+
+  function pickBestPlace(address) {
+    const candidates = [
+      address && address.village,
+      address && address.hamlet,
+      address && address.suburb,
+      address && address.neighbourhood,
+      address && address.municipality,
+      address && address.city_district,
+      address && address.town,
+      address && address.city,
+      address && address.county,
+      address && address.state_district
+    ].filter(Boolean);
+
+    return candidates.length ? String(candidates[0]) : '';
+  }
+
+  function findMatchingOption(placeName, sourceData, fullAddress) {
+    const addressParts = String(fullAddress || '')
+      .split(',')
+      .map(function (part) {
+        return part.trim();
+      })
+      .filter(Boolean);
+
+    const ignoredTailCount = 4;
+    const trimmedParts = addressParts.length > ignoredTailCount
+      ? addressParts.slice(0, Math.max(0, addressParts.length - ignoredTailCount))
+      : [];
+
+    const cleanedParts = trimmedParts.filter(function (part) {
+      const normalized = part.toLowerCase();
+      return normalized !== 'kerala' &&
+        normalized !== 'india' &&
+        !/^\d{5,6}$/.test(normalized);
+    });
+
+    const partsToCheck = cleanedParts;
+
+    function findForNeedle(needle) {
+      const normalizedNeedle = String(needle || '').trim().toLowerCase();
+
+      if (!normalizedNeedle) {
+        return '';
+      }
+
+      const match = sourceData.find(function (item) {
+        const displayName = normalizeDisplayName(item);
+        const primaryName = displayName.split(',')[0].trim().toLowerCase();
+        return primaryName === normalizedNeedle ||
+          primaryName.indexOf(normalizedNeedle) === 0 ||
+          normalizedNeedle.indexOf(primaryName) === 0;
+      });
+
+      return match ? normalizeDisplayName(match) : '';
+    }
+
+    for (let index = partsToCheck.length - 1; index >= 0; index -= 1) {
+      const match = findForNeedle(partsToCheck[index]);
+      if (match) {
+        return match;
+      }
+    }
+
+    const placeMatch = findForNeedle(placeName);
+    return placeMatch || '';
   }
 
   function closeDropdown(toggle) {
@@ -2413,9 +2625,72 @@
 
       persistRouteInputs();
     });
+
+    input.addEventListener('blur', function () {
+      validateRouteSelection(true);
+    });
   });
 
   document.addEventListener('click', function (event) {
+    const actionButton = event.target.closest('.route-dropdown-item[data-action]');
+
+    if (actionButton) {
+      const list = actionButton.closest('.route-dropdown-list');
+      const toggle = list ? document.querySelector('[aria-controls="' + list.id + '"]') : null;
+      const input = toggle ? toggle.querySelector('.route-search-input') : null;
+      const fieldName = actionButton.getAttribute('data-field') || (toggle && toggle.getAttribute('data-dropdown')) || 'from';
+
+      if (!toggle || !input) {
+        return;
+      }
+
+      const action = actionButton.getAttribute('data-action');
+
+      if (action === 'choose-on-map') {
+        try {
+          sessionStorage.setItem('route-map-return-url', window.location.href);
+        } catch (error) {}
+
+        window.location.href = 'preview.html?field=' + encodeURIComponent(fieldName);
+        return;
+      }
+
+      if (action !== 'use-current-location') {
+        return;
+      }
+
+      actionButton.disabled = true;
+      actionButton.classList.add('is-loading');
+
+      const previousValue = input.value;
+      input.value = 'Finding current location…';
+
+      const sourceData = fieldName === 'to' ? uniqueTouristData : uniqueDistrictData;
+
+      getBrowserLocation()
+        .then(function (coords) {
+          return reverseGeocode(coords.lat, coords.lon);
+        })
+        .then(function (data) {
+          const address = data && data.address ? data.address : {};
+          const bestPlace = pickBestPlace(address);
+          const fullAddress = String(data && data.display_name || '').trim();
+          const matched = findMatchingOption(bestPlace, sourceData, fullAddress);
+
+          input.value = matched || fullAddress || bestPlace || '';
+          persistRouteInputs();
+          closeDropdown(toggle);
+        })
+        .catch(function (error) {
+          input.value = previousValue;
+          actionButton.disabled = false;
+          actionButton.classList.remove('is-loading');
+          alert(error && error.message ? error.message : 'Unable to detect location');
+        });
+
+      return;
+    }
+
     const listItem = event.target.closest('.route-dropdown-item[data-select-value]');
 
     if (listItem) {
@@ -2428,6 +2703,7 @@
       }
 
       persistRouteInputs();
+      validateRouteSelection(true);
 
       if (toggle) {
         closeDropdown(toggle);

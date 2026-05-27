@@ -1,0 +1,570 @@
+(function () {
+  const SHARED_BANNER_STORAGE_KEY = 'vect-shared-banner-images-v1';
+      const ownerBannerImages = Array.from(document.querySelectorAll('#ownerBanner .owner-auth-banner-img'));
+      const defaultBannerImages = ownerBannerImages.map(function (imageNode, index) {
+        return {
+          src: String(imageNode.getAttribute('src') || '').trim(),
+          alt: String(imageNode.getAttribute('alt') || ('Banner slide ' + String(index + 1))).trim()
+        };
+      }).filter(function (item) {
+        return Boolean(item.src);
+      });
+
+      function loadSharedBannerImages() {
+        try {
+          const savedValue = localStorage.getItem(SHARED_BANNER_STORAGE_KEY);
+          const parsedValue = savedValue ? JSON.parse(savedValue) : [];
+          const normalizedValue = Array.isArray(parsedValue)
+            ? parsedValue.map(function (item, index) {
+                return {
+                  src: String(item && item.src || '').trim(),
+                  alt: String(item && item.alt || ('Banner slide ' + String(index + 1))).trim()
+                };
+              }).filter(function (item) {
+                return Boolean(item.src);
+              })
+            : [];
+
+          return normalizedValue.length ? normalizedValue : defaultBannerImages;
+        } catch (error) {
+          return defaultBannerImages;
+        }
+      }
+
+      function saveSharedBannerImages(imageList) {
+        try {
+          localStorage.setItem(SHARED_BANNER_STORAGE_KEY, JSON.stringify(imageList));
+        } catch (error) {
+          // Ignore storage issues.
+        }
+      }
+
+      function applyBannerImages(imageList) {
+        ownerBannerImages.forEach(function (imageNode, index) {
+          const nextImage = imageList[index % imageList.length];
+
+          if (!nextImage) {
+            return;
+          }
+
+          imageNode.src = nextImage.src;
+          imageNode.alt = nextImage.alt || ('Banner slide ' + String(index + 1));
+        });
+      }
+
+      const sharedBannerImages = loadSharedBannerImages();
+      applyBannerImages(sharedBannerImages);
+      saveSharedBannerImages(sharedBannerImages);
+      window.addEventListener('storage', function (event) {
+        if (event.key !== SHARED_BANNER_STORAGE_KEY) {
+          return;
+        }
+
+        applyBannerImages(loadSharedBannerImages());
+      });
+
+      const form = document.querySelector('[data-owner-auth-form]');
+      const emailInput = document.querySelector('[data-owner-email]');
+      const passwordField = document.querySelector('[data-owner-password-field]');
+      const passwordInput = document.querySelector('[data-owner-password]');
+      const passwordToggle = document.querySelector('[data-owner-password-toggle]');
+      const authExtras = document.querySelector('[data-owner-auth-extras]');
+      const authDividerText = document.querySelector('[data-owner-auth-divider-text]');
+      const errorText = document.querySelector('[data-owner-auth-error]');
+      const googleAuthButton = document.querySelector('[data-google-auth-btn]');
+      const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
+      const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
+      const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
+      const apiBaseFromMeta = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
+      const currentOrigin = /^https?:/i.test(window.location.origin || '') ? String(window.location.origin || '').trim().replace(/\/$/, '') : '';
+      const isLocalHost = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(window.location.hostname || '');
+      const apiBaseUrl = apiBaseFromMeta || 'https://go-kerala-backend.onrender.com';
+      const apiBaseCandidates = Array.from(new Set([
+        apiBaseUrl,
+        'https://go-kerala-backend.onrender.com',
+        'https://mymusics.onrender.com',
+        currentOrigin
+      ].map(function (value) {
+        return String(value || '').trim().replace(/\/$/, '');
+      }).filter(Boolean)));
+      const titleText = document.querySelector('[data-owner-auth-title]');
+      const subtitleText = document.querySelector('[data-owner-auth-subtitle]');
+      const submitButton = form ? form.querySelector('.owner-auth-submit') : null;
+      const pageParams = new URLSearchParams(window.location.search);
+      const modeParam = pageParams.get('mode');
+      const reviewItem = String(pageParams.get('review') || '').trim();
+      const returnPage = String(pageParams.get('return') || '').trim() || 'owner-details-done.html';
+      const REVIEW_ITEM_STORAGE_KEY = 'owner-review-item';
+      const REVIEW_RETURN_STORAGE_KEY = 'owner-review-return-page';
+      const hasCreatedAccount = localStorage.getItem('owner-account-created') === 'true';
+      const hasSavedLogin =
+        Boolean(String(localStorage.getItem('owner-login-email') || '').trim()) &&
+        Boolean(String(localStorage.getItem('owner-login-password') || ''));
+      const hasGoogleLogin =
+        String(localStorage.getItem('owner-login-method') || '').trim() === 'google' &&
+        Boolean(String(localStorage.getItem('owner-login-email') || '').trim());
+      const isEmailReview = reviewItem === 'owner-email';
+      let authMode = 'register';
+      let authSubmitInFlight = false;
+
+      if (isEmailReview) {
+        authMode = 'register';
+      } else if (modeParam === 'login' || modeParam === 'register') {
+        authMode = modeParam;
+      } else if (hasCreatedAccount && (hasSavedLogin || hasGoogleLogin)) {
+        authMode = 'login';
+      }
+
+      if (!form || !emailInput || !errorText) {
+        return;
+      }
+
+      function syncAuthMode() {
+        const isLogin = authMode === 'login';
+
+        if (titleText) {
+          titleText.textContent = isEmailReview ? 'Update email' : (isLogin ? 'Log in' : 'Create an account');
+        }
+
+        if (subtitleText) {
+          const embedQuery = new URLSearchParams(window.location.search).get('embed') === 'true' ? '&embed=true' : '';
+          
+    subtitleText.innerHTML = isEmailReview
+      ? 'Enter your updated email address to continue.'
+      : isLogin
+      ? 'Need an account? <a href="#" class="owner-auth-inline-link" data-owner-auth-switch-link>Create account</a>'
+      : 'Already have an account? <a href="#" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a>';
+
+    const switchLink = subtitleText.querySelector('[data-owner-auth-switch-link]');
+    if (switchLink) {
+      switchLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        authMode = isLogin ? 'register' : 'login';
+        syncAuthMode();
+        initializeGoogleAuth();
+      });
+    }
+  
+        }
+
+        if (submitButton) {
+          submitButton.textContent = isEmailReview ? 'Verify email' : (isLogin ? 'Log in' : 'Next');
+        }
+
+        if (passwordField) {
+          passwordField.style.display = isLogin ? '' : 'none';
+        }
+
+        if (isLogin) {
+          const savedEmail = String(localStorage.getItem('owner-login-email') || '').trim();
+          if (savedEmail && !emailInput.value.trim()) {
+            emailInput.value = savedEmail;
+          }
+        }
+        if (authExtras) {
+          authExtras.hidden = isEmailReview;
+        }
+
+        if (authDividerText) {
+          authDividerText.textContent = isLogin ? 'Or log in with' : 'Or register with';
+        }
+
+        if (!isLogin && passwordInput) {
+          passwordInput.value = '';
+          passwordInput.type = 'password';
+          if (passwordToggle) {
+            passwordToggle.classList.remove('is-visible');
+            passwordToggle.setAttribute('aria-label', 'Show password');
+          }
+        }
+
+      }
+
+      function hideError() {
+        errorText.hidden = true;
+      }
+
+      function showError(message) {
+        errorText.textContent = message;
+        errorText.hidden = false;
+      }
+
+      function storeOwnerSession(firstName, lastName, email) {
+        sessionStorage.setItem('owner-name', [firstName, lastName].filter(Boolean).join(' ').trim());
+        sessionStorage.setItem('owner-first-name', firstName);
+        sessionStorage.setItem('owner-last-name', lastName);
+        sessionStorage.setItem('owner-email', email);
+        sessionStorage.setItem('owner-api-base-url', apiBaseUrl);
+        localStorage.setItem('owner-authenticated', 'true');
+      }
+
+      function getVerificationPage() {
+        if (!isEmailReview) {
+          return 'verify.html';
+        }
+
+        const verifyUrl = new URL('verify.html', window.location.href);
+        verifyUrl.searchParams.set('review', reviewItem);
+        verifyUrl.searchParams.set('return', returnPage);
+        return verifyUrl.toString();
+      }
+
+      function getApiUrl(pathName) {
+        if (!apiBaseUrl) {
+          return pathName;
+        }
+
+        return apiBaseUrl + pathName;
+      }
+
+      function getApiUrlForBase(baseUrl, pathName) {
+        const safeBase = String(baseUrl || '').trim().replace(/\/$/, '');
+        const safePath = String(pathName || '').trim();
+
+        if (!safeBase) {
+          return safePath;
+        }
+
+        if (!safePath) {
+          return safeBase;
+        }
+
+        return safeBase + (safePath.charAt(0) === '/' ? safePath : '/' + safePath);
+      }
+
+      function fetchJsonFromApi(pathName, options) {
+        const bases = apiBaseCandidates.slice();
+
+        function tryNext() {
+          const baseUrl = bases.shift();
+
+          if (!baseUrl) {
+            return Promise.reject(new Error('Failed to reach the API.'));
+          }
+
+          return fetchJsonWithRetry(getApiUrlForBase(baseUrl, pathName), options).then(function (result) {
+            if (
+              result &&
+              !result.ok &&
+              (result.status === 404 || result.status === 502 || result.status === 503 || result.status === 504) &&
+              bases.length
+            ) {
+              return tryNext();
+            }
+
+            return result;
+          }).catch(function (error) {
+            if (bases.length) {
+              return tryNext();
+            }
+
+            throw error;
+          });
+        }
+
+        return tryNext();
+      }
+
+      function wait(ms) {
+        return new Promise(function (resolve) {
+          window.setTimeout(resolve, ms);
+        });
+      }
+
+      function fetchWithTimeout(url, options, timeoutMs) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(function () {
+          controller.abort();
+        }, timeoutMs || 15000);
+        const nextOptions = Object.assign({}, options || {}, { signal: controller.signal });
+
+        return fetch(url, nextOptions).finally(function () {
+          window.clearTimeout(timeout);
+        });
+      }
+
+      async function fetchJsonWithRetry(url, options, retryDelays) {
+        try {
+          const response = await fetchWithTimeout(url, options, 15000);
+          const text = await response.text();
+          let data = {};
+
+          try {
+            data = text ? JSON.parse(text) : {};
+          } catch (error) {
+            data = text ? { error: text } : {};
+          }
+
+          return {
+            ok: response.ok,
+            status: response.status,
+            data: data
+          };
+        } catch (error) {
+          if (error && error.name === 'AbortError') {
+            throw new Error('Request timed out. Please try again.');
+          }
+          console.error('Fetch error:', error);
+          throw error;
+        }
+      }
+
+      [emailInput, passwordInput].forEach(function (input) {
+        if (!input) {
+          return;
+        }
+
+        input.addEventListener('input', function () {
+          if (emailInput.value.trim()) {
+            hideError();
+          }
+        });
+      });
+
+      if (passwordToggle && passwordInput) {
+        passwordToggle.addEventListener('click', function () {
+          const shouldShow = passwordInput.type === 'password';
+          passwordInput.type = shouldShow ? 'text' : 'password';
+          passwordToggle.classList.toggle('is-visible', shouldShow);
+          passwordToggle.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+        });
+      }
+
+      function initializeGoogleAuth() {
+        if (!googleAuthButton) {
+          return;
+        }
+
+        if (!googleClientId || googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
+          return;
+        }
+
+        if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+          return;
+        }
+
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: function (response) {
+            if (!response || !response.credential) {
+              showError('Google sign-in did not return a valid credential.');
+              return;
+            }
+
+            fetchJsonFromApi('/api/auth/google', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                credential: response.credential
+              })
+            })
+              .then(function (result) {
+                if (!result.ok || !result.data || !result.data.user) {
+                  throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
+                }
+
+                const user = result.data.user;
+                hideError();
+                storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
+                localStorage.setItem('owner-login-method', 'google');
+                localStorage.setItem('owner-login-email', user.email || '');
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                credential: response.credential
+              })
+            })
+              .then(function (result) {
+                if (!result.ok || !result.data || !result.data.user) {
+                  throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
+                }
+
+                const user = result.data.user;
+                hideError();
+                storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
+                localStorage.setItem('owner-login-method', 'google');
+                localStorage.setItem('owner-login-email', user.email || '');
+                localStorage.setItem('owner-login-first-name', user.firstName || '');
+                localStorage.setItem('owner-login-last-name', user.lastName || '');
+                localStorage.removeItem('owner-login-password');
+
+                if (authMode === 'login') {
+                  if (localStorage.getItem('owner-account-created') !== 'true') {
+                    throw new Error('No account found. Please create an account first.');
+                  }
+                  window.location.href = 'owner-details.html';
+                  return;
+                }
+
+                window.location.href = 'owner-account-setup.html';
+              })
+              .catch(function (error) {
+                showError(error.message || 'Google sign-in failed.');
+              });
+          }
+        });
+
+        function renderGoogleButton() {
+          if (!authExtras || authExtras.hidden) {
+            return;
+          }
+
+          const buttonWidth = Math.max(300, Math.floor(googleAuthButton.getBoundingClientRect().width || googleAuthButton.clientWidth || 300));
+          googleAuthButton.innerHTML = '';
+          window.google.accounts.id.renderButton(googleAuthButton, {
+            theme: 'outline',
+            size: 'large',
+            text: authMode === 'login' ? 'signin_with' : 'signup_with',
+            shape: 'rectangular',
+            width: buttonWidth
+          });
+        }
+
+        renderGoogleButton();
+        window.addEventListener('resize', renderGoogleButton);
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (authSubmitInFlight) {
+          return;
+        }
+
+        const contact = emailInput.value.trim();
+        const isLogin = authMode === 'login';
+
+        if (!contact) {
+          showError('Please fill your email.');
+          if (!contact) {
+            emailInput.focus();
+          }
+          return;
+        }
+
+        if (isLogin) {
+          if (localStorage.getItem('owner-account-created') !== 'true') {
+            showError('No account found. Please create an account first.');
+            return;
+          }
+
+          const password = passwordInput ? String(passwordInput.value || '') : '';
+          const savedEmail = String(localStorage.getItem('owner-login-email') || '').trim().toLowerCase();
+          const savedPassword = String(localStorage.getItem('owner-login-password') || '');
+          const savedMethod = String(localStorage.getItem('owner-login-method') || '').trim().toLowerCase();
+          const inputEmail = contact.toLowerCase();
+
+          if (savedMethod === 'google' && savedEmail === inputEmail) {
+            showError('This account uses Google login. Please use the Google button below.');
+            return;
+          }
+
+          if (!password) {
+            showError('Please enter your password.');
+            if (passwordInput) {
+              passwordInput.focus();
+            }
+            return;
+          }
+
+          if (!savedEmail || !savedPassword) {
+            showError('No account found. Please create an account first.');
+            return;
+          }
+
+          if (savedEmail !== inputEmail || savedPassword !== password) {
+            showError('Invalid email or password.');
+            return;
+          }
+
+          sessionStorage.setItem('owner-email', contact);
+          localStorage.setItem('owner-authenticated', 'true');
+          hideError();
+          window.location.href = 'owner-details.html';
+          return;
+        }
+
+        if (submitButton) {
+          authSubmitInFlight = true;
+          submitButton.disabled = true;
+          submitButton.textContent = 'Please wait...';
+        }
+
+        const submitGuardTimer = window.setTimeout(function () {
+          authSubmitInFlight = false;
+          if (!submitButton) {
+            return;
+          }
+          submitButton.disabled = false;
+          syncAuthMode();
+        }, 20000);
+
+        fetchJsonFromApi('/api/auth/request-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contact: contact
+          })
+        })
+          .then(function (result) {
+            if (!result.ok) {
+              throw new Error((result.data && result.data.error) || 'Unable to send OTP.');
+            }
+
+            const contactValue = (result.data && result.data.contact) ? String(result.data.contact) : contact;
+            hideError();
+            storeOwnerSession('', '', contactValue);
+            localStorage.setItem('owner-login-method', 'email');
+            if (isEmailReview) {
+              sessionStorage.setItem(REVIEW_ITEM_STORAGE_KEY, reviewItem);
+              sessionStorage.setItem(REVIEW_RETURN_STORAGE_KEY, returnPage);
+            } else {
+              sessionStorage.removeItem(REVIEW_ITEM_STORAGE_KEY);
+              sessionStorage.removeItem(REVIEW_RETURN_STORAGE_KEY);
+            }
+            window.location.href = getVerificationPage();
+          })
+          .catch(function (error) {
+            showError(error && error.message ? error.message : 'Unable to send OTP right now. Please try again.');
+          })
+          .finally(function () {
+            window.clearTimeout(submitGuardTimer);
+            authSubmitInFlight = false;
+            if (!submitButton) {
+              return;
+            }
+            submitButton.disabled = false;
+            syncAuthMode();
+          });
+      });
+
+      syncAuthMode();
+
+  if (window.Swiper) {
+    const ownerBannerNode = document.getElementById('ownerBanner');
+    if (ownerBannerNode) {
+      new Swiper(ownerBannerNode, {
+        loop: true,
+        speed: 700,
+        autoplay: {
+          delay: 3000,
+          disableOnInteraction: false
+        },
+        slidesPerView: 1,
+        pagination: {
+          el: '.owner-auth-banner-pagination',
+          clickable: true
+        }
+      });
+    }
+  }
+
+  window.addEventListener('load', function () {
+    initializeGoogleAuth();
+  });
+})();

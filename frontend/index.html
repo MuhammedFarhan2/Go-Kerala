@@ -9,6 +9,8 @@
   </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="style.css?v=20260406-2">
+  <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -40,13 +42,58 @@
         </g>
       </svg>
     </button>
-    <aside class="account-panel" id="account-panel" aria-hidden="true">
-      <nav class="account-panel-nav">
-        <a href="owner.html" class="account-option">Owner Login</a>
-        <a href="#" class="account-option">History</a>
-        <a href="#" class="account-option">About</a>
-        <a href="#" class="account-option">Feedback</a>
-      </nav>
+    <aside class="account-panel" id="account-panel" aria-hidden="true" style="padding: 0;">
+      <div class="owner-auth-panel" style="padding: 24px 20px; box-shadow: none; max-width: 100%; border-radius: 0;">
+        <div class="owner-auth-panel-head">
+          <h1 class="owner-auth-title" data-owner-auth-title>Create an account</h1>
+          <p class="owner-auth-subtitle" data-owner-auth-subtitle>Already have an account? <a href="owner.html?mode=login" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a></p>
+        </div>
+
+        <form class="owner-auth-form" data-owner-auth-form novalidate>
+          <label class="owner-auth-field">
+            <span class="owner-auth-field-label">Email</span>
+            <input type="text" class="owner-auth-input" placeholder="Email" autocomplete="username" data-owner-email>
+          </label>
+
+          <label class="owner-auth-field" data-owner-password-field style="display:none;">
+            <span class="owner-auth-field-label">Password</span>
+            <span class="owner-auth-password-wrap">
+              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Password" autocomplete="current-password" data-owner-password>
+              <button type="button" class="owner-auth-password-toggle" data-owner-password-toggle aria-label="Show password">
+                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+                </svg>
+                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  <path d="M10.6 6.2A11 11 0 0 1 12 6c6.4 0 10 6 10 6a17.8 17.8 0 0 1-4.3 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M6.6 6.6C4 8.2 2 12 2 12s3.6 6 10 6c1.8 0 3.3-.5 4.6-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+                </svg>
+              </button>
+            </span>
+          </label>
+
+          <p class="owner-auth-error" data-owner-auth-error hidden>Please fill your email.</p>
+
+          <button type="submit" class="owner-auth-submit">Next</button>
+        </form>
+
+        <div data-owner-auth-extras>
+          <div class="owner-auth-divider">
+            <span></span>
+            <p data-owner-auth-divider-text>Or register with</p>
+            <span></span>
+          </div>
+
+          <div class="owner-auth-socials" aria-label="Owner social account access">
+            <div class="owner-auth-google-wrap">
+              <div class="owner-auth-google-button" data-google-auth-btn></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </aside>
     <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
   </header>
@@ -240,5 +287,7 @@
       });
     })();
   </script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="auth.js"></script>
 </body>
 </html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Manual Location Picker</title>
+
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial;
+    }
+
+    #map{
+      height:100vh;
+      width:100%;
+    }
+
+    .info-box{
+      position:absolute;
+      top:10px;
+      left:10px;
+      z-index:999;
+      background:white;
+      padding:15px;
+      border-radius:12px;
+      box-shadow:0 0 15px rgba(0,0,0,0.2);
+      width:320px;
+    }
+
+    .info-box h2{
+      margin:0 0 10px;
+      font-size:18px;
+    }
+
+    .info-box p{
+      margin:6px 0;
+      font-size:14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="info-box">
+    <h2>📍 Selected Location</h2>
+
+    <p><b>Latitude:</b> <span id="lat">Click on map</span></p>
+    <p><b>Longitude:</b> <span id="lon">Click on map</span></p>
+
+    <p><b>Village:</b> <span id="village">-</span></p>
+    <p><b>Town:</b> <span id="town">-</span></p>
+    <p><b>City/Region:</b> <span id="city">-</span></p>
+
+    <p><b>Full Address:</b></p>
+    <p id="address">Click anywhere on map</p>
+
+    <button id="useLocation" type="button" disabled style="margin-top:10px;width:100%;border:none;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:600;background:#111;color:#fff;opacity:.55;cursor:not-allowed;">
+      Use this location
+    </button>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    const pageParams = new URLSearchParams(window.location.search);
+    const targetField = pageParams.get('field') === 'to' ? 'to' : 'from';
+    const useBtn = document.getElementById('useLocation');
+    let selectedFullAddress = '';
+
+    // Default map view (India center)
+    var map = L.map('map').setView([10.8505, 76.2711], 7);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let marker;
+
+    // click event on map
+    map.on('click', async function(e){
+
+      let lat = e.latlng.lat;
+      let lon = e.latlng.lng;
+
+      document.getElementById("lat").innerText = lat.toFixed(6);
+      document.getElementById("lon").innerText = lon.toFixed(6);
+
+      // move marker
+      if(marker){
+        marker.setLatLng([lat, lon]);
+      } else {
+        marker = L.marker([lat, lon]).addTo(map);
+      }
+
+      // reverse geocode
+      let response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+      );
+
+      let data = await response.json();
+
+      let addr = data.address || {};
+
+      let village =
+        addr.village ||
+        addr.hamlet ||
+        addr.suburb ||
+        addr.neighbourhood ||
+        "Not Available";
+
+      let town =
+        addr.town ||
+        addr.municipality ||
+        "Not Available";
+
+      let city =
+        addr.city ||
+        addr.county ||
+        addr.state_district ||
+        "Not Available";
+
+      let fullAddress = data.display_name || "Not Available";
+
+      document.getElementById("village").innerText = village;
+      document.getElementById("town").innerText = town;
+      document.getElementById("city").innerText = city;
+      document.getElementById("address").innerText = fullAddress;
+
+      selectedFullAddress = fullAddress;
+      if (useBtn) {
+        useBtn.disabled = !selectedFullAddress || selectedFullAddress === 'Not Available';
+        useBtn.style.opacity = useBtn.disabled ? '.55' : '1';
+        useBtn.style.cursor = useBtn.disabled ? 'not-allowed' : 'pointer';
+      }
+
+      marker.bindPopup(`
+        <b>📍 Selected Location</b><br><br>
+        <b>Village:</b> ${village}<br>
+        <b>Town:</b> ${town}<br>
+        <b>City:</b> ${city}<br><br>
+        ${fullAddress}
+      `).openPopup();
+
+    });
+
+    if (useBtn) {
+      useBtn.addEventListener('click', function () {
+        if (!selectedFullAddress || selectedFullAddress === 'Not Available') {
+          return;
+        }
+
+        try {
+          sessionStorage.setItem('route-map-picked-' + targetField, selectedFullAddress);
+        } catch (error) {}
+
+        let returnUrl = '';
+        try {
+          returnUrl = sessionStorage.getItem('route-map-return-url') || '';
+          sessionStorage.removeItem('route-map-return-url');
+        } catch (error) {}
+
+        window.location.href = returnUrl || 'route.html';
+      });
+    }
+  </script>
+
+</body>
+</html>
