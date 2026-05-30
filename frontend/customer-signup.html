@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Sign Up</title>
+    <script>
+      document.documentElement.classList.add('show-page-loader');
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <link rel="stylesheet" href="style.css?v=20260406-2">
+    <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
+  </head>
+  <body>
+    <div class="page-loader" id="page-loader" aria-hidden="true">
+      <div class="page-loader-content">
+        <div class="page-loader-spinner" aria-hidden="true">
+          <span class="page-loader-ring page-loader-ring-outer"></span>
+          <span class="page-loader-ring page-loader-ring-middle"></span>
+          <span class="page-loader-ring page-loader-ring-inner"></span>
+        </div>
+        <p class="page-loader-text">Loading</p>
+      </div>
+    </div>
+
+    <header class="header owner-auth-header">
+      <div class="owner-auth-brand-lockup">
+        <h1 class="logo owner-auth-logo">VECT</h1>
+        <p class="owner-auth-logo-sub">MOVERS</p>
+      </div>
+      <nav class="header-switch" aria-label="Account switch">
+        <a class="header-switch-link" href="customer-login.html" aria-label="Open customer login">Log in</a>
+      </nav>
+    </header>
+
+    <main class="owner-main owner-auth-main">
+      <section class="owner-auth-shell" aria-label="Customer sign up">
+        <div class="owner-auth-visual" aria-hidden="true">
+          <div class="swiper owner-auth-banner" id="customerSignupBanner" aria-label="Homepage banner slider">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide">
+                <div class="owner-auth-banner-card">
+                  <img class="owner-auth-banner-img" src="https://picsum.photos/id/1011/1400/700" alt="Banner slide 1" loading="lazy">
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="owner-auth-banner-card">
+                  <img class="owner-auth-banner-img" src="https://picsum.photos/id/1025/1400/700" alt="Banner slide 2" loading="lazy">
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="owner-auth-banner-card">
+                  <img class="owner-auth-banner-img" src="https://picsum.photos/id/1035/1400/700" alt="Banner slide 3" loading="lazy">
+                </div>
+              </div>
+            </div>
+            <div class="swiper-pagination owner-auth-banner-pagination" aria-label="Slider navigation dots"></div>
+          </div>
+        </div>
+
+        <div class="owner-auth-panel">
+          <div class="owner-auth-panel-head">
+            <h1 class="owner-auth-title">Create an account</h1>
+            <p class="owner-auth-subtitle">Already have an account? <a href="customer-login.html" class="owner-auth-inline-link">Log in</a></p>
+          </div>
+
+          <form class="owner-auth-form" id="customer-signup-form" novalidate>
+            <label class="owner-auth-field">
+              <span class="owner-auth-field-label">Email</span>
+              <input type="text" class="owner-auth-input" placeholder="Email" autocomplete="username" required>
+            </label>
+
+            <div class="customer-auth-actions" aria-label="Account actions">
+              <a href="index.html" class="customer-auth-skip">Skip</a>
+              <button type="submit" class="owner-auth-submit customer-auth-submit">Next</button>
+            </div>
+          </form>
+
+          <div data-owner-auth-extras>
+            <div class="owner-auth-divider">
+              <span></span>
+              <p data-owner-auth-divider-text>Or sign up with</p>
+              <span></span>
+            </div>
+
+            <div class="owner-auth-socials" aria-label="Customer social account access">
+              <div class="owner-auth-google-wrap">
+                <div class="owner-auth-google-button" data-google-auth-btn></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="script.js?v=20260413-1"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+      (function () {
+        const form = document.getElementById('customer-signup-form');
+        const googleAuthButton = document.querySelector('[data-google-auth-btn]');
+        const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
+        const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
+
+        function decodeJwtPayload(token) {
+          try {
+            const parts = String(token || '').split('.');
+            if (parts.length < 2) return null;
+            const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const json = decodeURIComponent(
+              atob(payload)
+                .split('')
+                .map(function (c) {
+                  return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join('')
+            );
+            return JSON.parse(json);
+          } catch (error) {
+            return null;
+          }
+        }
+
+        function handleGoogleCredential(credential) {
+          const payload = decodeJwtPayload(credential);
+          const email = payload && payload.email ? String(payload.email).trim() : '';
+          const name = payload && payload.name ? String(payload.name).trim() : '';
+          const picture = payload && payload.picture ? String(payload.picture).trim() : '';
+          if (email) {
+            localStorage.setItem('customer-login-method', 'google');
+            localStorage.setItem('customer-login-email', email);
+            localStorage.setItem('customer-login-name', name || email.split('@')[0] || 'Customer');
+            localStorage.setItem('customer-login-picture', picture);
+            localStorage.setItem('customer-authenticated', 'true');
+          }
+          window.location.href = 'index.html';
+        }
+
+        function initializeGoogleAuth() {
+          if (!googleAuthButton) return;
+          if (!googleClientId || googleClientId === 'YOUR_GOOGLE_CLIENT_ID') return;
+          if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
+
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: function (response) {
+              handleGoogleCredential(response && response.credential ? response.credential : '');
+            }
+          });
+
+          googleAuthButton.innerHTML = '';
+          window.google.accounts.id.renderButton(googleAuthButton, {
+            theme: 'outline',
+            size: 'large',
+            text: 'signup_with',
+            shape: 'rectangular',
+            width: Math.max(300, Math.floor(googleAuthButton.getBoundingClientRect().width || googleAuthButton.clientWidth || 300))
+          });
+        }
+
+        if (form) {
+          form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const emailField = form.querySelector('input[type="text"]');
+            const email = emailField ? String(emailField.value || '').trim() : '';
+            if (email) {
+              localStorage.setItem('customer-login-method', 'email');
+              localStorage.setItem('customer-login-email', email);
+              localStorage.setItem('customer-login-name', email.split('@')[0] || 'Customer');
+              localStorage.removeItem('customer-login-picture');
+              localStorage.setItem('customer-authenticated', 'true');
+            }
+            window.location.href = 'index.html';
+          });
+        }
+
+        if (window.Swiper) {
+          new Swiper('#customerSignupBanner', {
+            loop: true,
+            speed: 700,
+            autoplay: { delay: 3000, disableOnInteraction: false },
+            slidesPerView: 1,
+            pagination: { el: '.owner-auth-banner-pagination', clickable: true }
+          });
+        }
+
+        window.addEventListener('load', function () {
+          initializeGoogleAuth();
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -29,73 +29,17 @@
       <h1 class="logo">VECT</h1>
       <p class="logo-sub">MOVERS</p>
     </div>
-    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
-      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
-        <defs>
-          <clipPath id="circle-clip">
-            <circle cx="12" cy="12" r="11.75"/>
-          </clipPath>
-        </defs>
-        <g clip-path="url(#circle-clip)">
-          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#fff"/>
-        </g>
-      </svg>
+    <nav class="header-switch" aria-label="Site switch" data-customer-header-links>
+      <a class="header-switch-link header-switch-link--login" href="customer-login.html" aria-label="Open login page">Log in</a>
+      <a class="header-switch-link header-switch-link--signup" href="customer-signup.html" aria-label="Open create account page">Sign up</a>
+    </nav>
+    <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
+      <span class="customer-account-avatar" data-customer-avatar aria-hidden="true"></span>
+      <span class="customer-account-labels">
+        <span class="customer-account-label" data-customer-account-label>Account</span>
+        <span class="customer-account-subtitle" data-customer-account-subtitle>Sign in</span>
+      </span>
     </button>
-    <aside class="account-panel" id="account-panel" aria-hidden="true" style="padding: 0;">
-      <div class="owner-auth-panel" style="padding: 24px 20px; box-shadow: none; max-width: 100%; border-radius: 0;">
-        <div class="owner-auth-panel-head">
-          <h1 class="owner-auth-title" data-owner-auth-title>Create an account</h1>
-          <p class="owner-auth-subtitle" data-owner-auth-subtitle>Already have an account? <a href="owner.html?mode=login" class="owner-auth-inline-link" data-owner-auth-switch-link>Log in</a></p>
-        </div>
-
-        <form class="owner-auth-form" data-owner-auth-form novalidate>
-          <label class="owner-auth-field">
-            <span class="owner-auth-field-label">Email</span>
-            <input type="text" class="owner-auth-input" placeholder="Email" autocomplete="username" data-owner-email>
-          </label>
-
-          <label class="owner-auth-field" data-owner-password-field style="display:none;">
-            <span class="owner-auth-field-label">Password</span>
-            <span class="owner-auth-password-wrap">
-              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Password" autocomplete="current-password" data-owner-password>
-              <button type="button" class="owner-auth-password-toggle" data-owner-password-toggle aria-label="Show password">
-                <svg class="owner-auth-password-icon owner-auth-password-icon-show" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
-                </svg>
-                <svg class="owner-auth-password-icon owner-auth-password-icon-hide" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                  <path d="M10.6 6.2A11 11 0 0 1 12 6c6.4 0 10 6 10 6a17.8 17.8 0 0 1-4.3 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                  <path d="M6.6 6.6C4 8.2 2 12 2 12s3.6 6 10 6c1.8 0 3.3-.5 4.6-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
-                </svg>
-              </button>
-            </span>
-          </label>
-
-          <p class="owner-auth-error" data-owner-auth-error hidden>Please fill your email.</p>
-
-          <button type="submit" class="owner-auth-submit">Next</button>
-        </form>
-
-        <div data-owner-auth-extras>
-          <div class="owner-auth-divider">
-            <span></span>
-            <p data-owner-auth-divider-text>Or register with</p>
-            <span></span>
-          </div>
-
-          <div class="owner-auth-socials" aria-label="Owner social account access">
-            <div class="owner-auth-google-wrap">
-              <div class="owner-auth-google-button" data-google-auth-btn></div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </aside>
-    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
   </header>
 
   <main class="main">
@@ -132,7 +76,7 @@
       </div>
     </section>
 
-    <section class="container" aria-label="Vehicle categories">
+    <section class="container" id="customer-cards" aria-label="Vehicle categories">
       <h2 class="vehicle-prompt">Select a Vehicle Category</h2>
 
       <div class="product-container" aria-label="Available vehicle categories">
@@ -194,9 +138,210 @@
     </section>
   </main>
 
+  <aside class="customer-account-panel" id="customer-account-panel" hidden aria-hidden="true">
+    <div class="customer-account-panel-head">
+      <div class="customer-account-profile">
+        <div class="customer-account-profile-avatar" data-customer-panel-avatar aria-hidden="true"></div>
+        <div>
+          <p class="customer-account-panel-name" data-customer-panel-name>Guest</p>
+          <p class="customer-account-panel-email" data-customer-panel-email>Sign in to save your profile</p>
+        </div>
+      </div>
+      <button type="button" class="customer-account-close" id="customer-account-close" aria-label="Close account panel">×</button>
+    </div>
+
+    <div class="customer-account-panel-body">
+      <label class="customer-account-field">
+        <span>Name</span>
+        <input type="text" class="customer-account-input" data-customer-name-input placeholder="Your name">
+      </label>
+
+      <label class="customer-account-field">
+        <span>Profile image URL</span>
+        <input type="text" class="customer-account-input" data-customer-picture-input placeholder="https://...">
+      </label>
+
+      <div class="customer-account-actions">
+        <button type="button" class="customer-account-save" data-customer-save>Save profile</button>
+        <a class="customer-account-feedback" href="mailto:vectmovers@gmail.com?subject=VECT%20Movers%20Feedback" data-customer-feedback>Feedback</a>
+        <button type="button" class="customer-account-logout" data-customer-logout>Log out</button>
+      </div>
+    </div>
+  </aside>
+  <div class="customer-account-backdrop" id="customer-account-backdrop" hidden></div>
+
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="script.js?v=20260413-1"></script>
   <script>
+    (function () {
+      const accountBtn = document.getElementById('customer-account-btn');
+      const accountPanel = document.getElementById('customer-account-panel');
+      const closeBtn = document.getElementById('customer-account-close');
+      const backdrop = document.getElementById('customer-account-backdrop');
+      const headerLinks = document.querySelector('[data-customer-header-links]');
+      const avatarNodes = Array.from(document.querySelectorAll('[data-customer-avatar], [data-customer-panel-avatar]'));
+      const labelNode = document.querySelector('[data-customer-account-label]');
+      const subtitleNode = document.querySelector('[data-customer-account-subtitle]');
+      const panelNameNode = document.querySelector('[data-customer-panel-name]');
+      const panelEmailNode = document.querySelector('[data-customer-panel-email]');
+      const nameInput = document.querySelector('[data-customer-name-input]');
+      const pictureInput = document.querySelector('[data-customer-picture-input]');
+      const saveButton = document.querySelector('[data-customer-save]');
+      const logoutButton = document.querySelector('[data-customer-logout]');
+      const feedbackLink = document.querySelector('[data-customer-feedback]');
+
+      function getCustomerProfile() {
+        const authenticated = localStorage.getItem('customer-authenticated') === 'true';
+        const method = String(localStorage.getItem('customer-login-method') || '').trim();
+        const email = String(localStorage.getItem('customer-login-email') || '').trim();
+        const name = String(localStorage.getItem('customer-login-name') || '').trim() || (email ? email.split('@')[0] : '');
+        const picture = String(localStorage.getItem('customer-login-picture') || '').trim();
+
+        return {
+          authenticated: authenticated,
+          method: method,
+          email: email,
+          name: name || 'Customer',
+          picture: picture
+        };
+      }
+
+      function getFallbackInitial(name) {
+        return String(name || 'C').trim().charAt(0).toUpperCase() || 'C';
+      }
+
+      function setAvatar(node, profile) {
+        if (!node) {
+          return;
+        }
+
+        node.innerHTML = '';
+
+        if (profile.picture) {
+          const image = document.createElement('img');
+          image.src = profile.picture;
+          image.alt = profile.name || 'Profile picture';
+          image.className = 'customer-account-avatar-image';
+          node.appendChild(image);
+          return;
+        }
+
+        node.textContent = getFallbackInitial(profile.name);
+      }
+
+      function openPanel() {
+        if (!accountPanel || !backdrop) {
+          return;
+        }
+
+        accountPanel.hidden = false;
+        accountPanel.setAttribute('aria-hidden', 'false');
+        backdrop.hidden = false;
+      }
+
+      function closePanel() {
+        if (!accountPanel || !backdrop) {
+          return;
+        }
+
+        accountPanel.hidden = true;
+        accountPanel.setAttribute('aria-hidden', 'true');
+        backdrop.hidden = true;
+      }
+
+      function renderCustomerAccount() {
+        const profile = getCustomerProfile();
+        const signedIn = profile.authenticated;
+
+        if (accountBtn) {
+          accountBtn.hidden = !signedIn;
+        }
+
+        if (headerLinks) {
+          headerLinks.hidden = signedIn;
+        }
+
+        if (!signedIn) {
+          closePanel();
+          return;
+        }
+
+        avatarNodes.forEach(function (node) {
+          setAvatar(node, profile);
+        });
+
+        if (labelNode) {
+          labelNode.textContent = profile.name;
+        }
+
+        if (subtitleNode) {
+          subtitleNode.textContent = profile.method === 'google' ? 'Google signed in' : 'Signed in';
+        }
+
+        if (panelNameNode) {
+          panelNameNode.textContent = profile.name;
+        }
+
+        if (panelEmailNode) {
+          panelEmailNode.textContent = profile.email || 'Connected account';
+        }
+
+        if (nameInput) {
+          nameInput.value = profile.name;
+        }
+
+        if (pictureInput) {
+          pictureInput.value = profile.picture;
+        }
+      }
+
+      if (accountBtn) {
+        accountBtn.addEventListener('click', function () {
+          renderCustomerAccount();
+          openPanel();
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closePanel);
+      }
+
+      if (backdrop) {
+        backdrop.addEventListener('click', closePanel);
+      }
+
+      if (saveButton) {
+        saveButton.addEventListener('click', function () {
+          const name = String(nameInput && nameInput.value || '').trim();
+          const picture = String(pictureInput && pictureInput.value || '').trim();
+
+          localStorage.setItem('customer-login-name', name || 'Customer');
+
+          if (picture) {
+            localStorage.setItem('customer-login-picture', picture);
+          } else {
+            localStorage.removeItem('customer-login-picture');
+          }
+
+          renderCustomerAccount();
+        });
+      }
+
+      if (logoutButton) {
+        logoutButton.addEventListener('click', function () {
+          localStorage.removeItem('customer-authenticated');
+          localStorage.removeItem('customer-login-method');
+          localStorage.removeItem('customer-login-email');
+          localStorage.removeItem('customer-login-name');
+          localStorage.removeItem('customer-login-picture');
+          closePanel();
+          renderCustomerAccount();
+        });
+      }
+
+      renderCustomerAccount();
+    })();
+
     (function () {
       const bannerNode = document.getElementById('flipBanner');
       const bannerImages = Array.from(document.querySelectorAll('#flipBanner .owner-auth-banner-img'));

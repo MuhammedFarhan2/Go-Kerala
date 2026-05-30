@@ -373,6 +373,19 @@
     }
   });
   backdrop.addEventListener('click', closePanel);
+
+  window.addEventListener('load', function () {
+    const currentPath = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (currentPath !== 'index.html') {
+      return;
+    }
+
+    openPanel();
+    const emailInput = accountPanel.querySelector('[data-owner-email]');
+    if (emailInput && typeof emailInput.focus === 'function') {
+      emailInput.focus();
+    }
+  });
 })();
 
 (function () {
@@ -2470,15 +2483,37 @@
       address && address.hamlet,
       address && address.suburb,
       address && address.neighbourhood,
+      address && address.quarter,
+      address && address.residential,
       address && address.municipality,
       address && address.city_district,
       address && address.town,
+      address && address.city_block,
       address && address.city,
       address && address.county,
       address && address.state_district
     ].filter(Boolean);
 
     return candidates.length ? String(candidates[0]) : '';
+  }
+
+  function pickBestCurrentLocationLabel(address, fullAddress) {
+    const place = pickBestPlace(address);
+    const parts = String(fullAddress || '')
+      .split(',')
+      .map(function (part) {
+        return part.trim();
+      })
+      .filter(Boolean);
+
+    const preciseParts = parts.filter(function (part) {
+      const normalized = part.toLowerCase();
+      return normalized !== 'kerala' &&
+        normalized !== 'india' &&
+        !/^\d{5,6}$/.test(normalized);
+    });
+
+    return place || (preciseParts.length ? preciseParts[0] : '') || fullAddress || '';
   }
 
   function findMatchingOption(placeName, sourceData, fullAddress) {
@@ -2671,13 +2706,13 @@
         .then(function (coords) {
           return reverseGeocode(coords.lat, coords.lon);
         })
-        .then(function (data) {
-          const address = data && data.address ? data.address : {};
-          const bestPlace = pickBestPlace(address);
+      .then(function (data) {
+        const address = data && data.address ? data.address : {};
           const fullAddress = String(data && data.display_name || '').trim();
+          const bestPlace = pickBestCurrentLocationLabel(address, fullAddress);
           const matched = findMatchingOption(bestPlace, sourceData, fullAddress);
 
-          input.value = matched || fullAddress || bestPlace || '';
+          input.value = matched || bestPlace || fullAddress || '';
           persistRouteInputs();
           closeDropdown(toggle);
         })
@@ -3286,6 +3321,40 @@
     nameTabLabel.classList.toggle('is-long', primaryTabLabel.length > 8);
   }
 
+  function syncDesktopFilterPaneVisibility() {
+    if (window.innerWidth < 1024) {
+      const activeTab = panel.dataset.activeTab || 'name';
+
+      panes.forEach(function (pane) {
+        const isActive = pane.getAttribute('data-submit-pane') === activeTab;
+
+        if (!isActive && pane.contains(document.activeElement)) {
+          const fallbackTab = tabs.find(function (button) {
+            return button.getAttribute('data-submit-tab') === activeTab;
+          }) || tabs[0];
+
+          if (fallbackTab && typeof fallbackTab.focus === 'function') {
+            fallbackTab.focus();
+          } else if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+          }
+        }
+
+        pane.hidden = !isActive;
+        pane.classList.toggle('is-active', isActive);
+        pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+      });
+
+      return;
+    }
+
+    panes.forEach(function (pane) {
+      pane.hidden = false;
+      pane.setAttribute('aria-hidden', 'false');
+      pane.classList.add('is-active');
+    });
+  }
+
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
@@ -3419,10 +3488,21 @@
 
     panes.forEach(function (pane) {
       const isActive = pane.getAttribute('data-submit-pane') === target;
+
+      if (!isActive && pane.contains(document.activeElement)) {
+        if (typeof targetTab.focus === 'function') {
+          targetTab.focus();
+        } else if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+      }
+
       pane.hidden = !isActive;
       pane.classList.toggle('is-active', isActive);
       pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');
     });
+
+    syncDesktopFilterPaneVisibility();
   }
 
   tabs.forEach(function (tab) {
@@ -3483,23 +3563,155 @@
   }
 
   function updateFilterCountBadge() {
+    let checkedCount = 0;
+
+    categoryButtons.forEach(function (button) {
+      const category = button.getAttribute('data-filter-category');
+      const group = category ? document.querySelector('.submit-filter-group[data-filter-group="' + category + '"]') : null;
+      const categoryCount = group ? Array.from(group.querySelectorAll('input[type="checkbox"]:checked')).length : 0;
+      let categoryBadge = button.querySelector('.submit-filter-category-count');
+
+      if (categoryCount > 0 && !categoryBadge) {
+        categoryBadge = document.createElement('span');
+        categoryBadge.className = 'submit-filter-category-count';
+        categoryBadge.setAttribute('aria-hidden', 'true');
+        button.appendChild(categoryBadge);
+      }
+
+      if (categoryBadge) {
+        categoryBadge.textContent = String(categoryCount);
+        categoryBadge.hidden = categoryCount === 0;
+      }
+
+      checkedCount += categoryCount;
+    });
+
     if (!filterCountBadge) {
       return;
     }
-
-    const checkedCount = Array.from(document.querySelectorAll('.submit-filter-group input[type="checkbox"]:checked')).length;
 
     filterCountBadge.textContent = String(checkedCount);
     filterCountBadge.hidden = checkedCount === 0;
   }
 
+  function getActiveFilterValues() {
+    return Array.from(document.querySelectorAll('.submit-filter-group input[type="checkbox"]:checked')).map(function (checkbox) {
+      return String(checkbox.value || '').trim();
+    }).filter(Boolean);
+  }
+
+  function getCardFilterText(card) {
+    return String(card ? card.textContent : '').toLowerCase();
+  }
+
+  function getCardSeatCount(card) {
+    const text = getCardFilterText(card);
+    const match = text.match(/(\d+)\s*seats?/i);
+    return match ? Number(match[1]) : null;
+  }
+
+  function getCardPrice(card) {
+    const priceNode = card ? card.querySelector('.submit-demo-price') : null;
+    const text = String(priceNode ? priceNode.textContent : card ? card.textContent : '').replace(/,/g, '');
+    const match = text.match(/₹\s*(\d+(?:\.\d+)?)/);
+    return match ? Number(match[1]) : null;
+  }
+
+  function cardMatchesSelectedFilters(card, selectedFilters) {
+    if (!selectedFilters.length) {
+      return true;
+    }
+
+    const text = getCardFilterText(card);
+    const seatCount = getCardSeatCount(card);
+    const price = getCardPrice(card);
+
+    return selectedFilters.some(function (filterValue) {
+      if (filterValue === 'seats-12-20') {
+        return seatCount !== null && seatCount >= 12 && seatCount <= 20;
+      }
+
+      if (filterValue === 'seats-21-30') {
+        return seatCount !== null && seatCount >= 21 && seatCount <= 30;
+      }
+
+      if (filterValue === 'seats-31-40') {
+        return seatCount !== null && seatCount >= 31 && seatCount <= 40;
+      }
+
+      if (filterValue === 'seats-41-plus') {
+        return seatCount !== null && seatCount >= 41;
+      }
+
+      if (filterValue === 'ac-yes') {
+        return text.indexOf(' ac') > -1 || text.indexOf('a/c') > -1 || text.indexOf('air conditioned') > -1;
+      }
+
+      if (filterValue === 'ac-no') {
+        return text.indexOf('non-ac') > -1 || text.indexOf('non ac') > -1 || text.indexOf('without ac') > -1;
+      }
+
+      if (filterValue === 'ac-sleeper') {
+        return text.indexOf('sleeper') > -1;
+      }
+
+      if (filterValue === 'price-under-10000') {
+        return price !== null && price < 10000;
+      }
+
+      if (filterValue === 'price-10000-15000') {
+        return price !== null && price >= 10000 && price <= 15000;
+      }
+
+      if (filterValue === 'price-15000-20000') {
+        return price !== null && price >= 15000 && price <= 20000;
+      }
+
+      if (filterValue === 'price-20000-plus') {
+        return price !== null && price > 20000;
+      }
+
+      if (filterValue === 'dealer-raj-travels') {
+        return text.indexOf('raj travels') > -1;
+      }
+
+      if (filterValue === 'dealer-cityline') {
+        return text.indexOf('cityline') > -1;
+      }
+
+      if (filterValue === 'dealer-skyway') {
+        return text.indexOf('skyway') > -1;
+      }
+
+      if (filterValue === 'dealer-metro') {
+        return text.indexOf('metro') > -1;
+      }
+
+      return false;
+    });
+  }
+
+  function applySelectedFilters() {
+    const selectedFilters = getActiveFilterValues();
+
+    demoCards.forEach(function (card) {
+      const shouldShow = cardMatchesSelectedFilters(card, selectedFilters);
+      card.hidden = !shouldShow;
+    });
+
+    updateFilterCountBadge();
+  }
+
   if (clearButton) {
     clearButton.addEventListener('click', function () {
-      const activeGroup = document.querySelector('.submit-filter-group.is-active');
-      const checkboxes = activeGroup ? Array.from(activeGroup.querySelectorAll('input[type="checkbox"]')) : [];
+      const checkboxes = Array.from(document.querySelectorAll('.submit-filter-group input[type="checkbox"]'));
 
       checkboxes.forEach(function (checkbox) {
         checkbox.checked = false;
+      });
+
+      demoCards.forEach(function (card) {
+        card.hidden = false;
       });
 
       updateFilterCountBadge();
@@ -3508,7 +3720,7 @@
 
   if (applyButton) {
     applyButton.addEventListener('click', function () {
-      updateFilterCountBadge();
+      applySelectedFilters();
 
       const nameTab = tabs.find(function (tab) {
         return tab.getAttribute('data-submit-tab') === 'name';
@@ -3521,6 +3733,8 @@
   }
 
   updateFilterCountBadge();
+  syncDesktopFilterPaneVisibility();
+  window.addEventListener('resize', syncDesktopFilterPaneVisibility);
 
   function setDemoCardExpanded(card, expanded) {
     demoCards.forEach(function (otherCard) {

@@ -14,6 +14,7 @@
     body{
       margin:0;
       font-family:Arial;
+      overflow:hidden;
     }
 
     #map{
@@ -42,13 +43,183 @@
       margin:6px 0;
       font-size:14px;
     }
+
+    .location-title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin:0 0 10px;
+      font-size:20px;
+      font-weight:700;
+    }
+
+    .location-title-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+      width:18px;
+      height:18px;
+      color:#e94b7a;
+    }
+
+    .location-title-icon svg{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+
+    .location-title-icon svg path,
+    .location-title-icon svg circle{
+      stroke:#ec407a;
+      fill:#ec407a;
+    }
+
+    .location-action,
+    #useLocation{
+      margin-top:10px;
+      width:100%;
+      border:none;
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:15px;
+      font-weight:600;
+      background:#111;
+      color:#fff;
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .location-action:not(:disabled),
+    #useLocation:not(:disabled){
+      opacity:1;
+      cursor:pointer;
+    }
+
+    @media (max-width: 680px){
+      body{
+        overflow:hidden;
+      }
+
+      #map{
+        height:100vh;
+      }
+
+      .info-box{
+        position:fixed;
+        left:14px;
+        right:14px;
+        bottom:92px;
+        top:auto;
+        width:auto;
+        margin:0;
+        max-height:42vh;
+        overflow:auto;
+        z-index:999;
+        padding:14px 14px 12px;
+        border-radius:18px;
+      }
+
+      .info-box h2{
+        font-size:16px;
+        margin-bottom:8px;
+      }
+
+      .info-box p{
+        margin:3px 0;
+        font-size:12.5px;
+        line-height:1.25;
+      }
+
+      .info-box p b{
+        font-weight:700;
+      }
+
+      #lat,
+      #lon{
+        display:none;
+      }
+
+      .location-title-icon{
+        width:14px;
+        height:14px;
+      }
+
+      .location-action,
+      #useLocation{
+        position:fixed;
+        left:14px;
+        right:14px;
+        bottom:14px;
+        width:auto;
+        margin-top:0;
+        padding:12px 14px;
+        border-radius:12px;
+        z-index:1000;
+      }
+
+      #address{
+        margin-top:4px;
+        font-size:12.8px;
+        line-height:1.35;
+      }
+
+      .address-label{
+        display:none;
+      }
+
+      body.has-selection #map{
+        display:block;
+      }
+
+      body:not(.has-selection) .location-title-icon,
+      body:not(.has-selection) .info-box p{
+        display:none;
+      }
+
+      body:not(.has-selection) .info-box{
+        display:none;
+      }
+
+      body:not(.has-selection) #useLocation{
+        display:none;
+      }
+
+      body.has-selection .address-label{
+        display:none;
+      }
+
+      body.has-selection .info-box{
+        bottom:70px;
+        max-height:30vh;
+      }
+
+      body.has-selection #useLocation{
+        left:50%;
+        right:auto;
+        bottom:14px;
+        width:min(340px, calc(100vw - 40px)) !important;
+        padding:12px 14px !important;
+        font-size:14px !important;
+        transform:translateX(-50%);
+      }
+
+    }
   </style>
 </head>
 
 <body>
 
   <div class="info-box">
-    <h2>📍 Selected Location</h2>
+    <h2 class="location-title">
+      <span class="location-title-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 21s6-5.3 6-10.2A6 6 0 1 0 6 10.8C6 15.7 12 21 12 21Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <circle cx="12" cy="10.8" r="2.1" fill="currentColor"/>
+        </svg>
+      </span>
+      <span>Selected Location</span>
+    </h2>
 
     <p><b>Latitude:</b> <span id="lat">Click on map</span></p>
     <p><b>Longitude:</b> <span id="lon">Click on map</span></p>
@@ -57,7 +228,7 @@
     <p><b>Town:</b> <span id="town">-</span></p>
     <p><b>City/Region:</b> <span id="city">-</span></p>
 
-    <p><b>Full Address:</b></p>
+    <p class="address-label"><b>Full Address:</b></p>
     <p id="address">Click anywhere on map</p>
 
     <button id="useLocation" type="button" disabled style="margin-top:10px;width:100%;border:none;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:600;background:#111;color:#fff;opacity:.55;cursor:not-allowed;">
@@ -73,6 +244,7 @@
     const pageParams = new URLSearchParams(window.location.search);
     const targetField = pageParams.get('field') === 'to' ? 'to' : 'from';
     const useBtn = document.getElementById('useLocation');
+    const body = document.body;
     let selectedFullAddress = '';
 
     // Default map view (India center)
@@ -135,6 +307,7 @@
       document.getElementById("address").innerText = fullAddress;
 
       selectedFullAddress = fullAddress;
+      body.classList.add('has-selection');
       if (useBtn) {
         useBtn.disabled = !selectedFullAddress || selectedFullAddress === 'Not Available';
         useBtn.style.opacity = useBtn.disabled ? '.55' : '1';
@@ -174,3 +347,5 @@
 
 </body>
 </html>
+
+

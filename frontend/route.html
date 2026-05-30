@@ -75,12 +75,12 @@
             </svg>
           </span>
         </div>
-        <p class="route-field-hint">Enter Village Name only</p>
+        <p class="route-field-hint">Enter village name only</p>
+        <p class="route-field-error" id="route-from-invalid" hidden>Please enter a village name from the list</p>
+        <p class="route-field-error" id="route-from-error" hidden>Please select a location</p>
         <div class="route-dropdown-list" id="from-list" hidden>
           <button type="button" class="route-dropdown-item is-placeholder">Waiting for your From list</button>
         </div>
-        <p class="route-field-error" id="route-from-error" hidden>Select Pickup Location</p>
-        <p class="route-field-error" id="route-from-invalid" hidden>Enter a Valid Location</p>
       </div>
 
       <div class="route-field" data-route-field="to">
@@ -107,12 +107,12 @@
             </svg>
           </span>
         </div>
-        <p class="route-field-hint">Enter Village Name only</p>
+        <p class="route-field-hint">Enter village name only</p>
+        <p class="route-field-error" id="route-to-invalid" hidden>Please enter a village name from the list</p>
+        <p class="route-field-error" id="route-to-error" hidden>Please select a location</p>
         <div class="route-dropdown-list" id="to-list" hidden>
           <button type="button" class="route-dropdown-item is-placeholder">Waiting for your To list</button>
         </div>
-        <p class="route-field-error" id="route-to-error" hidden>Select Dropoff Location</p>
-        <p class="route-field-error" id="route-to-invalid" hidden>Enter a Valid Location</p>
       </div>
 
       <div class="route-field">
@@ -141,7 +141,7 @@
           </button>
           <div class="route-calendar-months" data-calendar-months></div>
         </section>
-        <p class="route-field-error" id="route-date-error" hidden>Select Date or Dates</p>
+        <p class="route-field-error" id="route-date-error" hidden>Select Date/Dates</p>
         <div class="route-select-action">
           <a href="submit.html" class="route-select-btn">SUBMIT</a>
         </div>
