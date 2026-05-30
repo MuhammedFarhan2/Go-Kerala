@@ -198,7 +198,7 @@ button.submit-demo-expand-btn.is-view {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #3f7f1b;
+  background: #111;
   color: #fff;
   font-weight: 700;
 }
@@ -214,6 +214,12 @@ button.submit-demo-expand-btn.is-view {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+.customer-account-avatar-icon {
+  width: 70%;
+  height: 70%;
   display: block;
 }
 
@@ -316,12 +322,24 @@ button.submit-demo-expand-btn.is-view {
   display: grid;
   gap: 16px;
   height: 100%;
+  justify-items: center;
+}
+
+.customer-account-panel-profile {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  text-align: center;
+  padding-top: 34px;
+  gap: 0;
 }
 
 .customer-account-menu {
   display: grid;
   gap: 10px;
   padding-top: 6px;
+  width: 100%;
 }
 
 .customer-account-menu-item {
@@ -351,6 +369,7 @@ button.submit-demo-expand-btn.is-view {
   display: grid;
   gap: 12px;
   margin-top: auto;
+  width: 100%;
 }
 
 .customer-account-field {
