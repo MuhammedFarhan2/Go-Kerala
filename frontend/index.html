@@ -35,10 +35,6 @@
     </nav>
     <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
       <span class="customer-account-avatar" data-customer-avatar aria-hidden="true"></span>
-      <span class="customer-account-labels">
-        <span class="customer-account-label" data-customer-account-label>Account</span>
-        <span class="customer-account-subtitle" data-customer-account-subtitle>Sign in</span>
-      </span>
     </button>
   </header>
 
@@ -180,8 +176,6 @@
       const backdrop = document.getElementById('customer-account-backdrop');
       const headerLinks = document.querySelector('[data-customer-header-links]');
       const avatarNodes = Array.from(document.querySelectorAll('[data-customer-avatar], [data-customer-panel-avatar]'));
-      const labelNode = document.querySelector('[data-customer-account-label]');
-      const subtitleNode = document.querySelector('[data-customer-account-subtitle]');
       const panelNameNode = document.querySelector('[data-customer-panel-name]');
       const panelEmailNode = document.querySelector('[data-customer-panel-email]');
       const nameInput = document.querySelector('[data-customer-name-input]');
@@ -189,6 +183,9 @@
       const saveButton = document.querySelector('[data-customer-save]');
       const logoutButton = document.querySelector('[data-customer-logout]');
       const feedbackLink = document.querySelector('[data-customer-feedback]');
+      let editButton = document.querySelector('[data-customer-edit-account]');
+      let editorNode = document.querySelector('[data-customer-editor]');
+      const panelBody = accountPanel ? accountPanel.querySelector('.customer-account-panel-body') : null;
 
       function getCustomerProfile() {
         const authenticated = localStorage.getItem('customer-authenticated') === 'true';
@@ -249,7 +246,58 @@
         backdrop.hidden = true;
       }
 
+      function ensureDrawerLayout() {
+        if (!panelBody || editButton) {
+          return;
+        }
+
+        const profileNode = document.createElement('div');
+        profileNode.className = 'customer-account-panel-profile';
+        profileNode.innerHTML = [
+          '<div class="customer-account-profile-avatar" data-customer-panel-avatar aria-hidden="true"></div>',
+          '<p class="customer-account-panel-name" data-customer-panel-name>Guest</p>',
+          '<p class="customer-account-panel-email" data-customer-panel-email>Sign in to save your profile</p>'
+        ].join('');
+
+        const menuNode = document.createElement('div');
+        menuNode.className = 'customer-account-menu';
+        menuNode.innerHTML = [
+          '<button type="button" class="customer-account-menu-item" data-customer-edit-account>Account</button>',
+          '<a class="customer-account-menu-item" href="mailto:vectmovers@gmail.com?subject=VECT%20Movers%20Feedback" data-customer-feedback>Feedback</a>',
+          '<button type="button" class="customer-account-menu-item is-danger" data-customer-logout>Log out</button>'
+        ].join('');
+
+        const editor = document.createElement('div');
+        editor.className = 'customer-account-editor';
+        editor.dataset.customerEditor = 'true';
+        editor.hidden = true;
+        editor.innerHTML = [
+          '<label class="customer-account-field"><span>Name</span><input type="text" class="customer-account-input" data-customer-name-input placeholder="Your name"></label>',
+          '<label class="customer-account-field"><span>Profile image URL</span><input type="text" class="customer-account-input" data-customer-picture-input placeholder="https://..."></label>',
+          '<button type="button" class="customer-account-save" data-customer-save>Save profile</button>'
+        ].join('');
+
+        panelBody.innerHTML = '';
+        panelBody.appendChild(profileNode);
+        panelBody.appendChild(menuNode);
+        panelBody.appendChild(editor);
+        panelBody.appendChild(closeBtn);
+
+        editButton = panelBody.querySelector('[data-customer-edit-account]');
+        editorNode = panelBody.querySelector('[data-customer-editor]');
+      }
+
       function renderCustomerAccount() {
+        ensureDrawerLayout();
+        const profileAvatarNode = accountPanel ? accountPanel.querySelector('[data-customer-panel-avatar]') : null;
+        const panelNameNodeNow = accountPanel ? accountPanel.querySelector('[data-customer-panel-name]') : null;
+        const panelEmailNodeNow = accountPanel ? accountPanel.querySelector('[data-customer-panel-email]') : null;
+        const currentNameInput = accountPanel ? accountPanel.querySelector('[data-customer-name-input]') : null;
+        const currentPictureInput = accountPanel ? accountPanel.querySelector('[data-customer-picture-input]') : null;
+        const currentSaveButton = accountPanel ? accountPanel.querySelector('[data-customer-save]') : null;
+        const currentLogoutButton = accountPanel ? accountPanel.querySelector('[data-customer-logout]') : null;
+        const currentEditButton = accountPanel ? accountPanel.querySelector('[data-customer-edit-account]') : null;
+        const currentEditorNode = accountPanel ? accountPanel.querySelector('[data-customer-editor]') : null;
         const profile = getCustomerProfile();
         const signedIn = profile.authenticated;
 
@@ -269,29 +317,59 @@
         avatarNodes.forEach(function (node) {
           setAvatar(node, profile);
         });
+        setAvatar(profileAvatarNode, profile);
 
-        if (labelNode) {
-          labelNode.textContent = profile.name;
+        if (panelNameNodeNow) {
+          panelNameNodeNow.textContent = profile.name;
         }
 
-        if (subtitleNode) {
-          subtitleNode.textContent = profile.method === 'google' ? 'Google signed in' : 'Signed in';
+        if (panelEmailNodeNow) {
+          panelEmailNodeNow.textContent = profile.email || 'Connected account';
         }
 
-        if (panelNameNode) {
-          panelNameNode.textContent = profile.name;
+        if (currentNameInput) {
+          currentNameInput.value = profile.name;
         }
 
-        if (panelEmailNode) {
-          panelEmailNode.textContent = profile.email || 'Connected account';
+        if (currentPictureInput) {
+          currentPictureInput.value = profile.picture;
         }
 
-        if (nameInput) {
-          nameInput.value = profile.name;
+        if (currentEditButton) {
+          currentEditButton.onclick = function () {
+            if (currentEditorNode) {
+              currentEditorNode.hidden = !currentEditorNode.hidden;
+            }
+          };
         }
 
-        if (pictureInput) {
-          pictureInput.value = profile.picture;
+        if (currentSaveButton) {
+          currentSaveButton.onclick = function () {
+            const name = String(currentNameInput && currentNameInput.value || '').trim();
+            const picture = String(currentPictureInput && currentPictureInput.value || '').trim();
+
+            localStorage.setItem('customer-login-name', name || 'Customer');
+
+            if (picture) {
+              localStorage.setItem('customer-login-picture', picture);
+            } else {
+              localStorage.removeItem('customer-login-picture');
+            }
+
+            renderCustomerAccount();
+          };
+        }
+
+        if (currentLogoutButton) {
+          currentLogoutButton.onclick = function () {
+            localStorage.removeItem('customer-authenticated');
+            localStorage.removeItem('customer-login-method');
+            localStorage.removeItem('customer-login-email');
+            localStorage.removeItem('customer-login-name');
+            localStorage.removeItem('customer-login-picture');
+            closePanel();
+            renderCustomerAccount();
+          };
         }
       }
 
@@ -310,32 +388,13 @@
         backdrop.addEventListener('click', closePanel);
       }
 
-      if (saveButton) {
-        saveButton.addEventListener('click', function () {
-          const name = String(nameInput && nameInput.value || '').trim();
-          const picture = String(pictureInput && pictureInput.value || '').trim();
-
-          localStorage.setItem('customer-login-name', name || 'Customer');
-
-          if (picture) {
-            localStorage.setItem('customer-login-picture', picture);
-          } else {
-            localStorage.removeItem('customer-login-picture');
+      if (editButton) {
+        editButton.addEventListener('click', function () {
+          if (!editorNode) {
+            return;
           }
 
-          renderCustomerAccount();
-        });
-      }
-
-      if (logoutButton) {
-        logoutButton.addEventListener('click', function () {
-          localStorage.removeItem('customer-authenticated');
-          localStorage.removeItem('customer-login-method');
-          localStorage.removeItem('customer-login-email');
-          localStorage.removeItem('customer-login-name');
-          localStorage.removeItem('customer-login-picture');
-          closePanel();
-          renderCustomerAccount();
+          editorNode.hidden = !editorNode.hidden;
         });
       }
 

@@ -178,12 +178,11 @@ button.submit-demo-expand-btn.is-view {
 .customer-account-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
   margin-left: auto;
   border: 1px solid #111;
   border-radius: 999px;
   background: #fff;
-  padding: 6px 11px 6px 6px;
+  padding: 6px;
   color: #111;
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(17, 17, 17, 0.08);
@@ -199,14 +198,14 @@ button.submit-demo-expand-btn.is-view {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: linear-gradient(135deg, #111, #5b5b5b);
+  background: #3f7f1b;
   color: #fff;
   font-weight: 700;
 }
 
 .customer-account-avatar {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
 }
 
@@ -216,23 +215,6 @@ button.submit-demo-expand-btn.is-view {
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.customer-account-labels {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.1;
-}
-
-.customer-account-label {
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.customer-account-subtitle {
-  font-size: 0.74rem;
-  color: #5d5d5d;
 }
 
 .header-switch {
@@ -269,13 +251,17 @@ button.submit-demo-expand-btn.is-view {
 
 .customer-account-panel {
   position: fixed;
-  top: 78px;
+  top: 18px;
   right: 18px;
   z-index: 5000;
-  width: min(360px, calc(100vw - 36px));
+  width: min(26vw, 360px);
+  min-width: 300px;
+  height: calc(100vh - 36px);
   border: 1px solid #111;
-  background: #fff;
+  background: #2f2f2f;
   box-shadow: 0 24px 60px rgba(17, 17, 17, 0.16);
+  border-radius: 20px;
+  overflow: hidden;
 }
 
 .customer-account-panel[hidden],
@@ -283,104 +269,118 @@ button.submit-demo-expand-btn.is-view {
   display: none;
 }
 
-.customer-account-panel-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid #e7e7e7;
-}
-
-.customer-account-profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.customer-account-panel-shell {
+  position: relative;
+  height: 100%;
+  padding: 18px;
+  background: #2f2f2f;
+  color: #fff;
 }
 
 .customer-account-profile-avatar {
-  width: 54px;
-  height: 54px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
-  font-size: 1.15rem;
+  font-size: 1.85rem;
+  margin: 0 auto;
 }
 
 .customer-account-panel-name {
-  font-size: 1rem;
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: #111;
+  color: #fff;
 }
 
 .customer-account-panel-email {
-  margin-top: 2px;
+  margin-top: 4px;
+  text-align: center;
   font-size: 0.85rem;
-  color: #666;
+  color: #d4d4d4;
 }
 
 .customer-account-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   border: 0;
   background: transparent;
   font-size: 1.6rem;
   line-height: 1;
-  color: #111;
+  color: #fff;
   cursor: pointer;
 }
 
 .customer-account-panel-body {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 16px;
+  height: 100%;
+}
+
+.customer-account-menu {
+  display: grid;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.customer-account-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #4a4a4a;
+  border-radius: 12px;
+  background: #3a3a3a;
+  color: #fff;
+  text-decoration: none;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.customer-account-menu-item.is-danger {
+  border-color: #4d2b2b;
+  background: #211313;
+  color: #ffd9d9;
+}
+
+.customer-account-editor {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
 }
 
 .customer-account-field {
   display: grid;
   gap: 6px;
   font-size: 0.9rem;
-  color: #333;
+  color: #f0f0f0;
 }
 
 .customer-account-input {
   width: 100%;
-  border: 1px solid #d6d6d6;
+  border: 1px solid #555;
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 0.95rem;
+  background: #fff;
+  color: #111;
 }
 
-.customer-account-actions {
-  display: grid;
-  gap: 10px;
-}
-
-.customer-account-save,
-.customer-account-feedback,
-.customer-account-logout {
+.customer-account-save {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
   border-radius: 12px;
-  text-decoration: none;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.customer-account-save {
   border: 1px solid #111;
   background: #111;
   color: #fff;
-}
-
-.customer-account-feedback {
-  border: 1px solid #d8d8d8;
-  background: #fff;
-  color: #111;
-}
-
-.customer-account-logout {
-  border: 1px solid #f0b4b4;
-  background: #fff5f5;
-  color: #8d1f1f;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .customer-account-backdrop {
