@@ -370,24 +370,6 @@
                 storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
                 localStorage.setItem('owner-login-method', 'google');
                 localStorage.setItem('owner-login-email', user.email || '');
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                credential: response.credential
-              })
-            })
-              .then(function (result) {
-                if (!result.ok || !result.data || !result.data.user) {
-                  throw new Error((result.data && result.data.error) || 'Google sign-in failed.');
-                }
-
-                const user = result.data.user;
-                hideError();
-                storeOwnerSession(user.firstName || '', user.lastName || '', user.email || '');
-                localStorage.setItem('owner-login-method', 'google');
-                localStorage.setItem('owner-login-email', user.email || '');
                 localStorage.setItem('owner-login-first-name', user.firstName || '');
                 localStorage.setItem('owner-login-last-name', user.lastName || '');
                 localStorage.removeItem('owner-login-password');

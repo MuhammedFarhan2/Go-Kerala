@@ -8,7 +8,7 @@
     document.documentElement.classList.add('show-page-loader');
   </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-  <link rel="stylesheet" href="style.css?v=20260406-2">
+  <link rel="stylesheet" href="style.css?v=20260531-1">
   <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
   <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
 </head>
@@ -33,8 +33,19 @@
       <a class="header-switch-link header-switch-link--login" href="customer-login.html" aria-label="Open login page">Log in</a>
       <a class="header-switch-link header-switch-link--signup" href="customer-signup.html" aria-label="Open create account page">Sign up</a>
     </nav>
+
     <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
-      <span class="customer-account-avatar" data-customer-avatar aria-hidden="true"></span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip-submit">
+            <circle cx="12" cy="12" r="11.75"/>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip-submit)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#fff"/>
+        </g>
+      </svg>
     </button>
   </header>
 
@@ -167,7 +178,7 @@
   <div class="customer-account-backdrop" id="customer-account-backdrop" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script src="script.js?v=20260413-1"></script>
+  <script src="script.js?v=20260531-1"></script>
   <script>
     (function () {
       const accountBtn = document.getElementById('customer-account-btn');
@@ -175,7 +186,7 @@
       const closeBtn = document.getElementById('customer-account-close');
       const backdrop = document.getElementById('customer-account-backdrop');
       const headerLinks = document.querySelector('[data-customer-header-links]');
-      const avatarNodes = Array.from(document.querySelectorAll('[data-customer-avatar], [data-customer-panel-avatar]'));
+      const avatarNodes = Array.from(document.querySelectorAll('[data-customer-panel-avatar]'));
       const panelNameNode = document.querySelector('[data-customer-panel-name]');
       const panelEmailNode = document.querySelector('[data-customer-panel-email]');
       const nameInput = document.querySelector('[data-customer-name-input]');
@@ -203,7 +214,7 @@
         };
       }
 
-      function setAvatar(node, profile) {
+      function setPanelAvatar(node, profile) {
         if (!node) {
           return;
         }
@@ -219,12 +230,7 @@
           return;
         }
 
-        node.innerHTML = [
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="customer-account-avatar-icon" aria-hidden="true" focusable="false">',
-          '<circle cx="17.5" cy="6.5" r="2" fill="#111"></circle>',
-          '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#111"></path>',
-          '</svg>'
-        ].join('');
+        setHeaderIcon(node);
       }
 
       function openPanel() {
@@ -316,9 +322,8 @@
         }
 
         avatarNodes.forEach(function (node) {
-          setAvatar(node, profile);
+          setPanelAvatar(node, profile);
         });
-        setAvatar(profileAvatarNode, profile);
 
         if (panelNameNodeNow) {
           panelNameNodeNow.textContent = profile.name;

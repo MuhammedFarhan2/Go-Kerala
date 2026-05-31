@@ -179,13 +179,24 @@ button.submit-demo-expand-btn.is-view {
   display: flex;
   align-items: center;
   margin-left: auto;
-  border: 1px solid #111;
-  border-radius: 999px;
-  background: #fff;
-  padding: 6px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0;
   color: #111;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(17, 17, 17, 0.08);
+  box-shadow: none !important;
+}
+
+.header .customer-account-btn,
+.header .customer-account-btn:hover,
+.header .customer-account-btn:focus,
+.header .customer-account-btn:active {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 .customer-account-btn[hidden] {
@@ -204,9 +215,10 @@ button.submit-demo-expand-btn.is-view {
 }
 
 .customer-account-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 0;
+  background: transparent !important;
 }
 
 .customer-account-avatar-image,
@@ -221,6 +233,17 @@ button.submit-demo-expand-btn.is-view {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.customer-account-btn svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.header .customer-account-btn svg {
+  width: 35px;
+  height: 30px;
 }
 
 .header-switch {
@@ -1105,12 +1128,26 @@ html {
   background: none;
   border: none;
   cursor: pointer;
+  padding: 0;
+  box-shadow: none;
 }
 
 .user-icon svg path,
 .user-icon svg circle {
   fill: #111;
   stroke: #111;
+}
+
+.submit-page .user-icon {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+}
+
+.submit-page .user-icon svg {
+  display: block;
+  width: 28px;
+  height: 28px;
 }
 
 /* Account sliding panel */
