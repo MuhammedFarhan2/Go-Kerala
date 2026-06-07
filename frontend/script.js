@@ -347,6 +347,9 @@
     return;
   }
 
+  const signedIn = localStorage.getItem('customer-authenticated') === 'true';
+  accountBtn.hidden = !signedIn;
+
   function openPanel() {
     header.classList.add('panel-open');
     accountPanel.classList.add('is-open');
@@ -366,6 +369,10 @@
   }
 
   accountBtn.addEventListener('click', function () {
+    if (!signedIn) {
+      return;
+    }
+
     if (accountPanel.classList.contains('is-open')) {
       closePanel();
     } else {
@@ -406,6 +413,8 @@
   const routeFromKey = 'route-location-from';
   const routeToKey = 'route-location-to';
   let suppressedToggle = null;
+  const openStreetSuggestionCache = new Map();
+  const openStreetRequestTokens = new Map();
   const singleLocationScopes = new Set(['excavator', 'backhoe']);
 
   if (counterLabel) {
@@ -2348,6 +2357,157 @@
     toInput.value = sessionStorage.getItem(routeToKey) || '';
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function normalizeOpenStreetResult(item) {
+    const displayName = String(item && item.display_name || '').trim();
+    const address = item && item.address ? item.address : {};
+    const primary = String(
+      address.village ||
+      address.hamlet ||
+      address.suburb ||
+      address.neighbourhood ||
+      address.town ||
+      address.city ||
+      address.county ||
+      displayName
+    ).trim();
+
+    return primary || displayName;
+  }
+
+  function fetchOpenStreetSuggestions(fieldName, query) {
+    const normalizedQuery = String(query || '').trim().toLowerCase();
+    const cacheKey = fieldName + '::' + normalizedQuery;
+
+    if (openStreetSuggestionCache.has(cacheKey)) {
+      return openStreetSuggestionCache.get(cacheKey);
+    }
+
+    if (!normalizedQuery) {
+      const emptyResult = Promise.resolve([]);
+      openStreetSuggestionCache.set(cacheKey, emptyResult);
+      return emptyResult;
+    }
+
+    const requestToken = String(Date.now()) + Math.random().toString(36).slice(2);
+    openStreetRequestTokens.set(fieldName, requestToken);
+
+    function requestSuggestions(searchText) {
+      const broadUrl = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&layer=address,poi,natural,manmade,railway&limit=50&q=' +
+        encodeURIComponent(searchText);
+      const indiaUrl = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=in&layer=address,poi,natural,manmade,railway&limit=50&q=' +
+        encodeURIComponent(searchText);
+
+      function fetchJson(url) {
+        return fetch(url, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        }).then(function (response) {
+          if (!response.ok) {
+            throw new Error('Unable to load OpenStreet suggestions.');
+          }
+
+          return response.json();
+        });
+      }
+
+      return fetchJson(broadUrl).then(function (results) {
+        if (Array.isArray(results) && results.length) {
+          return results;
+        }
+
+        return fetchJson(indiaUrl);
+      });
+    }
+
+    function normalizeResults(results) {
+      const normalized = Array.isArray(results) ? results.map(normalizeOpenStreetResult).filter(Boolean) : [];
+      const seen = new Set();
+
+      return normalized.filter(function (item) {
+        const key = String(item || '').trim().toLowerCase();
+
+        if (!key || seen.has(key)) {
+          return false;
+        }
+
+        seen.add(key);
+        return true;
+      });
+    }
+
+    const queryVariants = [];
+    const rawQuery = String(query || '').trim();
+    const tokens = rawQuery.split(/\s+/).filter(Boolean);
+
+    if (rawQuery) {
+      queryVariants.push(rawQuery);
+    }
+
+    if (tokens.length > 1) {
+      queryVariants.push(tokens.join(' '));
+      queryVariants.push(tokens.slice(0, Math.max(1, tokens.length - 1)).join(' '));
+      queryVariants.push(tokens[tokens.length - 1]);
+    }
+
+    if (tokens.length > 2) {
+      queryVariants.push(tokens.slice(0, 2).join(' '));
+      queryVariants.push(tokens.slice(-2).join(' '));
+    }
+
+    const request = queryVariants.reduce(function (promiseChain, searchText) {
+      return promiseChain.then(function (accumulated) {
+        if (accumulated.length >= 20) {
+          return accumulated;
+        }
+
+        return requestSuggestions(searchText).then(function (results) {
+          if (openStreetRequestTokens.get(fieldName) !== requestToken) {
+            return [];
+          }
+
+          return accumulated.concat(normalizeResults(results));
+        });
+      });
+    }, Promise.resolve([]))
+      .then(function (results) {
+        if (openStreetRequestTokens.get(fieldName) !== requestToken) {
+          return [];
+        }
+
+        return normalizeResults(results);
+      })
+      .catch(function () {
+        return [];
+      });
+
+    openStreetSuggestionCache.set(cacheKey, request);
+    return request;
+  }
+
+  function buildSuggestionItems(items) {
+    return items.map(function (item) {
+      return '<button type="button" class="route-dropdown-item" data-select-value="' + escapeHtml(item) + '">' + escapeHtml(item) + '</button>';
+    }).join('');
+  }
+
+  function showLoadingState(list) {
+    if (!list) {
+      return;
+    }
+
+    list.innerHTML = '<button type="button" class="route-dropdown-item is-placeholder is-loading" disabled>Searching OpenStreet...</button>';
+  }
+
   function applyPickedMapLocation(fieldName, fullAddress) {
     const normalizedAddress = String(fullAddress || '').trim();
 
@@ -2420,7 +2580,7 @@
       '</button>'
     ];
 
-    const matches = sourceData.filter(function (item) {
+    const localMatches = sourceData.filter(function (item) {
       const displayName = normalizeDisplayName(item);
 
       if (!normalizedQuery) {
@@ -2428,18 +2588,44 @@
       }
 
       const primaryName = displayName.split(',')[0].trim().toLowerCase();
-      return primaryName.indexOf(normalizedQuery) === 0;
+      return primaryName.indexOf(normalizedQuery) === 0 || displayName.toLowerCase().indexOf(normalizedQuery) >= 0;
     });
 
-    if (!matches.length) {
-      list.innerHTML = utilityItems.join('') + '<button type="button" class="route-dropdown-item is-placeholder">No places found</button>';
+    const localMarkup = localMatches.length ? buildSuggestionItems(localMatches.map(function (item) {
+      return normalizeDisplayName(item);
+    })) : '';
+
+    if (!normalizedQuery || normalizedQuery.length < 1) {
+      if (!localMatches.length) {
+        list.innerHTML = utilityItems.join('') + '<button type="button" class="route-dropdown-item is-placeholder">Start typing a place name</button>';
+        return;
+      }
+
+      list.innerHTML = utilityItems.join('') + localMarkup;
       return;
     }
 
-    list.innerHTML = utilityItems.join('') + matches.map(function (item) {
-      const displayName = normalizeDisplayName(item);
-      return '<button type="button" class="route-dropdown-item" data-select-value="' + displayName + '">' + displayName + '</button>';
-    }).join('');
+    showLoadingState(list);
+
+    fetchOpenStreetSuggestions(fieldName, query).then(function (remoteMatches) {
+      const remoteDeduped = remoteMatches.filter(function (item) {
+        const normalizedItem = String(item || '').trim().toLowerCase();
+        return normalizedItem && localMatches.every(function (localItem) {
+          return normalizeDisplayName(localItem).trim().toLowerCase() !== normalizedItem;
+        });
+      });
+
+      const combined = localMatches.map(function (item) {
+        return normalizeDisplayName(item);
+      }).concat(remoteDeduped);
+
+      if (!combined.length) {
+        list.innerHTML = utilityItems.join('') + '<button type="button" class="route-dropdown-item is-placeholder">No matches found yet. Try a different place name.</button>';
+        return;
+      }
+
+      list.innerHTML = utilityItems.join('') + buildSuggestionItems(combined);
+    });
   }
 
   function getBrowserLocation() {

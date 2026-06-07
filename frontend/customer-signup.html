@@ -31,6 +31,19 @@
       <nav class="header-switch" aria-label="Account switch">
         <a class="header-switch-link" href="customer-login.html" aria-label="Open customer login">Log in</a>
       </nav>
+      <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
+        <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+          <defs>
+            <clipPath id="circle-clip-signup">
+              <circle cx="12" cy="12" r="11.75"/>
+            </clipPath>
+          </defs>
+          <g clip-path="url(#circle-clip-signup)">
+            <circle cx="17.5" cy="6.5" r="2.0" fill="#111"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#111"/>
+          </g>
+        </svg>
+      </button>
     </header>
 
     <main class="owner-main owner-auth-main">
@@ -188,6 +201,22 @@
         window.addEventListener('load', function () {
           initializeGoogleAuth();
         });
+
+        const accountBtn = document.getElementById('customer-account-btn');
+        const headerLinks = document.querySelector('.header-switch');
+        const signedIn = localStorage.getItem('customer-authenticated') === 'true';
+
+        if (accountBtn) {
+          accountBtn.hidden = !signedIn;
+          accountBtn.addEventListener('click', function () {
+            window.location.href = 'index.html';
+          });
+        }
+
+        if (headerLinks) {
+          headerLinks.hidden = signedIn;
+          headerLinks.style.display = signedIn ? 'none' : '';
+        }
       })();
     </script>
   </body>
