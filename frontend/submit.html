@@ -26,7 +26,12 @@
       <h1 class="logo">VECT</h1>
       <p class="logo-sub">MOVERS</p>
     </div>
-    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
+    <nav class="header-switch" aria-label="Site switch" data-customer-header-links>
+      <a class="header-switch-link header-switch-link--login" href="customer-login.html" aria-label="Open login page">Log in</a>
+      <a class="header-switch-link header-switch-link--signup" href="customer-signup.html" aria-label="Open create account page">Sign up</a>
+    </nav>
+
+    <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
       <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
         <defs>
           <clipPath id="circle-clip-submit">
@@ -39,15 +44,6 @@
         </g>
       </svg>
     </button>
-    <aside class="account-panel" id="account-panel" aria-hidden="true">
-      <nav class="account-panel-nav">
-        <a href="#" class="account-option">Account</a>
-        <a href="#" class="account-option">History</a>
-        <a href="#" class="account-option">About</a>
-        <a href="#" class="account-option">Feedback</a>
-      </nav>
-    </aside>
-    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
   </header>
 
   <main class="submit-main" aria-label="Admin page">
@@ -382,5 +378,46 @@
   </main>
 
   <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      const pageName = 'submit.html';
+      const accountBtn = document.getElementById('customer-account-btn');
+      const headerLinks = document.querySelector('[data-customer-header-links]');
+      const loginLink = headerLinks ? headerLinks.querySelector('.header-switch-link--login') : null;
+      const signupLink = headerLinks ? headerLinks.querySelector('.header-switch-link--signup') : null;
+
+      function buildAuthUrl(base) {
+        const url = new URL(base, window.location.href);
+        url.searchParams.set('return', pageName);
+        return url.toString();
+      }
+
+      function renderHeaderState() {
+        const signedIn = localStorage.getItem('customer-authenticated') === 'true';
+
+        if (accountBtn) {
+          accountBtn.hidden = !signedIn;
+        }
+
+        if (headerLinks) {
+          headerLinks.hidden = signedIn;
+          headerLinks.style.display = signedIn ? 'none' : '';
+        }
+
+        if (loginLink) {
+          loginLink.href = buildAuthUrl('customer-login.html');
+        }
+
+        if (signupLink) {
+          signupLink.href = buildAuthUrl('customer-signup.html');
+        }
+      }
+
+      renderHeaderState();
+
+      window.addEventListener('storage', renderHeaderState);
+      window.addEventListener('focus', renderHeaderState);
+    })();
+  </script>
 </body>
 </html>

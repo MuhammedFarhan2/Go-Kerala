@@ -181,11 +181,14 @@
   <script src="script.js?v=20260531-1"></script>
   <script>
     (function () {
+      const pageName = 'index.html';
       const accountBtn = document.getElementById('customer-account-btn');
       const accountPanel = document.getElementById('customer-account-panel');
       const closeBtn = document.getElementById('customer-account-close');
       const backdrop = document.getElementById('customer-account-backdrop');
       const headerLinks = document.querySelector('[data-customer-header-links]');
+      const loginLink = headerLinks ? headerLinks.querySelector('.header-switch-link--login') : null;
+      const signupLink = headerLinks ? headerLinks.querySelector('.header-switch-link--signup') : null;
       const avatarNodes = Array.from(document.querySelectorAll('[data-customer-panel-avatar]'));
       const panelNameNode = document.querySelector('[data-customer-panel-name]');
       const panelEmailNode = document.querySelector('[data-customer-panel-email]');
@@ -212,6 +215,12 @@
           name: name || 'Customer',
           picture: picture
         };
+      }
+
+      function buildAuthUrl(base) {
+        const url = new URL(base, window.location.href);
+        url.searchParams.set('return', pageName);
+        return url.toString();
       }
 
       function setHeaderIcon(node) {
@@ -335,6 +344,14 @@
         if (headerLinks) {
           headerLinks.hidden = signedIn;
           headerLinks.style.display = signedIn ? 'none' : '';
+        }
+
+        if (loginLink) {
+          loginLink.href = buildAuthUrl('customer-login.html');
+        }
+
+        if (signupLink) {
+          signupLink.href = buildAuthUrl('customer-signup.html');
         }
 
         if (!signedIn) {

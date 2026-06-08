@@ -2401,8 +2401,6 @@
     openStreetRequestTokens.set(fieldName, requestToken);
 
     function requestSuggestions(searchText) {
-      const broadUrl = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&layer=address,poi,natural,manmade,railway&limit=50&q=' +
-        encodeURIComponent(searchText);
       const indiaUrl = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=in&layer=address,poi,natural,manmade,railway&limit=50&q=' +
         encodeURIComponent(searchText);
 
@@ -2420,13 +2418,7 @@
         });
       }
 
-      return fetchJson(broadUrl).then(function (results) {
-        if (Array.isArray(results) && results.length) {
-          return results;
-        }
-
-        return fetchJson(indiaUrl);
-      });
+      return fetchJson(indiaUrl);
     }
 
     function normalizeResults(results) {
@@ -4347,15 +4339,6 @@
           }
           return;
         }
-      }
-
-      const isExpanded = card.classList.contains('is-expanded');
-      const shouldExpand = !isExpanded;
-      openDemoSheet();
-      setDemoCardExpanded(card, shouldExpand);
-      if (shouldExpand) {
-        ensureDemoCardVisible(card, true);
-        ensureDemoActionsVisible(card, 0);
       }
     });
   });

@@ -119,7 +119,19 @@
         const form = document.getElementById('customer-login-form');
         const googleAuthButton = document.querySelector('[data-google-auth-btn]');
         const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
+        const pageParams = new URLSearchParams(window.location.search);
+        const returnPage = String(pageParams.get('return') || '').trim();
         const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
+
+        function getSafeReturnTarget() {
+          const allowedPages = new Set([
+            'index.html',
+            'route.html',
+            'submit.html'
+          ]);
+          const normalized = returnPage.toLowerCase();
+          return allowedPages.has(normalized) ? normalized : 'index.html';
+        }
 
         function decodeJwtPayload(token) {
           try {
@@ -152,7 +164,7 @@
             localStorage.setItem('customer-login-picture', picture);
             localStorage.setItem('customer-authenticated', 'true');
           }
-          window.location.href = 'index.html';
+          window.location.href = getSafeReturnTarget();
         }
 
         function initializeGoogleAuth() {
@@ -189,7 +201,7 @@
               localStorage.removeItem('customer-login-picture');
               localStorage.setItem('customer-authenticated', 'true');
             }
-            window.location.href = 'index.html';
+            window.location.href = getSafeReturnTarget();
           });
         }
 
@@ -214,7 +226,7 @@
         if (accountBtn) {
           accountBtn.hidden = !signedIn;
           accountBtn.addEventListener('click', function () {
-            window.location.href = 'index.html';
+            window.location.href = getSafeReturnTarget();
           });
         }
 

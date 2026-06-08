@@ -127,6 +127,7 @@
 
           let state = data.address.state || "Not Available";
           let country = data.address.country || "Not Available";
+          let isIndiaLocation = String(country).toLowerCase() === "india";
 
           let fullAddress = data.display_name;
 
@@ -134,7 +135,9 @@
           document.getElementById("village").innerText = village;
           document.getElementById("town").innerText = town;
           document.getElementById("city").innerText = city;
-          document.getElementById("address").innerText = fullAddress;
+          document.getElementById("address").innerText = isIndiaLocation
+            ? fullAddress
+            : "This map is limited to India locations only.";
 
           // Marker popup
           L.marker([lat, lon]).addTo(map)
@@ -145,7 +148,7 @@
               <b>City:</b> ${city}<br>
               <b>State:</b> ${state}<br>
               <b>Country:</b> ${country}<br><br>
-              ${fullAddress}
+              ${isIndiaLocation ? fullAddress : "This map is limited to India locations only."}
             `)
             .openPopup();
 

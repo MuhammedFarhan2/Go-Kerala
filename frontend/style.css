@@ -178,7 +178,7 @@ button.submit-demo-expand-btn.is-view {
 .customer-account-btn {
   display: flex;
   align-items: center;
-  margin-left: auto;
+  margin-left: 0;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
@@ -1044,7 +1044,7 @@ html {
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 0.65rem 2rem;
   height: var(--header-height);
   background: #fff;
@@ -1052,6 +1052,7 @@ html {
   position: sticky;
   top: 0;
   z-index: 1200;
+  gap: 16px;
 }
 
 .header.panel-open {
@@ -1300,6 +1301,10 @@ html {
   padding: 0.65rem 1.4rem;
   background: #ffffff;
   border-bottom: 1px solid #111;
+}
+
+.owner-auth-header .header-switch {
+  margin-left: auto;
 }
 
 .owner-auth-brand-lockup {
@@ -1993,12 +1998,17 @@ html {
 
   .owner-auth-header {
     justify-content: flex-start;
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 6px;
+    padding-right: 2px;
+  }
+
+  .owner-auth-header .header-switch {
+    margin-left: auto;
+    gap: 6px;
   }
 
   .owner-auth-brand-lockup {
-    margin-left: 8px;
+    margin-left: 2px;
   }
 
   .owner-auth-main {
@@ -5465,6 +5475,16 @@ body.submit-page {
   .submit-demo-sheet-selected-location {
     margin: 1px 10px 6px;
     font-size: 0.74rem;
+  }
+
+  .submit-demo-sheet-remove {
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -50%);
+    width: 22px;
+    height: 22px;
+    font-size: 14px;
+    line-height: 22px;
   }
 }
 
