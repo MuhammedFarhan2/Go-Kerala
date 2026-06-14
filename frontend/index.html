@@ -145,37 +145,31 @@
     </section>
   </main>
 
-  <aside class="customer-account-panel" id="customer-account-panel" hidden aria-hidden="true">
+  <aside class="customer-account-panel" id="customer-account-panel" aria-hidden="true">
     <div class="customer-account-panel-head">
-      <div class="customer-account-profile">
-        <div class="customer-account-profile-avatar" data-customer-panel-avatar aria-hidden="true"></div>
-        <div>
-          <p class="customer-account-panel-name" data-customer-panel-name>Guest</p>
-          <p class="customer-account-panel-email" data-customer-panel-email>Sign in to save your profile</p>
-        </div>
-      </div>
       <button type="button" class="customer-account-close" id="customer-account-close" aria-label="Close account panel">×</button>
     </div>
 
     <div class="customer-account-panel-body">
-      <label class="customer-account-field">
-        <span>Name</span>
-        <input type="text" class="customer-account-input" data-customer-name-input placeholder="Your name">
-      </label>
-
-      <label class="customer-account-field">
-        <span>Profile image URL</span>
-        <input type="text" class="customer-account-input" data-customer-picture-input placeholder="https://...">
-      </label>
-
-      <div class="customer-account-actions">
-        <button type="button" class="customer-account-save" data-customer-save>Save profile</button>
-        <a class="customer-account-feedback" href="mailto:vectmovers@gmail.com?subject=VECT%20Movers%20Feedback" data-customer-feedback>Feedback</a>
-        <button type="button" class="customer-account-logout" data-customer-logout>Log out</button>
+      <div class="customer-account-panel-top">
+        <div class="customer-account-panel-profile">
+          <div class="customer-account-profile-avatar" aria-hidden="true">
+            <img src="account.png" alt="" class="customer-account-profile-avatar-image">
+          </div>
+          <p class="customer-account-panel-name" data-customer-panel-name>Guest</p>
+          <p class="customer-account-panel-email" data-customer-panel-email>Sign in to save your profile</p>
+        </div>
+      </div>
+      <div class="customer-account-panel-bottom">
+        <div class="customer-account-actions">
+          <a class="customer-account-feedback" href="mailto:vectmovers@gmail.com?subject=VECT%20Movers%20Feedback" data-customer-feedback>Feedback</a>
+          <a class="customer-account-favorites" href="favorites.html" data-customer-favorites>Favorites</a>
+          <button type="button" class="customer-account-logout" data-customer-logout>Log out</button>
+        </div>
       </div>
     </div>
   </aside>
-  <div class="customer-account-backdrop" id="customer-account-backdrop" hidden></div>
+  <div class="customer-account-backdrop" id="customer-account-backdrop" aria-hidden="true"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="script.js?v=20260531-1"></script>
@@ -189,16 +183,11 @@
       const headerLinks = document.querySelector('[data-customer-header-links]');
       const loginLink = headerLinks ? headerLinks.querySelector('.header-switch-link--login') : null;
       const signupLink = headerLinks ? headerLinks.querySelector('.header-switch-link--signup') : null;
-      const avatarNodes = Array.from(document.querySelectorAll('[data-customer-panel-avatar]'));
       const panelNameNode = document.querySelector('[data-customer-panel-name]');
       const panelEmailNode = document.querySelector('[data-customer-panel-email]');
-      const nameInput = document.querySelector('[data-customer-name-input]');
-      const pictureInput = document.querySelector('[data-customer-picture-input]');
-      const saveButton = document.querySelector('[data-customer-save]');
       const logoutButton = document.querySelector('[data-customer-logout]');
       const feedbackLink = document.querySelector('[data-customer-feedback]');
-      let editButton = document.querySelector('[data-customer-edit-account]');
-      let editorNode = document.querySelector('[data-customer-editor]');
+      const favoritesLink = document.querySelector('[data-customer-favorites]');
       const panelBody = accountPanel ? accountPanel.querySelector('.customer-account-panel-body') : null;
 
       function getCustomerProfile() {
@@ -243,33 +232,15 @@
         ].join('');
       }
 
-      function setPanelAvatar(node, profile) {
-        if (!node) {
-          return;
-        }
-
-        node.innerHTML = '';
-
-        if (profile.picture) {
-          const image = document.createElement('img');
-          image.src = profile.picture;
-          image.alt = profile.name || 'Profile picture';
-          image.className = 'customer-account-avatar-image';
-          node.appendChild(image);
-          return;
-        }
-
-        setHeaderIcon(node);
-      }
-
       function openPanel() {
         if (!accountPanel || !backdrop) {
           return;
         }
 
-        accountPanel.hidden = false;
         accountPanel.setAttribute('aria-hidden', 'false');
-        backdrop.hidden = false;
+        accountPanel.classList.add('is-open');
+        backdrop.classList.add('is-visible');
+        backdrop.setAttribute('aria-hidden', 'false');
       }
 
       function closePanel() {
@@ -277,63 +248,22 @@
           return;
         }
 
-        accountPanel.hidden = true;
         accountPanel.setAttribute('aria-hidden', 'true');
-        backdrop.hidden = true;
+        accountPanel.classList.remove('is-open');
+        backdrop.classList.remove('is-visible');
+        backdrop.setAttribute('aria-hidden', 'true');
       }
 
       function ensureDrawerLayout() {
-        if (!panelBody || editButton) {
+        if (!panelBody || panelBody.dataset.drawerReady === 'true') {
           return;
         }
-
-        const profileNode = document.createElement('div');
-        profileNode.className = 'customer-account-panel-profile';
-        profileNode.innerHTML = [
-          '<div class="customer-account-profile-avatar" data-customer-panel-avatar aria-hidden="true"></div>',
-          '<p class="customer-account-panel-name" data-customer-panel-name>Guest</p>',
-          '<p class="customer-account-panel-email" data-customer-panel-email>Sign in to save your profile</p>'
-        ].join('');
-
-        const menuNode = document.createElement('div');
-        menuNode.className = 'customer-account-menu';
-        menuNode.innerHTML = [
-          '<button type="button" class="customer-account-menu-item" data-customer-edit-account>Account</button>',
-          '<a class="customer-account-menu-item" href="mailto:vectmovers@gmail.com?subject=VECT%20Movers%20Feedback" data-customer-feedback>Feedback</a>',
-          '<button type="button" class="customer-account-menu-item is-danger" data-customer-logout>Log out</button>'
-        ].join('');
-
-        const editor = document.createElement('div');
-        editor.className = 'customer-account-editor';
-        editor.dataset.customerEditor = 'true';
-        editor.hidden = true;
-        editor.innerHTML = [
-          '<label class="customer-account-field"><span>Name</span><input type="text" class="customer-account-input" data-customer-name-input placeholder="Your name"></label>',
-          '<label class="customer-account-field"><span>Profile image URL</span><input type="text" class="customer-account-input" data-customer-picture-input placeholder="https://..."></label>',
-          '<button type="button" class="customer-account-save" data-customer-save>Save profile</button>'
-        ].join('');
-
-        panelBody.innerHTML = '';
-        panelBody.appendChild(profileNode);
-        panelBody.appendChild(menuNode);
-        panelBody.appendChild(editor);
-        panelBody.appendChild(closeBtn);
-
-        editButton = panelBody.querySelector('[data-customer-edit-account]');
-        editorNode = panelBody.querySelector('[data-customer-editor]');
+        panelBody.dataset.drawerReady = 'true';
       }
 
       function renderCustomerAccount() {
         ensureDrawerLayout();
-        const profileAvatarNode = accountPanel ? accountPanel.querySelector('[data-customer-panel-avatar]') : null;
-        const panelNameNodeNow = accountPanel ? accountPanel.querySelector('[data-customer-panel-name]') : null;
-        const panelEmailNodeNow = accountPanel ? accountPanel.querySelector('[data-customer-panel-email]') : null;
-        const currentNameInput = accountPanel ? accountPanel.querySelector('[data-customer-name-input]') : null;
-        const currentPictureInput = accountPanel ? accountPanel.querySelector('[data-customer-picture-input]') : null;
-        const currentSaveButton = accountPanel ? accountPanel.querySelector('[data-customer-save]') : null;
         const currentLogoutButton = accountPanel ? accountPanel.querySelector('[data-customer-logout]') : null;
-        const currentEditButton = accountPanel ? accountPanel.querySelector('[data-customer-edit-account]') : null;
-        const currentEditorNode = accountPanel ? accountPanel.querySelector('[data-customer-editor]') : null;
         const profile = getCustomerProfile();
         const signedIn = profile.authenticated;
 
@@ -359,53 +289,16 @@
           return;
         }
 
-        avatarNodes.forEach(function (node) {
-          setPanelAvatar(node, profile);
-        });
-
-        if (panelNameNodeNow) {
-          panelNameNodeNow.textContent = profile.name;
+        if (panelNameNode) {
+          panelNameNode.textContent = profile.name;
         }
 
-        if (panelEmailNodeNow) {
-          panelEmailNodeNow.textContent = profile.email || 'Connected account';
+        if (panelEmailNode) {
+          panelEmailNode.textContent = profile.email || 'Connected account';
         }
 
-        if (currentNameInput) {
-          currentNameInput.value = profile.name;
-        }
-
-        if (currentPictureInput) {
-          currentPictureInput.value = profile.picture;
-        }
-
-        if (currentEditButton) {
-          currentEditButton.onclick = function () {
-            if (currentEditorNode) {
-              currentEditorNode.hidden = !currentEditorNode.hidden;
-            }
-          };
-        }
-
-        if (currentSaveButton) {
-          currentSaveButton.onclick = function () {
-            const name = String(currentNameInput && currentNameInput.value || '').trim();
-            const picture = String(currentPictureInput && currentPictureInput.value || '').trim();
-
-            localStorage.setItem('customer-login-name', name || 'Customer');
-
-            if (picture) {
-              localStorage.setItem('customer-login-picture', picture);
-            } else {
-              localStorage.removeItem('customer-login-picture');
-            }
-
-            renderCustomerAccount();
-          };
-        }
-
-        if (currentLogoutButton) {
-          currentLogoutButton.onclick = function () {
+      if (currentLogoutButton) {
+        currentLogoutButton.onclick = function () {
             localStorage.removeItem('customer-authenticated');
             localStorage.removeItem('customer-login-method');
             localStorage.removeItem('customer-login-email');
@@ -413,9 +306,13 @@
             localStorage.removeItem('customer-login-picture');
             closePanel();
             renderCustomerAccount();
-          };
-        }
+        };
       }
+
+      if (favoritesLink) {
+        favoritesLink.href = 'favorites.html';
+      }
+    }
 
       if (accountBtn) {
         accountBtn.addEventListener('click', function () {
@@ -430,16 +327,6 @@
 
       if (backdrop) {
         backdrop.addEventListener('click', closePanel);
-      }
-
-      if (editButton) {
-        editButton.addEventListener('click', function () {
-          if (!editorNode) {
-            return;
-          }
-
-          editorNode.hidden = !editorNode.hidden;
-        });
       }
 
       renderCustomerAccount();

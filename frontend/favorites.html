@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favorites</title>
+  <script>
+    document.documentElement.classList.add('show-page-loader');
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260611-2">
+  <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
+</head>
+<body>
+  <div class="page-loader" id="page-loader" aria-hidden="true">
+    <div class="page-loader-content">
+      <div class="page-loader-spinner" aria-hidden="true">
+        <span class="page-loader-ring page-loader-ring-outer"></span>
+        <span class="page-loader-ring page-loader-ring-middle"></span>
+        <span class="page-loader-ring page-loader-ring-inner"></span>
+      </div>
+      <p class="page-loader-text">Loading</p>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+    <nav class="header-switch" aria-label="Site switch" data-customer-header-links>
+      <a class="header-switch-link header-switch-link--login" href="customer-login.html" aria-label="Open login page">Log in</a>
+      <a class="header-switch-link header-switch-link--signup" href="customer-signup.html" aria-label="Open create account page">Sign up</a>
+    </nav>
+    <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
+      <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
+        <defs>
+          <clipPath id="circle-clip-submit">
+            <circle cx="12" cy="12" r="11.75"></circle>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#circle-clip-submit)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#111"></circle>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#111"></path>
+        </g>
+      </svg>
+    </button>
+  </header>
+
+  <main class="favorites-main">
+    <section class="favorites-shell">
+      <div class="favorites-list" data-favorites-list></div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const pageName = 'favorites.html';
+      const FAVORITES_STORAGE_KEY = 'vect-favorites-v1';
+      const accountBtn = document.getElementById('customer-account-btn');
+      const headerLinks = document.querySelector('[data-customer-header-links]');
+      const loginLink = headerLinks ? headerLinks.querySelector('.header-switch-link--login') : null;
+      const signupLink = headerLinks ? headerLinks.querySelector('.header-switch-link--signup') : null;
+      const favoritesList = document.querySelector('[data-favorites-list]');
+
+      function buildAuthUrl(base) {
+        const url = new URL(base, window.location.href);
+        url.searchParams.set('return', pageName);
+        return url.toString();
+      }
+
+      function renderHeaderState() {
+        const signedIn = localStorage.getItem('customer-authenticated') === 'true';
+
+        if (accountBtn) {
+          accountBtn.hidden = !signedIn;
+        }
+
+        if (headerLinks) {
+          headerLinks.hidden = signedIn;
+          headerLinks.style.display = signedIn ? 'none' : '';
+        }
+
+        if (loginLink) {
+          loginLink.href = buildAuthUrl('customer-login.html');
+        }
+
+        if (signupLink) {
+          signupLink.href = buildAuthUrl('customer-signup.html');
+        }
+      }
+
+      function loadFavorites() {
+        try {
+          const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function renderFavorites() {
+        if (!favoritesList) {
+          return;
+        }
+
+        const favorites = loadFavorites();
+
+        if (!favorites.length) {
+          favoritesList.innerHTML = '<p class="favorites-empty-inline">You have not added any favorites yet.</p>';
+          return;
+        }
+
+        favoritesList.innerHTML = favorites.map(function (item) {
+          const meta = Array.isArray(item.meta) ? item.meta.filter(Boolean) : [];
+          return [
+            '<article class="favorites-card" data-favorite-id="' + item.id + '">',
+            '  <button type="button" class="demo-favorite-heart is-selected" data-favorite-remove aria-pressed="true" aria-label="Remove favorite">',
+            '    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
+            '      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>',
+            '    </svg>',
+            '  </button>',
+            item.image ? '<img class="favorites-card-image" src="' + item.image + '" alt="' + (item.alt || item.title || '') + '">' : '<div class="favorites-card-image favorites-card-image--placeholder"></div>',
+            '  <div class="favorites-card-copy">',
+            '    <h3 class="favorites-card-title">' + (item.title || 'Saved vehicle') + '</h3>',
+            meta.length ? '<p class="favorites-card-meta">' + meta.join(' &middot; ') + '</p>' : '',
+            '  </div>',
+            '</article>'
+          ].join('');
+        }).join('');
+
+        Array.from(favoritesList.querySelectorAll('[data-favorite-remove]')).forEach(function (button) {
+          button.addEventListener('click', function () {
+            const card = button.closest('[data-favorite-id]');
+            const favoriteId = card ? String(card.getAttribute('data-favorite-id') || '').trim() : '';
+            if (!favoriteId) {
+              return;
+            }
+
+            const updatedFavorites = loadFavorites().filter(function (item) {
+              return item.id !== favoriteId;
+            });
+            localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(updatedFavorites));
+            renderFavorites();
+          });
+        });
+      }
+
+      renderHeaderState();
+      renderFavorites();
+      window.addEventListener('storage', renderHeaderState);
+      window.addEventListener('storage', renderFavorites);
+      window.addEventListener('focus', renderHeaderState);
+      window.addEventListener('focus', renderFavorites);
+    })();
+  </script>
+  <script src="script.js?v=20260611-2"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="auth.js"></script>
+</body>
+</html>

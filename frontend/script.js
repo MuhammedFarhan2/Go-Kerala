@@ -3953,7 +3953,8 @@
 
     function runAutoScroll() {
       const sheetHeight = demoSheet && demoSheet.classList.contains('is-open') ? demoSheet.getBoundingClientRect().height : 0;
-      const extraExpandSpace = expanded ? 84 : 0;
+      const isPhone = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      const extraExpandSpace = expanded ? (isPhone ? 128 : 84) : 0;
       const bottomSafe = sheetHeight + 18 + extraExpandSpace;
       const rect = card.getBoundingClientRect();
       const viewportTop = topSafe;
@@ -3985,7 +3986,7 @@
       }
 
       if (rect.top < viewportTop || rect.bottom > viewportBottom) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        card.scrollIntoView({ behavior: 'smooth', block: isPhone ? 'center' : 'start', inline: 'nearest' });
       }
 
       const nextRect = card.getBoundingClientRect();
@@ -4043,6 +4044,7 @@
     const actionsRect = actions.getBoundingClientRect();
     const viewportBottomLimit = window.innerHeight - (sheetHeight + 18);
     let visibleBottom = viewportBottomLimit;
+    const isPhone = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
 
     if (scrollHost !== document.scrollingElement && scrollHost !== document.documentElement) {
       const hostRect = scrollHost.getBoundingClientRect();
@@ -4051,10 +4053,10 @@
 
     const overflow = actionsRect.bottom - visibleBottom;
     const comfortGap = visibleBottom - actionsRect.bottom;
-    const needsComfortLift = comfortGap < 36;
+    const needsComfortLift = comfortGap < (isPhone ? 88 : 36);
 
     if (overflow > 0 || needsComfortLift) {
-      const delta = overflow > 0 ? overflow + 14 : 36 - comfortGap;
+      const delta = overflow > 0 ? overflow + (isPhone ? 28 : 14) : (isPhone ? 88 : 36) - comfortGap;
       if (scrollHost === document.scrollingElement || scrollHost === document.documentElement) {
         window.scrollBy({ top: delta, behavior: 'smooth' });
       } else {
@@ -4339,6 +4341,21 @@
           }
           return;
         }
+      }
+
+      const shouldExpand = !card.classList.contains('is-expanded');
+
+      demoCards.forEach(function (otherCard) {
+        if (otherCard !== card) {
+          setDemoCardExpanded(otherCard, false);
+        }
+      });
+
+      setDemoCardExpanded(card, shouldExpand);
+
+      if (shouldExpand) {
+        ensureDemoCardVisible(card, true);
+        ensureDemoActionsVisible(card, 0);
       }
     });
   });
