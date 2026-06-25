@@ -11,13 +11,17 @@
       background: #f4f6fa;
       color: #111;
       font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .detail-page {
+      height: calc(100vh - 56px);
       min-height: calc(100vh - 56px);
       box-sizing: border-box;
       overflow-x: hidden;
-      padding-bottom: 120px;
+      overflow-y: hidden;
+      padding-bottom: 24px;
     }
 
     .detail-shell {
@@ -30,10 +34,13 @@
       grid-template-columns: 1fr;
       background: #fff;
       overflow: hidden;
-      padding-bottom: 240px;
+      padding-bottom: 0;
+      height: 100%;
+      transform: translateY(-8px);
     }
 
     .detail-image-wrap {
+      position: relative;
       width: 100%;
       height: 48vh;
       min-height: 0;
@@ -54,8 +61,15 @@
       background: #fff;
     }
 
+    .detail-favorite-heart {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 4;
+    }
+
     .detail-content {
-      padding: 14px 16px 16px;
+      padding: 10px 16px 6px;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
@@ -89,6 +103,32 @@
       line-height: 1.4;
     }
 
+    .detail-place {
+      margin: 0;
+      color: #111;
+      font-size: 0.96rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .detail-place-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      color: #111;
+      font-size: 0.96rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .detail-place-icon {
+      width: 18px;
+      height: 18px;
+      display: block;
+      object-fit: contain;
+    }
+
     .detail-specs li {
       position: relative;
       padding-left: 14px;
@@ -110,21 +150,16 @@
     }
 
     .detail-actions {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 20;
-      margin-top: 0;
-      padding: 10px 14px 14px;
-      background: linear-gradient(180deg, rgba(244, 246, 250, 0), #f4f6fa 22%);
+      margin-top: auto;
+      padding: 8px 14px 0;
+      background: transparent;
     }
 
     .detail-suggestions {
       position: relative;
       z-index: 1;
-      margin-top: 18px;
-      margin-bottom: 18px;
+      margin-top: 8px;
+      margin-bottom: 22px;
       display: grid;
       gap: 8px;
     }
@@ -153,33 +188,40 @@
       box-shadow: 0 8px 18px rgba(17, 17, 17, 0.05);
       padding: 0;
       cursor: pointer;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     .detail-suggestion-image {
       width: 100%;
-      height: 58px;
-      object-fit: cover;
+      flex: 1 1 auto;
+      min-height: 0;
+      object-fit: contain;
       display: block;
       background: #fff;
+      padding: 8px;
+      box-sizing: border-box;
     }
 
     .detail-suggestion-label {
-      padding: 8px 8px 9px;
-      font-size: 0.8rem;
+      padding: 6px 8px 8px;
+      font-size: 0.78rem;
       line-height: 1.2;
       font-weight: 700;
       color: #111;
+      text-align: center;
     }
 
     button.detail-whatsapp-btn {
       width: 100%;
-      min-height: 52px;
+      min-height: 48px;
       border: 0;
-      border-radius: 16px;
+      border-radius: 14px;
       background: #2AB318 !important;
       background-color: #2AB318 !important;
       color: #fff;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 800;
       cursor: pointer;
       appearance: none;
@@ -216,20 +258,19 @@
         min-height: 0;
       }
 
+      .detail-favorite-heart {
+        top: 10px;
+        right: 10px;
+        width: 42px;
+        height: 42px;
+      }
+
       .detail-content {
-        padding: 12px 14px 12px;
+        padding: 8px 14px 4px;
       }
 
       .detail-actions {
-        padding: 10px 12px 12px;
-      }
-
-      .detail-page {
-        padding-bottom: 140px;
-      }
-
-      .detail-card {
-        padding-bottom: 280px;
+        padding: 6px 12px 8px;
       }
 
       .detail-suggestion-row {
@@ -237,7 +278,7 @@
       }
 
       .detail-suggestion-image {
-        height: 48px;
+        padding: 6px;
       }
 
       .detail-suggestion-label {
@@ -408,6 +449,8 @@
       }
 
       const root = document.getElementById('detail-root');
+      const FAVORITES_STORAGE_KEY = 'vect-favorites-v1';
+      const PENDING_FAVORITE_KEY = 'pending-favorite-toggle';
       let data = null;
       try {
         data = JSON.parse(sessionStorage.getItem('submit-vehicle-detail') || 'null');
@@ -418,6 +461,28 @@
       if (!data || !data.title) {
         root.innerHTML = '<div class="detail-empty">No vehicle selected. Go back and press VIEW on a card.</div>';
         return;
+      }
+
+      function loadFavorites() {
+        try {
+          const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function saveFavorites(favorites) {
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+      }
+
+      function isSignedIn() {
+        return localStorage.getItem('customer-authenticated') === 'true';
+      }
+
+      function getFavoriteId() {
+        return String(data.scope || data.title || '').trim();
       }
 
       const imageSrc = data.image && data.image.src ? data.image.src : '';
@@ -432,6 +497,11 @@
       root.innerHTML = [
         '<article class="detail-card">',
         '<div class="detail-image-wrap">',
+        '<button type="button" class="demo-favorite-heart detail-favorite-heart" data-detail-favorite aria-pressed="false" aria-label="Mark as favorite">',
+        '  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
+        '    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>',
+        '  </svg>',
+        '</button>',
         '<img class="detail-image" src="' + imageSrc.replace(/"/g, '&quot;') + '" alt="' + imageAlt.replace(/"/g, '&quot;') + '">',
         '</div>',
         '<div class="detail-content">',
@@ -440,9 +510,10 @@
         '<ul class="detail-specs">' + specs.map(function (spec) {
           return '<li>' + String(spec).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</li>';
         }).join('') + '</ul>',
+        '<p class="detail-place-row"><img src="location-2955.svg" alt="" class="detail-place-icon" aria-hidden="true"><span class="detail-place">' + String(data.place || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span></p>',
         '<div class="detail-actions">',
         '<div class="detail-actions-inner">',
-        '<button type="button" class="detail-whatsapp-btn" style="background:#2AB318 !important;background-color:#2AB318 !important;color:#fff !important;border:0 !important;">Whatsupp</button>',
+        '<button type="button" class="detail-whatsapp-btn" style="background:#2AB318 !important;background-color:#2AB318 !important;color:#fff !important;border:0 !important;">WhatsApp</button>',
         '</div>',
         '</div>',
         '<div class="detail-suggestions">',
@@ -460,12 +531,120 @@
         '</article>'
       ].join('');
 
+      const favoriteButton = root.querySelector('[data-detail-favorite]');
+
+      function syncFavoriteButton() {
+        if (!favoriteButton) {
+          return;
+        }
+
+        const favoriteId = getFavoriteId();
+        const isSelected = favoriteId ? loadFavorites().some(function (item) {
+          return item.id === favoriteId;
+        }) : false;
+
+        favoriteButton.classList.toggle('is-selected', isSelected);
+        favoriteButton.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        favoriteButton.setAttribute('aria-label', isSelected ? 'Remove favorite' : 'Mark as favorite');
+      }
+
+      function redirectToSignIn(nextTarget) {
+        sessionStorage.setItem(PENDING_FAVORITE_KEY, JSON.stringify(nextTarget));
+        window.location.href = 'customer-login.html?return=vehicle-detail.html';
+      }
+
+      function applyPendingFavoriteIfAny() {
+        if (!isSignedIn()) {
+          return;
+        }
+
+        try {
+          const raw = sessionStorage.getItem(PENDING_FAVORITE_KEY);
+          const pending = raw ? JSON.parse(raw) : null;
+
+          if (!pending || pending.id !== getFavoriteId() || !favoriteButton) {
+            return;
+          }
+
+          const favorites = loadFavorites();
+          const existingIndex = favorites.findIndex(function (item) {
+            return item.id === pending.id;
+          });
+
+          if (pending.action === 'add' && existingIndex === -1) {
+            favorites.unshift({
+              id: pending.id,
+              title: String(data.title || 'Saved vehicle').trim(),
+              alt: String(imageAlt || data.title || 'Saved vehicle').trim(),
+              image: String(imageSrc || '').trim(),
+              meta: [
+                String(data.dealer || '').trim(),
+                specs.filter(Boolean).join(' · ')
+              ].filter(Boolean)
+            });
+            saveFavorites(favorites);
+          } else if (pending.action === 'remove' && existingIndex >= 0) {
+            favorites.splice(existingIndex, 1);
+            saveFavorites(favorites);
+          }
+
+          syncFavoriteButton();
+        } catch (error) {
+          // Ignore malformed pending state.
+        } finally {
+          sessionStorage.removeItem(PENDING_FAVORITE_KEY);
+        }
+      }
+
+      if (favoriteButton) {
+        favoriteButton.addEventListener('click', function () {
+          const favoriteId = getFavoriteId();
+          if (!favoriteId) {
+            return;
+          }
+
+          if (!isSignedIn()) {
+            redirectToSignIn({
+              id: favoriteId,
+              action: favoriteButton.classList.contains('is-selected') ? 'remove' : 'add'
+            });
+            return;
+          }
+
+          const favorites = loadFavorites();
+          const existingIndex = favorites.findIndex(function (item) {
+            return item.id === favoriteId;
+          });
+
+          if (existingIndex >= 0) {
+            favorites.splice(existingIndex, 1);
+          } else {
+            favorites.unshift({
+              id: favoriteId,
+              title: String(data.title || 'Saved vehicle').trim(),
+              alt: String(imageAlt || data.title || 'Saved vehicle').trim(),
+              image: String(imageSrc || '').trim(),
+              meta: [
+                String(data.dealer || '').trim(),
+                specs.filter(Boolean).join(' · ')
+              ].filter(Boolean)
+            });
+          }
+
+          saveFavorites(favorites);
+          syncFavoriteButton();
+        });
+      }
+
       const ctaButton = root.querySelector('.detail-whatsapp-btn');
       if (ctaButton) {
         ctaButton.style.background = '#2AB318';
         ctaButton.style.backgroundColor = '#2AB318';
         ctaButton.style.color = '#fff';
       }
+
+      syncFavoriteButton();
+      applyPendingFavoriteIfAny();
 
       Array.from(root.querySelectorAll('[data-detail-suggestion]')).forEach(function (button) {
         button.addEventListener('click', function () {

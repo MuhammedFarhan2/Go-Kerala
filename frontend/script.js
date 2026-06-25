@@ -4080,6 +4080,24 @@
       }
     }
 
+    if (isPhone) {
+      requestAnimationFrame(function () {
+        const refreshedRect = actions.getBoundingClientRect();
+        const refreshedSheetHeight = demoSheet && demoSheet.classList.contains('is-open') ? demoSheet.getBoundingClientRect().height : 0;
+        const refreshedVisibleBottom = window.innerHeight - (refreshedSheetHeight + 12);
+        const buttonBottomGap = refreshedVisibleBottom - refreshedRect.bottom;
+
+        if (buttonBottomGap < 0) {
+          const extraDelta = Math.abs(buttonBottomGap) + 24;
+          if (scrollHost === document.scrollingElement || scrollHost === document.documentElement) {
+            window.scrollBy({ top: extraDelta, behavior: 'smooth' });
+          } else {
+            scrollHost.scrollBy({ top: extraDelta, behavior: 'smooth' });
+          }
+        }
+      });
+    }
+
     if ((attempt || 0) < 12) {
       setTimeout(function () {
         ensureDemoActionsVisible(card, (attempt || 0) + 1);
@@ -4256,6 +4274,11 @@
       return '';
     }
 
+    const placeNode = card.querySelector('.submit-demo-place');
+    if (placeNode && String(placeNode.textContent || '').trim()) {
+      return String(placeNode.textContent || '').trim();
+    }
+
     const metas = Array.from(card.querySelectorAll('.submit-demo-meta'));
     const locationMeta = metas.find(function (node) {
       return node.textContent && node.textContent.indexOf('\u00b7') !== -1;
@@ -4345,6 +4368,7 @@
       title: getCardTitle(card),
       dealer: getCardDealer(card),
       specs: getCardSpecs(card),
+      place: getCardLocation(card),
       image: getCardImage(card),
       scope: String(card.getAttribute('data-demo-source') || card.getAttribute('data-favorite-id') || '').trim()
     };
@@ -4385,6 +4409,12 @@
 
           setDemoCardExpanded(card, false);
           updateDemoSheetPreview();
+          if (isSelected) {
+            window.requestAnimationFrame(function () {
+              ensureDemoCardVisible(card, true);
+              ensureDemoActionsVisible(card, 0);
+            });
+          }
           openDemoSheet();
           return;
         }
@@ -4704,64 +4734,12 @@
 })();
 
 (function () {
-  const installButton = document.getElementById('install-app-btn');
-  let deferredPrompt = null;
-
-  function isStandaloneMode() {
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  }
-
-  function updateInstallButtonVisibility() {
-    if (!installButton) {
-      return;
-    }
-
-    installButton.hidden = isStandaloneMode() || !deferredPrompt;
-  }
-
-  if (installButton) {
-    installButton.addEventListener('click', async function () {
-      if (!deferredPrompt) {
-        return;
-      }
-
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice.catch(function () {
-        return { outcome: 'dismissed' };
-      });
-      deferredPrompt = null;
-      updateInstallButtonVisibility();
-    });
-  }
-
-  window.addEventListener('beforeinstallprompt', function (event) {
-    event.preventDefault();
-    deferredPrompt = event;
-    updateInstallButtonVisibility();
-  });
-
-  window.addEventListener('appinstalled', function () {
-    deferredPrompt = null;
-    updateInstallButtonVisibility();
-  });
-
   window.addEventListener('load', function () {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function () {
         return null;
       });
     }
-
-    updateInstallButtonVisibility();
   });
-
-  if (window.matchMedia) {
-    const standaloneQuery = window.matchMedia('(display-mode: standalone)');
-    if (typeof standaloneQuery.addEventListener === 'function') {
-      standaloneQuery.addEventListener('change', updateInstallButtonVisibility);
-    } else if (typeof standaloneQuery.addListener === 'function') {
-      standaloneQuery.addListener(updateInstallButtonVisibility);
-    }
-  }
 })();
 

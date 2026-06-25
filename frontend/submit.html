@@ -122,6 +122,7 @@
                   </ul>
                   <div class="submit-demo-location-icon" aria-label="Location icon">
                     <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Ernakulam</span>
                   </div>
                 </div>
               </div>
@@ -155,6 +156,7 @@
                   </ul>
                   <div class="submit-demo-location-icon" aria-label="Location icon">
                     <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Kochi</span>
                   </div>
                 </div>
               </div>
@@ -188,6 +190,7 @@
                   </ul>
                   <div class="submit-demo-location-icon" aria-label="Location icon">
                     <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Ernakulam</span>
                   </div>
                 </div>
               </div>
@@ -221,6 +224,7 @@
                   </ul>
                   <div class="submit-demo-location-icon" aria-label="Location icon">
                     <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Kottayam</span>
                   </div>
                 </div>
               </div>
@@ -234,7 +238,7 @@
               </div>
             </article>
 
-            <article class="submit-demo-card" data-favorite-id="backhoe-loader">
+            <article class="submit-demo-card" data-demo-card data-favorite-id="backhoe-loader">
               <button type="button" class="demo-favorite-heart" data-demo-favorite aria-pressed="false" aria-label="Mark as favorite">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
@@ -254,6 +258,7 @@
                   </ul>
                   <div class="submit-demo-location-icon" aria-label="Location icon">
                     <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Palakkad</span>
                   </div>
                 </div>
               </div>
@@ -287,6 +292,7 @@
                   </ul>
                   <div class="submit-demo-location-icon" aria-label="Location icon">
                     <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Thrissur</span>
                   </div>
                 </div>
               </div>
@@ -320,6 +326,7 @@
                   </ul>
                   <div class="submit-demo-location-icon" aria-label="Location icon">
                     <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Kozhikode</span>
                   </div>
                 </div>
               </div>
@@ -581,6 +588,11 @@
     (function () {
       const favoriteButtons = Array.from(document.querySelectorAll('[data-demo-favorite]'));
       const FAVORITES_STORAGE_KEY = 'vect-favorites-v1';
+      const PENDING_FAVORITE_KEY = 'pending-favorite-toggle';
+
+      function isSignedIn() {
+        return localStorage.getItem('customer-authenticated') === 'true';
+      }
 
       function loadFavorites() {
         try {
@@ -606,6 +618,65 @@
         card.classList.toggle('is-favorited', isSelected);
       }
 
+      function redirectToSignIn(nextTarget) {
+        sessionStorage.setItem(PENDING_FAVORITE_KEY, JSON.stringify(nextTarget));
+        window.location.href = 'customer-login.html?return=submit.html';
+      }
+
+      function applyPendingFavoriteIfAny() {
+        if (!isSignedIn()) {
+          return;
+        }
+
+        try {
+          const raw = sessionStorage.getItem(PENDING_FAVORITE_KEY);
+          const pending = raw ? JSON.parse(raw) : null;
+
+          if (!pending || !pending.id) {
+            return;
+          }
+
+          const button = Array.from(document.querySelectorAll('[data-demo-favorite]')).find(function (item) {
+            const card = item.closest('[data-favorite-id]');
+            return card && String(card.getAttribute('data-favorite-id') || '').trim() === pending.id;
+          });
+
+          if (button) {
+            const card = button.closest('[data-favorite-id]');
+            const favorites = loadFavorites();
+            const existingIndex = favorites.findIndex(function (item) {
+              return item.id === pending.id;
+            });
+
+            if (pending.action === 'add' && existingIndex === -1 && card) {
+              const titleNode = card.querySelector('.submit-demo-title');
+              const imageNode = card.querySelector('.submit-demo-image');
+              const metaNodes = Array.from(card.querySelectorAll('.submit-demo-meta')).map(function (node) {
+                return node.textContent || '';
+              });
+
+              favorites.push({
+                id: pending.id,
+                title: titleNode ? titleNode.textContent.trim() : '',
+                image: imageNode ? imageNode.getAttribute('src') : '',
+                alt: imageNode ? imageNode.getAttribute('alt') || '' : '',
+                meta: metaNodes
+              });
+              saveFavorites(favorites);
+              setFavoriteState(card, button, true);
+            } else if (pending.action === 'remove' && existingIndex >= 0) {
+              favorites.splice(existingIndex, 1);
+              saveFavorites(favorites);
+              setFavoriteState(card, button, false);
+            }
+          }
+        } catch (error) {
+          // Ignore malformed pending state.
+        } finally {
+          sessionStorage.removeItem(PENDING_FAVORITE_KEY);
+        }
+      }
+
       favoriteButtons.forEach(function (button) {
         const card = button.closest('[data-favorite-id]');
         const favoriteId = card ? String(card.getAttribute('data-favorite-id') || '').trim() : '';
@@ -616,6 +687,14 @@
 
         button.addEventListener('click', function () {
           if (!card || !favoriteId) {
+            return;
+          }
+
+          if (!isSignedIn()) {
+            redirectToSignIn({
+              id: favoriteId,
+              action: button.classList.contains('is-selected') ? 'remove' : 'add'
+            });
             return;
           }
 
@@ -647,6 +726,8 @@
           setFavoriteState(card, button, isSelected);
         });
       });
+
+      applyPendingFavoriteIfAny();
     })();
   </script>
 </body>
