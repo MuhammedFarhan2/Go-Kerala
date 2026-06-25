@@ -1520,7 +1520,8 @@ html {
   .owner-auth-banner,
   .owner-auth-banner-card {
     min-height: 0;
-    aspect-ratio: 1.7 / 1;
+    aspect-ratio: 2.4 / 1;
+    max-height: 360px;
   }
 
   .owner-auth-panel-head {
@@ -1688,7 +1689,8 @@ html {
   .owner-auth-banner {
     height: auto;
     min-height: 0;
-    aspect-ratio: 2 / 1;
+    aspect-ratio: 2.2 / 1;
+    max-height: 420px;
     border: 0;
     border-radius: 28px;
     overflow: hidden;
@@ -1705,6 +1707,7 @@ html {
   .owner-auth-banner-card {
     height: 100%;
     min-height: 0;
+    max-height: 420px;
     border-radius: 28px;
     overflow: hidden;
     background: #ffffff;
@@ -3619,24 +3622,24 @@ h1 {
   }
 
   .product-box {
-    min-height: 116px;
+    min-height: 96px;
     padding-right: 14px;
   }
 
   .product-icon {
-    width: 128px;
-    flex-basis: 128px;
+    width: 92px;
+    flex-basis: 92px;
   }
 
   .product-icon-image-featured,
   .product-icon-image-vehicle {
-    padding: 14px;
-    transform: scale(0.9);
+    padding: 8px;
+    transform: scale(0.72);
   }
 
   .product-icon-image-excavator {
-    padding: 12px;
-    transform: scale(0.88);
+    padding: 6px;
+    transform: scale(0.7);
   }
 }
 
@@ -3663,9 +3666,9 @@ h1 {
 }
 
 .product-icon {
-  width: 178px;
+  width: 198px;
   align-self: stretch;
-  flex: 0 0 178px;
+  flex: 0 0 198px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3684,29 +3687,55 @@ h1 {
 
 .product-icon-image-featured {
   object-fit: contain !important;
-  padding: 2px;
+  padding: 0;
   background: #fff;
-  transform: scale(1.12);
+  transform: scale(1.2);
   transform-origin: center;
   image-rendering: auto;
-  filter: contrast(1.1) saturate(1.06) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08));
+  filter: contrast(1.12) saturate(1.08) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08));
 }
 
 .product-icon-image-vehicle {
   object-fit: contain !important;
-  padding: 4px;
+  padding: 1px;
   background: #fff;
-  transform: scale(1.1);
+  transform: scale(1.18);
   transform-origin: center;
   image-rendering: auto;
-  filter: contrast(1.1) saturate(1.06) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08));
+  filter: contrast(1.12) saturate(1.08) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08));
 }
 
 .product-icon-image-excavator {
-  padding: 2px;
-  transform: scale(1.16);
+  padding: 0;
+  transform: scale(1.24);
   image-rendering: auto;
-  filter: contrast(1.12) saturate(1.08) brightness(1.01) drop-shadow(0 5px 12px rgba(0, 0, 0, 0.1));
+  filter: contrast(1.14) saturate(1.1) brightness(1.01) drop-shadow(0 5px 12px rgba(0, 0, 0, 0.1));
+}
+
+@media (min-width: 1024px) {
+  #customer-cards .product-box {
+    min-height: 136px;
+    padding-right: 14px;
+  }
+
+  #customer-cards .product-icon {
+    width: 154px;
+    flex: 0 0 154px;
+    padding: 0;
+  }
+
+  #customer-cards .product-icon-image-featured,
+  #customer-cards .product-icon-image-vehicle {
+    padding: 6px;
+    object-fit: contain !important;
+    transform: scale(1.24);
+  }
+
+  #customer-cards .product-icon-image-excavator {
+    padding: 4px;
+    object-fit: contain !important;
+    transform: scale(1.2);
+  }
 }
 
 .product-copy {
@@ -3760,8 +3789,8 @@ h1 {
   }
 
   .product-icon {
-    width: 130px;
-    flex-basis: 130px;
+    width: 136px;
+    flex-basis: 136px;
     border-radius: 14px 0 0 14px;
   }
 
@@ -3800,8 +3829,8 @@ h1 {
   }
 
   .product-icon {
-    width: 112px;
-    flex-basis: 112px;
+    width: 116px;
+    flex-basis: 116px;
     border-radius: 12px;
   }
 
@@ -3844,9 +3873,7 @@ h1 {
 }
 
 .route-main {
-  padding: 6px 14px 8px;
-  height: calc(100dvh - var(--header-height));
-  overflow: hidden;
+  padding: 20px 16px 26px;
 }
 
 .route-sheet {
@@ -3854,40 +3881,34 @@ h1 {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  height: 100%;
-  overflow: hidden;
+  gap: 16px;
 }
 
 .route-field {
   position: relative;
 }
 
-.route-field[data-route-field="from"] {
-  margin-top: -2px;
-}
-
 .route-field-label {
-  margin: 0 0 2px;
-  font-size: 0.82rem;
+  margin: 0 0 3px;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #111;
 }
 
 .route-field-hint {
-  margin: -2px 0 4px;
-  font-size: 0.72rem;
+  margin: -2px 0 5px;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #8a8a8a;
 }
 
 .route-dropdown-toggle + .route-field-hint {
-  margin-top: 4px;
+  margin-top: 5px;
 }
 
 .route-field-error {
-  margin: 4px 0 0;
-  font-size: 0.75rem;
+  margin: 5px 0 0;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #d92d20;
 }
@@ -3950,14 +3971,14 @@ h1 {
   display: flex;
   justify-content: center;
   position: static;
-  margin-top: 4px;
+  margin-top: 14px;
 }
 
 .route-select-btn {
   min-width: min(420px, 100%);
   width: 100%;
   max-width: 420px;
-  height: 46px;
+  height: 48px;
   border: none;
   border-radius: 999px;
   background: #111;
@@ -3981,11 +4002,11 @@ h1 {
 
 .route-dropdown-toggle {
   width: 100%;
-  min-height: 62px;
+  min-height: 71px;
   border: 1px solid #dcdcdc;
   border-radius: 20px;
   background: #fff;
-  padding: 12px 16px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4002,7 +4023,7 @@ h1 {
 }
 
 .route-dropdown-value {
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #111;
 }
@@ -4014,7 +4035,7 @@ h1 {
   outline: none;
   background: transparent;
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 500;
   color: #111;
 }
@@ -4284,17 +4305,17 @@ h1 {
 
 @media (max-width: 768px) {
   .route-main {
-    padding: 4px 10px 8px;
+    padding: 14px 12px 18px;
   }
 
   .route-sheet {
-    gap: 6px;
+    gap: 12px;
   }
 
   .route-dropdown-toggle {
-    min-height: 52px;
+    min-height: 61px;
     border-radius: 18px;
-    padding: 8px 12px;
+    padding: 12px 14px;
   }
 
   .route-dropdown-list {
@@ -4303,7 +4324,7 @@ h1 {
   }
 
   .route-calendar {
-    padding: 6px 36px;
+    padding: 12px 42px;
     border-radius: 20px;
   }
 
@@ -4313,32 +4334,23 @@ h1 {
   }
 
   .route-calendar-day {
-    width: 30px;
-    height: 30px;
-    font-size: 0.9rem;
+    width: 32px;
+    height: 32px;
+    font-size: 0.94rem;
   }
 
   .route-select-action {
-    margin-top: 4px;
+    margin-top: 12px;
   }
 
   .route-select-btn {
-    height: 40px;
+    height: 46px;
   }
-}
-
-.route-page {
-  overflow: hidden;
-  height: 100dvh;
-}
-
-.route-page .main {
-  overflow: hidden;
 }
 
 @media (min-height: 860px) {
   .route-main {
-    padding-bottom: 76px;
+    padding-bottom: 120px;
   }
 
   .route-select-action {
@@ -4358,7 +4370,7 @@ h1 {
 
 @media (max-width: 768px) and (min-height: 860px) {
   .route-main {
-    padding-bottom: 72px;
+    padding-bottom: 110px;
   }
 
   .route-select-action {
