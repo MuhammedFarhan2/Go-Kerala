@@ -4735,11 +4735,6 @@
 
 (function () {
   window.addEventListener('load', function () {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(function () {
-        return null;
-      });
-    }
   });
 })();
 
