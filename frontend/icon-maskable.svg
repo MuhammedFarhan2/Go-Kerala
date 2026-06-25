@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="VECT Movers maskable icon">
+  <rect width="512" height="512" rx="128" fill="#111111"/>
+  <rect x="48" y="48" width="416" height="416" rx="104" fill="#ffffff"/>
+  <path d="M124 198c0-24 20-44 44-44h176c24 0 44 20 44 44v104c0 16-12 28-28 28h-14l-20 36h-28l-20-36H182l-20 36h-28l-20-36h-10c-16 0-28-12-28-28V198z" fill="#111111"/>
+  <path d="M160 212h192v68H160z" fill="#f3f4f6"/>
+  <circle cx="186" cy="346" r="26" fill="#111111"/>
+  <circle cx="326" cy="346" r="26" fill="#111111"/>
+  <text x="256" y="278" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="700" fill="#ffffff">VECT</text>
+</svg>

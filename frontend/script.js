@@ -3363,13 +3363,20 @@
     const place = String(record.place || '').trim();
     const seats = String(record.seats || '').trim();
     const vehicleType = String(record.type || '').trim();
-    const companyName = String(record.companyName || 'VECT Movers').trim();
     const imageUrl = resolveImageUrl(record.photo || getDefaultImageForScope(record.scope));
     const metaParts = [
       place || 'Kerala',
       seats ? seats + ' seats' : '',
       vehicleType || ''
     ].filter(Boolean);
+    const isTouristBus = record.scope === 'tourist';
+    const dealerName = String(record.dealerName || 'abc').trim() || 'abc';
+    const touristSeatsText = seats || '34 seats';
+    const touristAcsText = vehicleType || 'A/C';
+    const featureParts = isTouristBus
+      ? [touristSeatsText, touristAcsText, 'Music']
+      : metaParts.slice(0, 3);
+    const locationText = isTouristBus ? 'Location' : (place || 'Location');
 
     return [
       '<article class="submit-demo-card is-accepted-source" data-demo-card data-demo-source="accepted-vehicle">',
@@ -3378,11 +3385,20 @@
       '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="' + title.replace(/"/g, '&quot;') + '" class="submit-demo-image" onerror="this.onerror=null;this.src=\'' + getDefaultImageForScope(record.scope).replace(/'/g, '&#39;') + '\';" />',
       '</div>',
       '<div class="submit-demo-content">',
-      '<div class="submit-demo-topline">',
-      '<h3 class="submit-demo-title">' + title + '</h3>',
-      '<span class="submit-demo-price">Accepted</span>',
-      '</div>',
-      '<p class="submit-demo-meta">' + metaParts.join(' \u00b7 ') + '</p>',
+      [
+        '<div class="submit-demo-tourist-block">',
+        '<h3 class="submit-demo-title">' + title + '</h3>',
+        '<p class="submit-demo-dealer">Dealer : ' + dealerName + '</p>',
+        '<ul class="submit-demo-specs" aria-label="Vehicle features">',
+        featureParts.map(function (part) {
+          return '<li class="submit-demo-spec">' + part + '</li>';
+        }).join(''),
+        '</ul>',
+        '<div class="submit-demo-location-icon" aria-label="Location icon">',
+        '<img src="location-2955.svg" alt="" class="submit-demo-location-image" />',
+        '</div>',
+        '</div>'
+      ].join(''),
       '</div>',
       '</div>',
       '<div class="submit-demo-expand" aria-hidden="true">',
@@ -4294,6 +4310,49 @@
     updateDemoSheetPreview();
   }
 
+  function getCardSpecs(card) {
+    return Array.from(card.querySelectorAll('.submit-demo-spec'))
+      .map(function (node) {
+        return String(node.textContent || '').trim();
+      })
+      .filter(Boolean);
+  }
+
+  function getCardDealer(card) {
+    const dealerNode = card.querySelector('.submit-demo-dealer');
+    return dealerNode ? String(dealerNode.textContent || '').replace(/^Dealer\s*:\s*/i, '').trim() : '';
+  }
+
+  function getCardTitle(card) {
+    const titleNode = card.querySelector('.submit-demo-title');
+    return titleNode ? String(titleNode.textContent || '').trim() : 'Vehicle';
+  }
+
+  function getCardImage(card) {
+    const imageNode = card.querySelector('.submit-demo-image');
+    return {
+      src: imageNode ? String(imageNode.getAttribute('src') || '').trim() : '',
+      alt: imageNode ? String(imageNode.getAttribute('alt') || '').trim() : ''
+    };
+  }
+
+  function openVehicleDetailPage(card) {
+    if (!card) {
+      return;
+    }
+
+    const payload = {
+      title: getCardTitle(card),
+      dealer: getCardDealer(card),
+      specs: getCardSpecs(card),
+      image: getCardImage(card),
+      scope: String(card.getAttribute('data-demo-source') || card.getAttribute('data-favorite-id') || '').trim()
+    };
+
+    sessionStorage.setItem('submit-vehicle-detail', JSON.stringify(payload));
+    window.location.href = 'vehicle-detail.html';
+  }
+
   if (bookButton) {
     bookButton.addEventListener('click', function () {
       if (bookButton.disabled) {
@@ -4331,14 +4390,7 @@
         }
 
         if (actionType === 'view') {
-          const isExpanded = card.classList.contains('is-expanded');
-          const shouldExpand = !isExpanded;
-          openDemoSheet();
-          setDemoCardExpanded(card, shouldExpand);
-          if (shouldExpand) {
-            ensureDemoCardVisible(card, true);
-            ensureDemoActionsVisible(card, 0);
-          }
+          openVehicleDetailPage(card);
           return;
         }
       }
@@ -4650,3 +4702,66 @@
     refresh();
   });
 })();
+
+(function () {
+  const installButton = document.getElementById('install-app-btn');
+  let deferredPrompt = null;
+
+  function isStandaloneMode() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  function updateInstallButtonVisibility() {
+    if (!installButton) {
+      return;
+    }
+
+    installButton.hidden = isStandaloneMode() || !deferredPrompt;
+  }
+
+  if (installButton) {
+    installButton.addEventListener('click', async function () {
+      if (!deferredPrompt) {
+        return;
+      }
+
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice.catch(function () {
+        return { outcome: 'dismissed' };
+      });
+      deferredPrompt = null;
+      updateInstallButtonVisibility();
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    deferredPrompt = event;
+    updateInstallButtonVisibility();
+  });
+
+  window.addEventListener('appinstalled', function () {
+    deferredPrompt = null;
+    updateInstallButtonVisibility();
+  });
+
+  window.addEventListener('load', function () {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function () {
+        return null;
+      });
+    }
+
+    updateInstallButtonVisibility();
+  });
+
+  if (window.matchMedia) {
+    const standaloneQuery = window.matchMedia('(display-mode: standalone)');
+    if (typeof standaloneQuery.addEventListener === 'function') {
+      standaloneQuery.addEventListener('change', updateInstallButtonVisibility);
+    } else if (typeof standaloneQuery.addListener === 'function') {
+      standaloneQuery.addListener(updateInstallButtonVisibility);
+    }
+  }
+})();
+

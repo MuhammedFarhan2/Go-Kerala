@@ -1,10 +1,12 @@
-const APP_CACHE = "pmq-app-v8";
+const APP_CACHE = "pmq-app-v9";
 const APP_FILES = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
   "./manifest.json",
+  "./icon.svg",
+  "./icon-maskable.svg",
   "./vect-own/index.html",
   "./vect-own/dashboard.html"
 ];
@@ -66,4 +68,10 @@ self.addEventListener("fetch", (event) => {
       return caches.match("./index.html");
     }
   })());
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });

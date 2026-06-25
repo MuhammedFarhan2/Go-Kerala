@@ -255,6 +255,30 @@ button.submit-demo-expand-btn.is-view {
   margin-left: auto;
 }
 
+.install-app-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(17, 17, 17, 0.08);
+}
+
+.install-app-btn:hover {
+  opacity: 0.95;
+}
+
+.install-app-btn[hidden] {
+  display: none;
+}
+
 .header-switch-link {
   display: inline-flex;
   align-items: center;
@@ -5150,28 +5174,32 @@ body.submit-page {
     border: 0 !important;
     box-shadow: 0 8px 18px rgba(17, 17, 17, 0.12);
   }
+
+  .submit-demo-card {
+    padding-right: 50px;
+  }
 }
 
 .submit-demo-card.is-accepted-source {
-  padding: 4px;
   border: 2px solid #111;
 }
 
 .submit-demo-card.is-accepted-source .submit-demo-card-main {
-  gap: 6px;
+  gap: 14px;
 }
 
 .submit-demo-card.is-accepted-source .submit-demo-image-wrap {
-  width: 116px;
-  flex: 0 0 116px;
+  width: 170px;
+  flex: 0 0 170px;
+  margin-top: 0;
 }
 
 .submit-demo-card.is-accepted-source .submit-demo-image {
-  min-height: 72px;
+  min-height: 120px;
 }
 
 .submit-demo-card.is-accepted-source .submit-demo-content {
-  gap: 3px;
+  gap: 0;
 }
 
 .submit-demo-card.is-expanded {
@@ -5210,8 +5238,10 @@ body.submit-page {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 6px;
+  gap: 14px;
   min-height: 0;
+  padding: 8px 10px;
+  min-height: 104px;
 }
 
 .submit-demo-image-wrap {
@@ -5223,12 +5253,15 @@ body.submit-page {
   border: 1px solid #ececec;
   padding: 0;
   box-sizing: border-box;
+  align-self: center;
+  margin-top: 0;
+  height: 104px;
 }
 
 .submit-demo-image {
   width: 100%;
   height: 100%;
-  min-height: 120px;
+  min-height: 0;
   object-fit: cover;
   display: block;
 }
@@ -5239,7 +5272,10 @@ body.submit-page {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 0;
+  padding: 0;
+  margin-top: 0;
 }
 
 .submit-demo-topline {
@@ -5247,6 +5283,8 @@ body.submit-page {
   align-items: flex-start;
   justify-content: flex-start;
   gap: 0;
+  width: 100%;
+  margin-bottom: 6px;
 }
 
 .submit-demo-title {
@@ -5254,13 +5292,70 @@ body.submit-page {
   font-size: 1.02rem;
   font-weight: 800;
   color: #111;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
 }
 
 .submit-demo-meta {
   margin: 0;
   color: #5b5b5b;
   font-size: 0.92rem;
-  line-height: 1.35;
+  line-height: 1.45;
+}
+
+.submit-demo-dealer {
+  margin: 0;
+  color: #3f4756;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.submit-demo-specs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  margin-bottom: 10px;
+}
+
+.submit-demo-spec {
+  position: relative;
+  margin: 0;
+  padding-left: 14px;
+  color: #5b5b5b;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.submit-demo-spec::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.67em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.submit-demo-location-icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 2px;
+  width: 100%;
+  transform: translateY(-7px);
+}
+
+.submit-demo-location-image {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
 }
 
 .submit-demo-expand {
@@ -5296,7 +5391,8 @@ body.submit-page {
 
 .submit-demo-expand-btn {
   flex: 1 1 0;
-  min-height: 44px;
+  min-width: 0;
+  height: 44px;
   border: 1px solid #111;
   border-radius: 14px;
   font-size: 0.92rem;
@@ -5304,6 +5400,13 @@ body.submit-page {
   letter-spacing: 0.06em;
   line-height: 1;
   padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow: inset 0 -1px 0 #111;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 .submit-demo-expand-btn.is-view {
@@ -5672,12 +5775,19 @@ body.submit-page {
     border-width: 2px;
   }
 
+  .demo-favorite-heart {
+    top: 8px;
+    right: 8px;
+  }
+
   .submit-demo-list {
     padding-bottom: 6px;
   }
 
   .submit-demo-card-main {
-    gap: 3px;
+    gap: 10px;
+    padding: 6px 8px;
+    min-height: 92px;
   }
 
   .submit-demo-image-wrap {
@@ -5685,13 +5795,14 @@ body.submit-page {
     flex-basis: 160px;
     height: 102px;
     padding: 0;
+    margin-top: 0;
   }
 
   .submit-demo-image {
     width: 100%;
     height: 100%;
     min-height: 0;
-    object-fit: contain;
+    object-fit: cover;
     object-position: center;
     image-rendering: auto;
   }
@@ -5699,7 +5810,7 @@ body.submit-page {
   .submit-demo-topline {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1px;
+    gap: 2px;
   }
 
   .submit-demo-content {
@@ -5707,12 +5818,40 @@ body.submit-page {
   }
 
   .submit-demo-title {
-    font-size: 0.84rem;
+    font-size: 0.96rem;
   }
 
   .submit-demo-meta {
-    font-size: 0.7rem;
-    line-height: 1.15;
+    font-size: 0.76rem;
+    line-height: 1.4;
+  }
+
+  .submit-demo-dealer,
+  .submit-demo-spec {
+    font-size: 0.76rem;
+    line-height: 1.4;
+  }
+
+  .submit-demo-specs {
+    gap: 0 8px;
+  }
+
+  .submit-demo-spec {
+    padding-left: 10px;
+  }
+
+  .submit-demo-spec::before {
+    width: 4px;
+    height: 4px;
+  }
+
+  .submit-demo-location-image {
+    width: 18px;
+    height: 18px;
+  }
+
+  .submit-demo-location-icon {
+    transform: translateY(-5px);
   }
 
   .submit-demo-card.is-expanded {
@@ -5729,7 +5868,8 @@ body.submit-page {
   }
 
   .submit-demo-expand-actions {
-    gap: 2px;
+    gap: 4px;
+    width: 100%;
   }
 
   .submit-demo-sheet {
@@ -5759,10 +5899,17 @@ body.submit-page {
   }
 
   .submit-demo-expand-btn {
-    min-height: 32px;
+    height: 32px;
     border-radius: 12px;
     font-size: 0.74rem;
-    padding: 0 6px;
+    padding: 0 10px;
+    min-width: 0;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    box-shadow: inset 0 -1px 0 #111;
   }
 
   .submit-demo-sheet-selected-location {
