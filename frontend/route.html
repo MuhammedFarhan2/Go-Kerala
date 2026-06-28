@@ -198,6 +198,8 @@
 
         if (accountBtn) {
           accountBtn.hidden = !signedIn;
+          accountBtn.style.marginLeft = signedIn ? 'auto' : '';
+          accountBtn.style.marginRight = signedIn ? '10px' : '';
         }
 
         if (headerLinks) {

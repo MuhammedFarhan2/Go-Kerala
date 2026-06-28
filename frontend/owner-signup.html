@@ -3,14 +3,10 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Sign Up</title>
+    <title>Owner Sign Up</title>
     <script>
       document.documentElement.classList.add('show-page-loader');
-      (function () {
-        const returnPage = String(new URLSearchParams(window.location.search).get('return') || '').trim().toLowerCase();
-        const ownerFlowPages = new Set(['owner-coverage.html', 'owner-next.html', 'owner.html']);
-        document.documentElement.classList.toggle('is-owner-auth-flow', ownerFlowPages.has(returnPage));
-      })();
+      document.documentElement.classList.add('is-owner-auth-flow');
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <link rel="stylesheet" href="style.css?v=20260406-2">
@@ -51,7 +47,7 @@
     </header>
 
     <main class="owner-main owner-auth-main">
-      <section class="owner-auth-shell" aria-label="Customer sign up">
+      <section class="owner-auth-shell" aria-label="Owner sign up">
         <div class="owner-auth-visual" aria-hidden="true">
           <div class="swiper owner-auth-banner" id="customerSignupBanner" aria-label="Homepage banner slider">
             <div class="swiper-wrapper">
@@ -78,7 +74,7 @@
         <div class="owner-auth-panel">
           <div class="owner-auth-panel-head">
             <h1 class="owner-auth-title">Create an account</h1>
-            <p class="owner-auth-subtitle">Already have an account? <a href="customer-login.html" class="owner-auth-inline-link">Log in</a></p>
+            <p class="owner-auth-subtitle">Already have an account? <a href="owner-login.html" class="owner-auth-inline-link">Log in</a></p>
           </div>
 
           <form class="owner-auth-form" id="customer-signup-form" novalidate>
@@ -88,7 +84,7 @@
             </label>
 
             <div class="customer-auth-actions" aria-label="Account actions">
-              <a href="index.html" class="customer-auth-skip">Skip</a>
+              <a href="owner-coverage.html" class="customer-auth-skip">Skip</a>
               <button type="submit" class="owner-auth-submit customer-auth-submit">Next</button>
             </div>
           </form>
@@ -119,12 +115,11 @@
         const googleAuthButton = document.querySelector('[data-google-auth-btn]');
         const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
         const pageParams = new URLSearchParams(window.location.search);
-        const returnPage = String(pageParams.get('return') || '').trim();
+        const returnPage = String(pageParams.get('return') || '').trim() || 'owner-coverage.html';
         const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
 
         function getSafeReturnTarget() {
           const allowedPages = new Set([
-            'index.html',
             'owner-coverage.html',
             'owner-next.html',
             'owner.html',
@@ -132,7 +127,7 @@
             'submit.html'
           ]);
           const normalized = returnPage.toLowerCase();
-          return allowedPages.has(normalized) ? normalized : 'index.html';
+          return allowedPages.has(normalized) ? normalized : 'owner-coverage.html';
         }
 
         function decodeJwtPayload(token) {

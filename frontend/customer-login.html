@@ -6,6 +6,11 @@
     <title>Customer Login</title>
     <script>
       document.documentElement.classList.add('show-page-loader');
+      (function () {
+        const returnPage = String(new URLSearchParams(window.location.search).get('return') || '').trim().toLowerCase();
+        const ownerFlowPages = new Set(['owner-coverage.html', 'owner-next.html', 'owner.html']);
+        document.documentElement.classList.toggle('is-owner-auth-flow', ownerFlowPages.has(returnPage));
+      })();
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <link rel="stylesheet" href="style.css?v=20260406-2">
@@ -23,14 +28,12 @@
       </div>
     </div>
 
-    <header class="header owner-auth-header">
-      <div class="owner-auth-brand-lockup">
-        <h1 class="logo owner-auth-logo">VECT</h1>
-        <p class="owner-auth-logo-sub">MOVERS</p>
+    <header class="owner-topbar owner-auth-header">
+      <div class="owner-topbar-inner">
+      <div class="brand-lockup owner-brand-lockup">
+        <h1 class="logo">VECT</h1>
+        <p class="logo-sub">MOVERS</p>
       </div>
-      <nav class="header-switch" aria-label="Account switch">
-        <a class="header-switch-link" href="customer-signup.html" aria-label="Open customer sign up">Sign up</a>
-      </nav>
       <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
         <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
           <defs>
@@ -44,6 +47,7 @@
           </g>
         </svg>
       </button>
+      </div>
     </header>
 
     <main class="owner-main owner-auth-main">
@@ -126,6 +130,9 @@
         function getSafeReturnTarget() {
           const allowedPages = new Set([
             'index.html',
+            'owner-coverage.html',
+            'owner-next.html',
+            'owner.html',
             'route.html',
             'submit.html'
           ]);
@@ -225,6 +232,7 @@
 
         if (accountBtn) {
           accountBtn.hidden = !signedIn;
+          accountBtn.style.display = signedIn ? 'inline-flex' : 'none';
           accountBtn.addEventListener('click', function () {
             window.location.href = getSafeReturnTarget();
           });

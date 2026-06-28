@@ -4750,7 +4750,7 @@ body.submit-page {
 @media (min-width: 1024px) {
   .submit-box-location-row {
     transform: none;
-    text-align: center;
+    text-align: left;
     padding-left: 0;
     padding-right: 0;
     white-space: normal;
@@ -4798,12 +4798,12 @@ body.submit-page {
 }
 
 .submit-box-location .submit-box-text-centered {
-  text-align: center;
+  text-align: left;
   padding-left: 0;
 }
 
 .submit-box-location-row {
-  text-align: center;
+  text-align: left;
 }
 
 .submit-box-location::before {
@@ -4816,9 +4816,9 @@ body.submit-page {
 
 .submit-box-location-row {
   position: relative;
-  padding-left: 0;
+  padding-left: 34px;
   padding-right: 0;
-  text-align: center;
+  text-align: left;
   font-size: clamp(0.7rem, 0.58rem + 0.35vw, 0.92rem);
   line-height: 1.25;
   word-break: break-word;
@@ -5143,6 +5143,11 @@ body.submit-page {
 .is-submit-page .header,
 .is-route-page .header {
   border-bottom-color: #111;
+}
+
+.is-submit-page .customer-account-btn {
+  margin-left: auto;
+  margin-right: 10px;
 }
 
 @media (max-width: 768px) {

@@ -3,14 +3,10 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Sign Up</title>
+    <title>Owner Login</title>
     <script>
       document.documentElement.classList.add('show-page-loader');
-      (function () {
-        const returnPage = String(new URLSearchParams(window.location.search).get('return') || '').trim().toLowerCase();
-        const ownerFlowPages = new Set(['owner-coverage.html', 'owner-next.html', 'owner.html']);
-        document.documentElement.classList.toggle('is-owner-auth-flow', ownerFlowPages.has(returnPage));
-      })();
+      document.documentElement.classList.add('is-owner-auth-flow');
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <link rel="stylesheet" href="style.css?v=20260406-2">
@@ -37,11 +33,11 @@
       <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
         <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
           <defs>
-            <clipPath id="circle-clip-signup">
+            <clipPath id="circle-clip-login">
               <circle cx="12" cy="12" r="11.75"/>
             </clipPath>
           </defs>
-          <g clip-path="url(#circle-clip-signup)">
+          <g clip-path="url(#circle-clip-login)">
             <circle cx="17.5" cy="6.5" r="2.0" fill="#111"/>
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#111"/>
           </g>
@@ -51,9 +47,9 @@
     </header>
 
     <main class="owner-main owner-auth-main">
-      <section class="owner-auth-shell" aria-label="Customer sign up">
+      <section class="owner-auth-shell" aria-label="Owner login">
         <div class="owner-auth-visual" aria-hidden="true">
-          <div class="swiper owner-auth-banner" id="customerSignupBanner" aria-label="Homepage banner slider">
+          <div class="swiper owner-auth-banner" id="customerLoginBanner" aria-label="Homepage banner slider">
             <div class="swiper-wrapper">
               <div class="swiper-slide">
                 <div class="owner-auth-banner-card">
@@ -77,26 +73,31 @@
 
         <div class="owner-auth-panel">
           <div class="owner-auth-panel-head">
-            <h1 class="owner-auth-title">Create an account</h1>
-            <p class="owner-auth-subtitle">Already have an account? <a href="customer-login.html" class="owner-auth-inline-link">Log in</a></p>
+            <h1 class="owner-auth-title">Log in</h1>
+            <p class="owner-auth-subtitle">Need an account? <a href="owner-signup.html" class="owner-auth-inline-link">Create account</a></p>
           </div>
 
-          <form class="owner-auth-form" id="customer-signup-form" novalidate>
+          <form class="owner-auth-form" id="customer-login-form" novalidate>
             <label class="owner-auth-field">
               <span class="owner-auth-field-label">Email</span>
               <input type="text" class="owner-auth-input" placeholder="Email" autocomplete="username" required>
             </label>
 
+            <label class="owner-auth-field">
+              <span class="owner-auth-field-label">Password</span>
+              <input type="password" class="owner-auth-input owner-auth-input-password" placeholder="Password" autocomplete="current-password" required>
+            </label>
+
             <div class="customer-auth-actions" aria-label="Account actions">
-              <a href="index.html" class="customer-auth-skip">Skip</a>
-              <button type="submit" class="owner-auth-submit customer-auth-submit">Next</button>
+              <a href="owner-coverage.html" class="customer-auth-skip">Skip</a>
+              <button type="submit" class="owner-auth-submit customer-auth-submit">Log in</button>
             </div>
           </form>
 
           <div data-owner-auth-extras>
             <div class="owner-auth-divider">
               <span></span>
-              <p data-owner-auth-divider-text>Or sign up with</p>
+              <p data-owner-auth-divider-text>Or log in with</p>
               <span></span>
             </div>
 
@@ -115,16 +116,15 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
       (function () {
-        const form = document.getElementById('customer-signup-form');
+        const form = document.getElementById('customer-login-form');
         const googleAuthButton = document.querySelector('[data-google-auth-btn]');
         const googleMetaTag = document.querySelector('meta[name="google-signin-client_id"]');
         const pageParams = new URLSearchParams(window.location.search);
-        const returnPage = String(pageParams.get('return') || '').trim();
+        const returnPage = String(pageParams.get('return') || '').trim() || 'owner-coverage.html';
         const googleClientId = googleMetaTag ? String(googleMetaTag.getAttribute('content') || '').trim() : '';
 
         function getSafeReturnTarget() {
           const allowedPages = new Set([
-            'index.html',
             'owner-coverage.html',
             'owner-next.html',
             'owner.html',
@@ -132,7 +132,7 @@
             'submit.html'
           ]);
           const normalized = returnPage.toLowerCase();
-          return allowedPages.has(normalized) ? normalized : 'index.html';
+          return allowedPages.has(normalized) ? normalized : 'owner-coverage.html';
         }
 
         function decodeJwtPayload(token) {
@@ -185,7 +185,7 @@
           window.google.accounts.id.renderButton(googleAuthButton, {
             theme: 'outline',
             size: 'large',
-            text: 'signup_with',
+            text: 'signin_with',
             shape: 'rectangular',
             width: Math.max(300, Math.floor(googleAuthButton.getBoundingClientRect().width || googleAuthButton.clientWidth || 300))
           });
@@ -208,7 +208,7 @@
         }
 
         if (window.Swiper) {
-          new Swiper('#customerSignupBanner', {
+          new Swiper('#customerLoginBanner', {
             loop: true,
             speed: 700,
             autoplay: { delay: 3000, disableOnInteraction: false },
