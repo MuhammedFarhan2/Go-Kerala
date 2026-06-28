@@ -99,6 +99,101 @@
         }
       }
 
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function resolveFavoritePlace(item) {
+        return String(item && (item.place || item.location || item.locationText) || '').trim();
+      }
+
+      function resolveFavoriteDealer(item, metaParts) {
+        const dealer = String(item && (item.dealer || item.dealerName) || '').trim();
+        if (dealer) {
+          return dealer;
+        }
+        if (Array.isArray(metaParts)) {
+          const dealerMeta = metaParts.find(function (part) {
+            return /dealer\s*:/i.test(String(part || ''));
+          });
+          if (dealerMeta) {
+            return String(dealerMeta).replace(/^dealer\s*:\s*/i, '').trim();
+          }
+        }
+        return 'abc';
+      }
+
+      function resolveFavoriteSpecs(item, metaParts) {
+        if (Array.isArray(item && item.specs) && item.specs.length) {
+          return item.specs.filter(Boolean).slice(0, 3);
+        }
+
+        const cleaned = Array.isArray(metaParts) ? metaParts.filter(Boolean) : [];
+        return cleaned.slice(0, 3);
+      }
+
+      function buildFavoriteCard(item) {
+        const title = String(item && item.title || 'Saved vehicle').trim() || 'Saved vehicle';
+        const image = String(item && item.image || '').trim();
+        const alt = String(item && item.alt || title).trim();
+        const metaParts = Array.isArray(item && item.meta) ? item.meta.filter(Boolean) : [];
+        const place = resolveFavoritePlace(item) || (metaParts.length ? String(metaParts[metaParts.length - 1] || '').trim() : '');
+        const dealer = resolveFavoriteDealer(item, metaParts);
+        const specs = resolveFavoriteSpecs(item, metaParts);
+        const sourceScope = String(item && (item.scope || item.id) || '').trim();
+        const viewPayload = {
+          title: title,
+          dealer: dealer,
+          place: place,
+          specs: specs,
+          image: image,
+          scope: sourceScope
+        };
+
+        return [
+          '<article class="submit-demo-card favorites-demo-card" data-favorite-card data-favorite-id="' + escapeHtml(item && item.id) + '" data-favorite-payload="' + escapeHtml(JSON.stringify(viewPayload)) + '">',
+          '  <button type="button" class="demo-favorite-heart is-selected" data-favorite-remove aria-pressed="true" aria-label="Remove favorite">',
+          '    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
+          '      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>',
+          '    </svg>',
+          '  </button>',
+          '  <div class="submit-demo-card-main">',
+          '    <div class="submit-demo-image-wrap">',
+          image ? '      <img class="submit-demo-image" src="' + escapeHtml(image) + '" alt="' + escapeHtml(alt) + '">' : '      <div class="submit-demo-image submit-demo-image--placeholder"></div>',
+          '    </div>',
+          '    <div class="submit-demo-content">',
+          '      <div class="submit-demo-topline">',
+          '        <h3 class="submit-demo-title">' + escapeHtml(title) + '</h3>',
+          '      </div>',
+          '      <p class="submit-demo-dealer">Dealer : ' + escapeHtml(dealer) + '</p>',
+          '      <ul class="submit-demo-specs" aria-label="Vehicle features">',
+          specs.map(function (spec) {
+            return '<li class="submit-demo-spec">' + escapeHtml(spec) + '</li>';
+          }).join(''),
+          '      </ul>',
+          '      <div class="submit-demo-location-icon" aria-label="Location icon">',
+          '        <img src="location-2955.svg" alt="" class="submit-demo-location-image" />',
+          '        <span class="submit-demo-place">' + escapeHtml(place || 'Location') + '</span>',
+          '      </div>',
+          '    </div>',
+          '  </div>',
+          '  <div class="submit-demo-expand" aria-hidden="true">',
+          '    <div class="submit-demo-expand-inner">',
+          '      <div class="submit-demo-expand-actions">',
+          '        <button type="button" class="submit-demo-expand-btn is-view" data-favorite-action="view">VIEW</button>',
+          '        <button type="button" class="submit-demo-expand-btn is-select" data-favorite-action="select">SELECT</button>',
+          '      </div>',
+          '    </div>',
+          '  </div>',
+          '</article>'
+        ].join('');
+      }
+
       function renderFavorites() {
         if (!favoritesList) {
           return;
@@ -111,26 +206,11 @@
           return;
         }
 
-        favoritesList.innerHTML = favorites.map(function (item) {
-          const meta = Array.isArray(item.meta) ? item.meta.filter(Boolean) : [];
-          return [
-            '<article class="favorites-card" data-favorite-id="' + item.id + '">',
-            '  <button type="button" class="demo-favorite-heart is-selected" data-favorite-remove aria-pressed="true" aria-label="Remove favorite">',
-            '    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
-            '      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>',
-            '    </svg>',
-            '  </button>',
-            item.image ? '<img class="favorites-card-image" src="' + item.image + '" alt="' + (item.alt || item.title || '') + '">' : '<div class="favorites-card-image favorites-card-image--placeholder"></div>',
-            '  <div class="favorites-card-copy">',
-            '    <h3 class="favorites-card-title">' + (item.title || 'Saved vehicle') + '</h3>',
-            meta.length ? '<p class="favorites-card-meta">' + meta.join(' &middot; ') + '</p>' : '',
-            '  </div>',
-            '</article>'
-          ].join('');
-        }).join('');
+        favoritesList.innerHTML = favorites.map(buildFavoriteCard).join('');
 
         Array.from(favoritesList.querySelectorAll('[data-favorite-remove]')).forEach(function (button) {
-          button.addEventListener('click', function () {
+          button.addEventListener('click', function (event) {
+            event.stopPropagation();
             const card = button.closest('[data-favorite-id]');
             const favoriteId = card ? String(card.getAttribute('data-favorite-id') || '').trim() : '';
             if (!favoriteId) {
@@ -142,6 +222,62 @@
             });
             localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(updatedFavorites));
             renderFavorites();
+          });
+        });
+
+        Array.from(favoritesList.querySelectorAll('[data-favorite-card]')).forEach(function (card) {
+          card.addEventListener('click', function (event) {
+            const actionButton = event.target.closest('[data-favorite-action]');
+
+            if (actionButton) {
+              event.stopPropagation();
+              const actionType = actionButton.getAttribute('data-favorite-action');
+
+              if (actionType === 'view') {
+                const payloadRaw = card.getAttribute('data-favorite-payload') || '{}';
+                let payload = {};
+
+                try {
+                  payload = JSON.parse(payloadRaw);
+                } catch (error) {
+                  payload = {};
+                }
+
+                sessionStorage.setItem('submit-vehicle-detail', JSON.stringify(payload));
+                window.location.href = 'vehicle-detail.html';
+                return;
+              }
+
+              if (actionType === 'select') {
+                const isSelected = !card.classList.contains('is-selected');
+                card.classList.toggle('is-selected', isSelected);
+
+                const selectButton = card.querySelector('[data-favorite-action="select"]');
+                if (selectButton) {
+                  selectButton.classList.toggle('is-active', isSelected);
+                  selectButton.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+                  selectButton.textContent = isSelected ? 'DESELECT' : 'SELECT';
+                }
+                return;
+              }
+            }
+
+            const shouldExpand = !card.classList.contains('is-expanded');
+            favoritesList.querySelectorAll('.submit-demo-card.is-expanded').forEach(function (otherCard) {
+              if (otherCard !== card) {
+                otherCard.classList.remove('is-expanded');
+                const expand = otherCard.querySelector('.submit-demo-expand');
+                if (expand) {
+                  expand.setAttribute('aria-hidden', 'true');
+                }
+              }
+            });
+
+            card.classList.toggle('is-expanded', shouldExpand);
+            const expand = card.querySelector('.submit-demo-expand');
+            if (expand) {
+              expand.setAttribute('aria-hidden', shouldExpand ? 'false' : 'true');
+            }
           });
         });
       }
