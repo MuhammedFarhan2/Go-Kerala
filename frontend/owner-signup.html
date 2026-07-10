@@ -11,6 +11,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <link rel="stylesheet" href="style.css?v=20260406-2">
     <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
+    <style>
+      .owner-auth-header {
+        padding: 0.65rem 1.4rem;
+      }
+    </style>
   </head>
   <body>
     <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -30,19 +35,7 @@
         <h1 class="logo">VECT</h1>
         <p class="logo-sub">MOVERS</p>
       </div>
-      <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
-        <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
-          <defs>
-            <clipPath id="circle-clip-signup">
-              <circle cx="12" cy="12" r="11.75"/>
-            </clipPath>
-          </defs>
-          <g clip-path="url(#circle-clip-signup)">
-            <circle cx="17.5" cy="6.5" r="2.0" fill="#111"/>
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#111"/>
-          </g>
-        </svg>
-      </button>
+
       </div>
     </header>
 
@@ -216,17 +209,8 @@
           initializeGoogleAuth();
         });
 
-        const accountBtn = document.getElementById('customer-account-btn');
         const headerLinks = document.querySelector('.header-switch');
         const signedIn = localStorage.getItem('customer-authenticated') === 'true';
-
-        if (accountBtn) {
-          accountBtn.hidden = !signedIn;
-          accountBtn.style.display = signedIn ? 'inline-flex' : 'none';
-          accountBtn.addEventListener('click', function () {
-            window.location.href = getSafeReturnTarget();
-          });
-        }
 
         if (headerLinks) {
           headerLinks.hidden = signedIn;
