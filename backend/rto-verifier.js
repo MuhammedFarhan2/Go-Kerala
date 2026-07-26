@@ -101,8 +101,8 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
     browser = await puppeteer.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-      timeout: 30000
+      headless: 'new',
+      timeout: 45000
     });
 
     const page = await browser.newPage();
@@ -110,11 +110,24 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
 
-    await page.goto(PARIVAHAN_BASE + '/?pur_cd=102', { waitUntil: 'networkidle2', timeout: 30000 });
+    try {
+      await page.goto(PARIVAHAN_BASE + '/?pur_cd=102', { waitUntil: 'networkidle2', timeout: 45000 });
+    } catch (navErr) {
+      var pageContent = await page.evaluate(function () { return document.body ? document.body.innerText.substring(0, 2000) : 'no body'; }).catch(function () { return 'page unavailable'; });
+      var pageUrl = page.url();
+      return { verified: false, found: false, error: 'Parivahan navigation failed', formatValid: true, systemError: 'URL=' + pageUrl + ' Body=' + pageContent };
+    }
 
-    await page.waitForSelector('input[id*="tf_reg_no1"]', { timeout: 15000 });
-    await page.click('input[id*="tf_reg_no1"]', { clickCount: 3 });
-    await page.type('input[id*="tf_reg_no1"]', cleaned, { delay: 20 });
+    try {
+      await page.waitForSelector('input[id*="tf_reg_no1"], input[name*="tf_reg_no"], input[type="text"]', { timeout: 30000 });
+    } catch (selErr) {
+      var pageContent = await page.evaluate(function () { return document.body ? document.body.innerHTML.substring(0, 3000) : 'no body'; }).catch(function () { return 'page unavailable'; });
+      var pageUrl = page.url();
+      return { verified: false, found: false, error: 'Parivahan form input not found', formatValid: true, systemError: 'URL=' + pageUrl + ' HTML=' + pageContent.replace(/\s+/g, ' ').trim() };
+    }
+
+    await page.click('input[id*="tf_reg_no1"], input[name*="tf_reg_no"], input[type="text"]', { clickCount: 3 });
+    await page.type('input[id*="tf_reg_no1"], input[name*="tf_reg_no"], input[type="text"]', cleaned, { delay: 20 });
     await page.waitForTimeout(300);
 
     var clicked = false;
@@ -184,13 +197,24 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
       formatValid: true
     };
   } catch (err) {
+    var errorMsg = err.message;
+    if (browser) {
+      try {
+        var pages = await browser.pages();
+        if (pages.length > 0) {
+          var p = pages[0];
+          var html = await p.evaluate(function () { return (document.body ? document.body.innerHTML : '') || ''; }).catch(function () { return ''; });
+          if (html) errorMsg += ' PAGE_HTML=' + html.replace(/\s+/g, ' ').substring(0, 3000);
+        }
+      } catch (_) {}
+    }
     return {
       verified: false,
       found: false,
       error: 'Unable to reach RTO portal via browser.',
       formatValid: true,
       manualUrl: PARIVAHAN_BASE + '/?pur_cd=102',
-      systemError: err.message
+      systemError: errorMsg
     };
   } finally {
     if (browser) try { await browser.close(); } catch (_) {}
