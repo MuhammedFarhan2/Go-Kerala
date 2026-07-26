@@ -1129,7 +1129,7 @@
       <button type="button" class="vect-own-tourist-bottom-button is-accept" data-vect-own-tourist-bottom-action="accepted">Accept</button>
       <div class="vect-own-tourist-reject-group">
         <button type="button" class="vect-own-tourist-bottom-button is-reject" data-vect-own-tourist-bottom-action="updated">Reject</button>
-        <textarea class="vect-own-tourist-reject-reason" rows="2" placeholder="Why rejected? (optional)" data-vect-own-reject-reason></textarea>
+        <textarea class="vect-own-tourist-reject-reason" rows="2" placeholder="Why rejected? (optional)" hidden data-vect-own-reject-reason></textarea>
       </div>
     </div>
   </div>
@@ -1443,10 +1443,9 @@
         touristBottomBoxNode.hidden = !isTouristPage;
 
         var rejectReasonNode = document.querySelector('[data-vect-own-reject-reason]');
-        var isRejected = safeStatus !== '' && safeStatus !== 'accepted' && safeStatus !== 'pending';
-
         if (rejectReasonNode) {
-          rejectReasonNode.hidden = !isRejected;
+          rejectReasonNode.hidden = true;
+          rejectReasonNode.value = '';
         }
 
         touristBottomActionButtons.forEach(function (button) {
@@ -1471,14 +1470,21 @@
           return;
         }
 
-        if (cleanStatus === 'accepted' && editableSections.length) {
-          window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
-          return;
-        }
-
-        if (cleanStatus !== 'accepted' && !editableSections.length) {
-          window.alert('Mark the wrong parts first, then press Reject.');
-          return;
+        if (cleanStatus === 'accepted') {
+          if (editableSections.length) {
+            window.alert('Some parts are still marked for correction. Change them back to Accept before approving this submission.');
+            return;
+          }
+        } else {
+          if (!editableSections.length) {
+            window.alert('Mark the wrong parts first, then press Reject.');
+            return;
+          }
+          if (rejectReasonNode && rejectReasonNode.hidden !== false) {
+            rejectReasonNode.hidden = false;
+            rejectReasonNode.focus();
+            return;
+          }
         }
 
         if (cleanStatus === 'accepted') {
