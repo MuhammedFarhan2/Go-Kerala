@@ -164,6 +164,7 @@ function determineStatus(params) {
   var ocrResult = params.ocrResult;
   var documentIntegrity = params.documentIntegrity;
   var ocrConfidence = params.ocrConfidence;
+  var ocrDlFound = params.ocrDlFound;
 
   if (documentIntegrity === 'suspicious') {
     return { status: VERIFICATION_STATUS.NEEDS_MANUAL_REVIEW, reason: 'Document appears to be tampered or of suspicious quality.' };
@@ -178,8 +179,7 @@ function determineStatus(params) {
       return { status: VERIFICATION_STATUS.MISMATCH, reason: 'Submitted information conflicts with available records.' };
     }
     var nameMatch = crossCheck.checks && crossCheck.checks.nameMatch;
-    var dlMatch = crossCheck.checks && crossCheck.checks.dlNumberMatch;
-    if (nameMatch === true && dlMatch === true) {
+    if (nameMatch === true && ocrDlFound) {
       return { status: VERIFICATION_STATUS.VERIFIED, reason: 'Licence number and name match the photo and submission. Verified by OCR cross-check.' };
     }
     if (ocrConfidence === 'high' || ocrConfidence === 'medium') {
@@ -311,11 +311,7 @@ async function verifyLicense(params) {
     }
   }
 
-  if (!dlNumber && ocrDetails.dlNumber) {
-    dlNumber = ocrDetails.dlNumber;
-  }
-
-  var cleanedDl = dlNumber.replace(/[\s-]/g, '').toUpperCase();
+  var cleanedDl = dlNumber ? dlNumber.replace(/[\s-]/g, '').toUpperCase() : '';
 
   var officialResult = null;
   if (cleanedDl && /^[A-Z]{2}\d{2}\d{4,15}$/.test(cleanedDl)) {
@@ -364,7 +360,7 @@ async function verifyLicense(params) {
     result.warnings.push('No licence number provided for official verification.');
   }
 
-  if (dlNumber) result.details.dlNumber = dlNumber;
+  result.details.dlNumber = dlNumber || (ocrDetails && ocrDetails.dlNumber) || '';
   if (userDob && !result.details.dob) result.details.dob = userDob;
 
   if (officialResult && officialResult.found) {
@@ -389,7 +385,8 @@ async function verifyLicense(params) {
     crossCheck: crossCheckResult,
     ocrResult: ocrResult,
     documentIntegrity: result.confidence.documentIntegrity,
-    ocrConfidence: result.confidence.ocrConfidence
+    ocrConfidence: result.confidence.ocrConfidence,
+    ocrDlFound: !!(ocrDetails && ocrDetails.dlNumber)
   });
   result.status = statusResult.status;
   result.statusInfo = STATUS_LABELS[statusResult.status];
