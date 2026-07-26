@@ -138,33 +138,58 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
     await page.type('input[id*="tf_dlNO"], input[id*="tf_reg_no1"], input[placeholder*="Driving Licence"]', cleaned, { delay: 20 });
     await delay(300);
 
-    // Solve captcha using Tesseract OCR
+    // Solve captcha: retry with clean parameters until Tesseract can read it
     var captchaText = '';
-    try {
-      var captchaBase64 = await page.evaluate(function () {
-        var img = document.querySelector('img[src*="DispplayCaptcha"]');
-        if (!img) return null;
-        var canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width || 200;
-        canvas.height = img.naturalHeight || img.height || 60;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        return canvas.toDataURL('image/png');
-      });
-      if (captchaBase64) {
-        var result = await Tesseract.recognize(captchaBase64, 'eng', {
-          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    for (var captchaAttempt = 0; captchaAttempt < 5; captchaAttempt++) {
+      try {
+        // Reload captcha with clean parameters (no noise, no distortion, no background)
+        var reloaded = await page.evaluate(function () {
+          var img = document.querySelector('img[src*="DispplayCaptcha"]');
+          if (!img) return false;
+          var src = img.src;
+          src = src.replace(/noise_cd=\d+/g, 'noise_cd=0');
+          src = src.replace(/gimp_cd=\d+/g, 'gimp_cd=0');
+          src = src.replace(/bkgp_cd=\d+/g, 'bkgp_cd=0');
+          img.src = src;
+          return true;
         });
-        captchaText = (result.data.text || '').replace(/\s/g, '').replace(/[^A-Za-z0-9]/g, '').substring(0, 6);
-        if (captchaText) {
-          var captchaInput = await page.$('input[id*="CaptchaID"]');
-          if (captchaInput) {
-            await captchaInput.type(captchaText, { delay: 15 });
+        if (!reloaded) break;
+
+        await delay(800);
+
+        // Capture captcha via canvas
+        var captchaBase64 = await page.evaluate(function () {
+          var img = document.querySelector('img[src*="DispplayCaptcha"]');
+          if (!img) return null;
+          var canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width || 200;
+          canvas.height = img.naturalHeight || img.height || 60;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          return canvas.toDataURL('image/png');
+        });
+
+        if (captchaBase64) {
+          var result = await Tesseract.recognize(captchaBase64, 'eng', {
+            tessedit_pageseg_mode: 7
+          });
+          captchaText = (result.data.text || '').replace(/\s/g, '').replace(/[^A-Za-z0-9]/g, '').substring(0, 6);
+          if (captchaText && captchaText.length >= 4) {
+            break; // Successfully read captcha
           }
         }
-      }
-    } catch (captchaErr) {
+      } catch (_) {}
       captchaText = '';
+      await delay(500);
+    }
+
+    if (captchaText) {
+      try {
+        var captchaInput = await page.$('input[id*="CaptchaID"]');
+        if (captchaInput) {
+          await captchaInput.type(captchaText.toUpperCase(), { delay: 15 });
+        }
+      } catch (_) {}
     }
 
     await delay(200);
@@ -271,8 +296,8 @@ async function verifyDrivingLicenseHttp(dlNumber) {
   if (!cleaned) {
     return { verified: false, error: 'No DL number provided', formatValid: false };
   }
-  if (!/^[A-Z]{2}\d{2}\d{4,15}$/.test(cleaned)) {
-    return { verified: false, error: 'Invalid DL number format (expected: MH0220110012345)', formatValid: false };
+  if (!/^[A-Z]{2}\d{2}\d{4,15}$/.test(cleaned) && !/^[A-Z]{2}\d{5,13}$/.test(cleaned)) {
+    return { verified: false, error: 'Invalid DL number format (expected: MH0220110012345 or MC5518528)', formatValid: false };
   }
   try {
     const result = await checkParivahanHttp(cleaned);
@@ -359,10 +384,42 @@ async function checkParivahanHttp(dlNumber) {
   const viewState = extractViewState(initialHtml);
   const firstButtonId = extractFirstButtonId(initialHtml);
   const cookies = extractCookies(initialRes);
+  const formAction = initialHtml.match(/action="(\/rcdlstatus\/[^"]+)"/);
+  const jsessionid = formAction ? (formAction[1].match(/jsessionid=([^?;]+)/) || ['',''])[1] : '';
 
   if (!viewState || !firstButtonId) {
     var htmlPreview = initialHtml.substring(0, 1500).replace(/\s+/g, ' ').trim();
     throw new Error('Could not initialize RTO portal session. HTML: ' + htmlPreview);
+  }
+
+  // Solve captcha with retry: request clean captcha, OCR, retry if fails
+  var captchaCode = '';
+  for (var c = 0; c < 5; c++) {
+    try {
+      var captchaUrl = PARIVAHAN_BASE + '/DispplayCaptcha' + (jsessionid ? ';jsessionid=' + jsessionid : '')
+        + '?txtp_cd=1&bkgp_cd=0&noise_cd=0&gimp_cd=0&txtp_length=5';
+      var captchaRes = await fetchWithTimeout(captchaUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Cookie': cookies,
+          'Referer': PARIVAHAN_BASE + '/?pur_cd=102'
+        }
+      });
+      var captchaBuf = Buffer.from(await captchaRes.arrayBuffer());
+
+      var ocrResult = await Tesseract.recognize(captchaBuf, 'eng', {
+        tessedit_pageseg_mode: 7
+      });
+      var readText = (ocrResult.data.text || '').replace(/\s/g, '').replace(/[^A-Za-z0-9]/g, '').substring(0, 6);
+      if (readText && readText.length >= 4) {
+        captchaCode = readText.toUpperCase();
+        break;
+      }
+    } catch (_) {}
+  }
+
+  if (!captchaCode) {
+    throw new Error('Could not read verification code after multiple attempts');
   }
 
   var params = new URLSearchParams();
@@ -373,9 +430,14 @@ async function checkParivahanHttp(dlNumber) {
   params.append(firstButtonId, firstButtonId);
   params.append('form_rcdl', 'form_rcdl');
   params.append('form_rcdl:tf_dlNO', dlNumber);
+  params.append('form_rcdl:tf_dob_input', '');
+  params.append('form_rcdl:j_idt68:CaptchaID', captchaCode);
   params.append('javax.faces.ViewState', viewState);
 
-  const postRes = await fetchWithTimeout(PARIVAHAN_POST, {
+  var postUrl = 'https://parivahan.gov.in' + actionPath;
+  if (jsessionid) postUrl += ';jsessionid=' + jsessionid;
+
+  const postRes = await fetchWithTimeout(postUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -392,7 +454,7 @@ async function checkParivahanHttp(dlNumber) {
 
   const responseText = await postRes.text();
 
-  if (responseText.includes('does not exist') || responseText.includes('No Record')) {
+  if (responseText.includes('does not exist') || responseText.includes('No Record') || responseText.includes('SORRY')) {
     return {
       verified: false,
       found: false,
@@ -410,6 +472,7 @@ async function checkParivahanHttp(dlNumber) {
     verified: hasData,
     found: hasData,
     details: hasData ? tableData : null,
+    captchaUsed: !!captchaCode,
     error: hasData ? '' : 'Could not parse RTO response'
   };
 }
