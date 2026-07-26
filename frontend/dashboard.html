@@ -865,6 +865,42 @@
       box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.28);
     }
 
+    .vect-own-tourist-reject-group {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .vect-own-tourist-reject-group .vect-own-tourist-bottom-button {
+      flex-shrink: 0;
+      width: auto;
+      min-width: 100px;
+    }
+
+    .vect-own-tourist-reject-reason {
+      flex: 1;
+      min-height: 44px;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 0.88rem;
+      resize: vertical;
+      background: #f9fafb;
+      color: #111827;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .vect-own-tourist-reject-reason:focus {
+      border-color: #111827;
+      background: #fff;
+    }
+
+    .vect-own-tourist-reject-reason[hidden] {
+      display: none !important;
+    }
+
 
   </style>
 </head>
@@ -1091,7 +1127,10 @@
   <div class="vect-own-tourist-bottom-box" hidden data-vect-own-tourist-bottom-box>
     <div class="vect-own-tourist-bottom-actions">
       <button type="button" class="vect-own-tourist-bottom-button is-accept" data-vect-own-tourist-bottom-action="accepted">Accept</button>
-      <button type="button" class="vect-own-tourist-bottom-button is-reject" data-vect-own-tourist-bottom-action="updated">Reject</button>
+      <div class="vect-own-tourist-reject-group">
+        <button type="button" class="vect-own-tourist-bottom-button is-reject" data-vect-own-tourist-bottom-action="updated">Reject</button>
+        <textarea class="vect-own-tourist-reject-reason" rows="2" placeholder="Why rejected? (optional)" data-vect-own-reject-reason></textarea>
+      </div>
     </div>
   </div>
 
@@ -1403,6 +1442,13 @@
 
         touristBottomBoxNode.hidden = !isTouristPage;
 
+        var rejectReasonNode = document.querySelector('[data-vect-own-reject-reason]');
+        var isRejected = safeStatus !== '' && safeStatus !== 'accepted' && safeStatus !== 'pending';
+
+        if (rejectReasonNode) {
+          rejectReasonNode.hidden = !isRejected;
+        }
+
         touristBottomActionButtons.forEach(function (button) {
           const buttonStatus = String(button.getAttribute('data-vect-own-tourist-bottom-action') || '').trim().toLowerCase();
           const isSelected = !!currentSubmission && buttonStatus === safeStatus;
@@ -1418,6 +1464,8 @@
         const currentSubmission = getSelectedSubmission('submission');
         const targetSubmissionId = selectedSubmissionId;
         const editableSections = getSubmissionEditableSections(currentSubmission);
+        const rejectReasonNode = document.querySelector('[data-vect-own-reject-reason]');
+        const rejectReason = rejectReasonNode ? String(rejectReasonNode.value || '').trim() : '';
 
         if (!targetSubmissionId || !cleanStatus || !currentSubmission) {
           return;
@@ -1451,7 +1499,7 @@
           },
           body: JSON.stringify({
             status: cleanStatus,
-            reviewNote: ''
+            reviewNote: rejectReason
           })
         })
           .then(function (response) {
@@ -1473,7 +1521,7 @@
 
             if (cleanStatus !== 'accepted') {
               const digits = String((currentSubmission.summary && (currentSubmission.summary.whatsappNumber || currentSubmission.summary.phone)) || (currentSubmission.fields && currentSubmission.fields['owner-whatsapp-number']) || '').trim().replace(/[^\d]/g, '');
-              const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission)) : '';
+              const rejectWhatsappLink = digits ? 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(buildTouristRejectWhatsappMessage(currentSubmission, rejectReason)) : '';
 
               if (rejectWhatsappLink) {
                 window.open(rejectWhatsappLink, '_blank');
@@ -2986,7 +3034,7 @@
         return ACCEPT_WHATSAPP_MESSAGE + '\n' + getBlankSheetLink(submission, []);
       }
 
-      function buildTouristRejectWhatsappMessage(submission) {
+      function buildTouristRejectWhatsappMessage(submission, rejectReason) {
         const currentSubmission = submission || getSelectedSubmission('submission');
         const rejectedKeys = getSubmissionCorrectionItemKeys(currentSubmission);
         const editableSections = getSubmissionEditableSections(currentSubmission);
@@ -2997,6 +3045,11 @@
 
         const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
         const lines = [REJECT_INTRO_MESSAGE, ''];
+
+        if (rejectReason) {
+          lines.push('Reason: ' + rejectReason);
+          lines.push('');
+        }
 
         rejectedKeys.forEach(function (itemKey) {
           const itemLabel = String(submissionSelections[itemKey + '__label'] || itemKey).trim();
