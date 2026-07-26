@@ -1988,7 +1988,8 @@
         var payload = {
           submissionId: submissionId,
           dlNumber: dlNumber || undefined,
-          dob: undefined
+          dob: undefined,
+          ownerName: sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || undefined
         };
         Object.keys(payload).forEach(function (k) { if (payload[k] === undefined) delete payload[k]; });
 

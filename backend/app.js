@@ -2474,7 +2474,7 @@ async function handleRtoAiReview(request, response) {
       imageData = fields['owner-heavy-licence-photo-url-1'] || '';
     }
 
-    var userName = fields['owner-name'] || '';
+    var userName = payload.ownerName || fields['owner-name'] || '';
     if (!userName) {
       var firstName = fields['owner-first-name'] || '';
       var lastName = fields['owner-last-name'] || '';
