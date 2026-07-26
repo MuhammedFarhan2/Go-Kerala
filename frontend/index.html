@@ -4,15 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VECT Movers - Home</title>
-  <meta name="theme-color" content="#111111">
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-  <link rel="stylesheet" href="style.css?v=20260531-1">
-  <meta name="google-signin-client_id" content="743689462629-ogfmkvkp39jsk49piia08ffsmsrh8qus.apps.googleusercontent.com">
-  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
+  <link rel="stylesheet" href="style.css?v=20260406-2">
 </head>
 <body>
   <div class="page-loader" id="page-loader" aria-hidden="true">
@@ -31,25 +27,28 @@
       <h1 class="logo">VECT</h1>
       <p class="logo-sub">MOVERS</p>
     </div>
-    <nav class="header-switch" aria-label="Site switch" data-customer-header-links>
-      <a class="header-switch-link header-switch-link--login" href="customer-login.html" aria-label="Open login page">Log in</a>
-      <a class="header-switch-link header-switch-link--signup" href="customer-signup.html" aria-label="Open create account page">Sign up</a>
-      <a class="header-switch-link header-switch-link--owner" href="owner.html" aria-label="Owner login" style="margin-left:8px;font-size:0.85rem;color:#666">Owner?</a>
-    </nav>
-
-    <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
+    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
       <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
         <defs>
-          <clipPath id="circle-clip-submit">
+          <clipPath id="circle-clip">
             <circle cx="12" cy="12" r="11.75"/>
           </clipPath>
         </defs>
-        <g clip-path="url(#circle-clip-submit)">
-          <circle cx="17.5" cy="6.5" r="2.0" fill="#111"/>
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#111"/>
+        <g clip-path="url(#circle-clip)">
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#fff"/>
         </g>
       </svg>
     </button>
+    <aside class="account-panel" id="account-panel" aria-hidden="true">
+      <nav class="account-panel-nav">
+        <a href="owner.html" class="account-option">Owner Login</a>
+        <a href="#" class="account-option">History</a>
+        <a href="#" class="account-option">About</a>
+        <a href="#" class="account-option">Feedback</a>
+      </nav>
+    </aside>
+    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
   </header>
 
   <main class="main">
@@ -86,7 +85,7 @@
       </div>
     </section>
 
-    <section class="container" id="customer-cards" aria-label="Vehicle categories">
+    <section class="container" aria-label="Vehicle categories">
       <h2 class="vehicle-prompt">Select a Vehicle Category</h2>
 
       <div class="product-container" aria-label="Available vehicle categories">
@@ -148,195 +147,9 @@
     </section>
   </main>
 
-  <aside class="customer-account-panel" id="customer-account-panel" aria-hidden="true">
-    <div class="customer-account-panel-head">
-      <button type="button" class="customer-account-close" id="customer-account-close" aria-label="Close account panel">×</button>
-    </div>
-
-    <div class="customer-account-panel-body">
-      <div class="customer-account-panel-top">
-        <div class="customer-account-panel-profile">
-          <div class="customer-account-profile-avatar" aria-hidden="true">
-            <img src="account.png" alt="" class="customer-account-profile-avatar-image">
-          </div>
-          <p class="customer-account-panel-name" data-customer-panel-name>Guest</p>
-          <p class="customer-account-panel-email" data-customer-panel-email>Sign in to save your profile</p>
-        </div>
-      </div>
-      <div class="customer-account-panel-bottom">
-        <div class="customer-account-actions">
-          <a class="customer-account-feedback" href="mailto:vectmovers@gmail.com?subject=VECT%20Movers%20Feedback" data-customer-feedback>Feedback</a>
-          <a class="customer-account-favorites" href="favorites.html" data-customer-favorites>Favorites</a>
-          <button type="button" class="customer-account-logout" data-customer-logout>Log out</button>
-        </div>
-      </div>
-    </div>
-  </aside>
-  <div class="customer-account-backdrop" id="customer-account-backdrop" aria-hidden="true"></div>
-
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script src="script.js?v=20260531-1"></script>
+  <script src="script.js?v=20260413-1"></script>
   <script>
-    (function () {
-      const pageName = 'index.html';
-      const accountBtn = document.getElementById('customer-account-btn');
-      const accountPanel = document.getElementById('customer-account-panel');
-      const closeBtn = document.getElementById('customer-account-close');
-      const backdrop = document.getElementById('customer-account-backdrop');
-      const headerLinks = document.querySelector('[data-customer-header-links]');
-      const loginLink = headerLinks ? headerLinks.querySelector('.header-switch-link--login') : null;
-      const signupLink = headerLinks ? headerLinks.querySelector('.header-switch-link--signup') : null;
-      const panelNameNode = document.querySelector('[data-customer-panel-name]');
-      const panelEmailNode = document.querySelector('[data-customer-panel-email]');
-      const logoutButton = document.querySelector('[data-customer-logout]');
-      const feedbackLink = document.querySelector('[data-customer-feedback]');
-      const favoritesLink = document.querySelector('[data-customer-favorites]');
-      const panelBody = accountPanel ? accountPanel.querySelector('.customer-account-panel-body') : null;
-
-      function getCustomerProfile() {
-        const authenticated = localStorage.getItem('customer-authenticated') === 'true';
-        const method = String(localStorage.getItem('customer-login-method') || '').trim();
-        const email = String(localStorage.getItem('customer-login-email') || '').trim();
-        const name = String(localStorage.getItem('customer-login-name') || '').trim() || (email ? email.split('@')[0] : '');
-        const picture = String(localStorage.getItem('customer-login-picture') || '').trim();
-
-        return {
-          authenticated: authenticated,
-          method: method,
-          email: email,
-          name: name || 'Customer',
-          picture: picture
-        };
-      }
-
-      function buildAuthUrl(base) {
-        const url = new URL(base, window.location.href);
-        url.searchParams.set('return', pageName);
-        return url.toString();
-      }
-
-      function setHeaderIcon(node) {
-        if (!node) {
-          return;
-        }
-
-        node.innerHTML = [
-          '<svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">',
-          '<defs>',
-          '<clipPath id="circle-clip-submit">',
-          '<circle cx="12" cy="12" r="11.75"></circle>',
-          '</clipPath>',
-          '</defs>',
-          '<g clip-path="url(#circle-clip-submit)">',
-          '<circle cx="17.5" cy="6.5" r="2.0" fill="#111"></circle>',
-          '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#111"></path>',
-          '</g>',
-          '</svg>'
-        ].join('');
-      }
-
-      function openPanel() {
-        if (!accountPanel || !backdrop) {
-          return;
-        }
-
-        accountPanel.setAttribute('aria-hidden', 'false');
-        accountPanel.classList.add('is-open');
-        backdrop.classList.add('is-visible');
-        backdrop.setAttribute('aria-hidden', 'false');
-      }
-
-      function closePanel() {
-        if (!accountPanel || !backdrop) {
-          return;
-        }
-
-        accountPanel.setAttribute('aria-hidden', 'true');
-        accountPanel.classList.remove('is-open');
-        backdrop.classList.remove('is-visible');
-        backdrop.setAttribute('aria-hidden', 'true');
-      }
-
-      function ensureDrawerLayout() {
-        if (!panelBody || panelBody.dataset.drawerReady === 'true') {
-          return;
-        }
-        panelBody.dataset.drawerReady = 'true';
-      }
-
-      function renderCustomerAccount() {
-        ensureDrawerLayout();
-        const currentLogoutButton = accountPanel ? accountPanel.querySelector('[data-customer-logout]') : null;
-        const profile = getCustomerProfile();
-        const signedIn = profile.authenticated;
-
-        if (accountBtn) {
-          accountBtn.hidden = !signedIn;
-          accountBtn.style.marginLeft = signedIn ? 'auto' : '';
-          accountBtn.style.marginRight = signedIn ? '10px' : '';
-        }
-
-        if (headerLinks) {
-          headerLinks.hidden = signedIn;
-          headerLinks.style.display = signedIn ? 'none' : '';
-        }
-
-        if (loginLink) {
-          loginLink.href = buildAuthUrl('customer-login.html');
-        }
-
-        if (signupLink) {
-          signupLink.href = buildAuthUrl('customer-signup.html');
-        }
-
-        if (!signedIn) {
-          closePanel();
-          return;
-        }
-
-        if (panelNameNode) {
-          panelNameNode.textContent = profile.name;
-        }
-
-        if (panelEmailNode) {
-          panelEmailNode.textContent = profile.email || 'Connected account';
-        }
-
-      if (currentLogoutButton) {
-        currentLogoutButton.onclick = function () {
-            localStorage.removeItem('customer-authenticated');
-            localStorage.removeItem('customer-login-method');
-            localStorage.removeItem('customer-login-email');
-            localStorage.removeItem('customer-login-name');
-            localStorage.removeItem('customer-login-picture');
-            closePanel();
-            renderCustomerAccount();
-        };
-      }
-
-      if (favoritesLink) {
-        favoritesLink.href = 'favorites.html';
-      }
-    }
-
-      if (accountBtn) {
-        accountBtn.addEventListener('click', function () {
-          renderCustomerAccount();
-          openPanel();
-        });
-      }
-
-      if (closeBtn) {
-        closeBtn.addEventListener('click', closePanel);
-      }
-
-      if (backdrop) {
-        backdrop.addEventListener('click', closePanel);
-      }
-
-      renderCustomerAccount();
-    })();
-
     (function () {
       const bannerNode = document.getElementById('flipBanner');
       const bannerImages = Array.from(document.querySelectorAll('#flipBanner .owner-auth-banner-img'));
@@ -427,7 +240,5 @@
       });
     })();
   </script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="auth.js"></script>
 </body>
 </html>
