@@ -7032,6 +7032,31 @@ body.submit-page {
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease;
+}
+
+.vect-own-lightbox-rotate {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.72);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.vect-own-lightbox-rotate:hover {
+  background: rgba(17, 24, 39, 0.9);
 }
 
 .vect-own-note-input {
