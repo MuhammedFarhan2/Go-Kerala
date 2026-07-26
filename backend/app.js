@@ -3,6 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { URL } = require('url');
+const rtoVerifier = require('./rto-verifier');
+const aiAgent = require('./ai-rto-agent');
+const verificationEngine = require('./verification-engine');
 
 const HOST = '0.0.0.0';
 const PORT = Number(process.env.PORT) || 3000;
@@ -33,6 +36,7 @@ const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 const LEGACY_UPLOADS_DIR = path.join(FRONTEND_DIR, 'uploads');
 const PROFILE_PHOTO_SESSION_DB_PATH = path.join(DATA_DIR, 'profile-photo-sessions.json');
 const VECT_OWN_DB_PATH = path.join(DATA_DIR, 'vect-own-submissions.json');
+const VERIFICATION_AUDIT_DB_PATH = path.join(DATA_DIR, 'verification-audit.json');
 const VECT_OWN_SESSION_COOKIE = 'vect_own_session';
 const VECT_OWN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const VECT_OWN_PASSWORD = String(process.env.VECT_OWN_PASSWORD || 'vectown1234').trim();
@@ -570,7 +574,7 @@ async function verifyAppleIdentityToken(identityToken) {
 
 function sendJson(response, statusCode, payload, extraHeaders) {
   response.writeHead(statusCode, Object.assign({
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': response._corsOrigin,
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,PATCH,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session',
     'Content-Type': 'application/json; charset=utf-8'
@@ -580,12 +584,12 @@ function sendJson(response, statusCode, payload, extraHeaders) {
 
 function sendText(response, statusCode, message) {
   response.writeHead(statusCode, {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': response._corsOrigin,
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,PATCH,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session',
     'Content-Type': 'text/plain; charset=utf-8'
   });
-  response.end(message);
+  response.end(String(message));
 }
 
 function handleHealthCheck(response) {
@@ -832,6 +836,39 @@ function loadVectOwnSubmissions() {
 
 function persistVectOwnSubmissions() {
   writeJsonFile(VECT_OWN_DB_PATH, loadVectOwnSubmissions());
+}
+
+var verificationAuditLog = null;
+
+function loadVerificationAuditLog() {
+  if (verificationAuditLog) return verificationAuditLog;
+  verificationAuditLog = readJsonFile(VERIFICATION_AUDIT_DB_PATH, []);
+  if (!Array.isArray(verificationAuditLog)) verificationAuditLog = [];
+  return verificationAuditLog;
+}
+
+function persistVerificationAuditLog() {
+  writeJsonFile(VERIFICATION_AUDIT_DB_PATH, loadVerificationAuditLog());
+}
+
+function appendVerificationAuditEntry(entry) {
+  var log = loadVerificationAuditLog();
+  log.push(Object.assign({
+    id: crypto.randomUUID(),
+    timestamp: new Date().toISOString()
+  }, entry));
+  if (log.length > 1000) log = log.slice(-1000);
+  verificationAuditLog = log;
+  persistVerificationAuditLog();
+}
+
+function getVerificationAuditForSubmission(submissionId) {
+  var log = loadVerificationAuditLog();
+  return log.filter(function (entry) {
+    return entry.submissionId === submissionId;
+  }).sort(function (a, b) {
+    return new Date(b.timestamp) - new Date(a.timestamp);
+  });
 }
 
 function loadProfilePhotoSessions() {
@@ -2352,14 +2389,215 @@ async function handleVectOwnSubmissionDelete(requestUrl, request, response) {
   });
 }
 
+async function handleRtoVerifyDl(request, response) {
+  let payload;
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const dlNumber = String(payload.dlNumber || '').trim();
+  if (!dlNumber) {
+    sendJson(response, 400, { success: false, error: 'DL number is required.' });
+    return;
+  }
+
+  try {
+    const result = await rtoVerifier.verifyDrivingLicense(dlNumber);
+    sendJson(response, 200, { success: true, result: result });
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'RTO verification failed.' });
+  }
+}
+
+async function handleRtoVerifyRc(request, response) {
+  let payload;
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  const regNumber = String(payload.regNumber || '').trim();
+  if (!regNumber) {
+    sendJson(response, 400, { success: false, error: 'Registration number is required.' });
+    return;
+  }
+
+  try {
+    const result = await rtoVerifier.verifyVehicleRegistration(regNumber);
+    sendJson(response, 200, { success: true, result: result });
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'RTO verification failed.' });
+  }
+}
+
+async function handleRtoAiReview(request, response) {
+  const session = requireVectOwnSession(request, response);
+  if (!session) return;
+
+  let payload;
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  var submissionId = String(payload.submissionId || '').trim();
+  if (!submissionId && !payload.dlNumber) {
+    sendJson(response, 400, { success: false, error: 'submissionId or dlNumber is required.' });
+    return;
+  }
+
+  try {
+    var dlNumber = String(payload.dlNumber || '').trim();
+    var dob = String(payload.dob || '').trim();
+    var imageData = '';
+
+    if (submissionId) {
+      var submission = await getSubmissionByIdAsync(submissionId);
+      if (!submission) {
+        sendJson(response, 404, { success: false, error: 'Submission not found.' });
+        return;
+      }
+      var fields = submission.fields || {};
+      if (!dlNumber) dlNumber = fields['owner-heavy-licence-photo-name-1'] || fields['owner-heavy-licence-photo-name-2'] || '';
+      imageData = fields['owner-heavy-licence-photo-url-1'] || '';
+    }
+
+    var verificationResult = await verificationEngine.verifyLicense({
+      dlNumber: dlNumber,
+      dob: dob,
+      imageData: imageData,
+      submissionId: submissionId
+    });
+
+    var duplicateCheck = null;
+    if (verificationResult.details && verificationResult.details.dlNumber) {
+      duplicateCheck = await verificationEngine.checkDuplicateLicense(
+        verificationResult.details.dlNumber,
+        submissionId || null
+      );
+      if (duplicateCheck && duplicateCheck.count > 0) {
+        verificationResult.warnings.push('This licence number is used by ' + duplicateCheck.count + ' other account(s).');
+        if (verificationResult.status === verificationEngine.VERIFICATION_STATUS.VERIFIED ||
+            verificationResult.status === verificationEngine.VERIFICATION_STATUS.VALID) {
+          verificationResult.status = verificationEngine.VERIFICATION_STATUS.NEEDS_MANUAL_REVIEW;
+          verificationResult.statusInfo = verificationEngine.STATUS_LABELS[verificationResult.status];
+          verificationResult.summary = verificationResult.statusInfo;
+          verificationResult.warnings.push('Duplicate licence detected. Manual review required.');
+        }
+      }
+      verificationResult.duplicateCheck = duplicateCheck;
+    }
+
+    appendVerificationAuditEntry({
+      submissionId: submissionId || '',
+      dlNumber: verificationResult.details ? verificationResult.details.dlNumber : '',
+      status: verificationResult.status,
+      source: verificationResult.source,
+      reviewedBy: session.role || session.email || 'unknown',
+      action: 'auto_verify',
+      details: {
+        officialFound: verificationResult.official ? verificationResult.official.found : false,
+        ocrConfidence: verificationResult.confidence.ocrConfidence,
+        dataMatch: verificationResult.confidence.dataMatch
+      }
+    });
+
+    sendJson(response, 200, {
+      success: true,
+      verification: verificationResult
+    });
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Verification failed.' });
+  }
+}
+
+async function handleVerificationAudit(requestUrl, request, response) {
+  const session = requireVectOwnSession(request, response);
+  if (!session) return;
+
+  var submissionId = String(requestUrl.pathname.split('/').pop() || '').trim();
+  var auditEntries = getVerificationAuditForSubmission(submissionId);
+  sendJson(response, 200, { success: true, entries: auditEntries });
+}
+
+async function handleAdminVerificationReview(request, response) {
+  const session = requireVectOwnSession(request, response);
+  if (!session) return;
+
+  let payload;
+  try {
+    payload = await readJsonBody(request);
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: error.message || 'Invalid request body.' });
+    return;
+  }
+
+  var submissionId = String(payload.submissionId || '').trim();
+  var action = String(payload.action || '').trim().toLowerCase();
+  var reviewNote = String(payload.reviewNote || '').trim();
+
+  if (!submissionId || !['verified', 'rejected', 'needs_more_info'].includes(action)) {
+    sendJson(response, 400, { success: false, error: 'submissionId and action (verified/rejected/needs_more_info) are required.' });
+    return;
+  }
+
+  try {
+    var submission = await getSubmissionByIdAsync(submissionId);
+    if (!submission) {
+      sendJson(response, 404, { success: false, error: 'Submission not found.' });
+      return;
+    }
+
+    var auditEntry = {
+      submissionId: submissionId,
+      dlNumber: (submission.fields && (submission.fields['owner-heavy-licence-photo-name-1'] || submission.fields['owner-heavy-licence-photo-name-2'])) || '',
+      status: action,
+      source: 'admin_review',
+      reviewedBy: session.email || session.role || 'unknown',
+      action: 'admin_' + action,
+      details: {
+        note: reviewNote,
+        previousStatus: submission.status
+      }
+    };
+
+    appendVerificationAuditEntry(auditEntry);
+
+    if (!submission.fields) submission.fields = {};
+    submission.fields['verification-admin-review'] = action;
+    submission.fields['verification-admin-reviewer'] = session.email || session.role || '';
+    submission.fields['verification-admin-reviewed-at'] = new Date().toISOString();
+    submission.fields['verification-admin-note'] = reviewNote;
+
+    await updateSubmissionRecord(submission);
+
+    sendJson(response, 200, {
+      success: true,
+      message: 'Review recorded.',
+      entry: auditEntry
+    });
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: error.message || 'Review failed.' });
+  }
+}
+
 const server = http.createServer(function (request, response) {
   const requestUrl = new URL(request.url, 'http://' + request.headers.host);
+  var requestOrigin = request.headers['origin'] || '';
+  response._corsOrigin = requestOrigin === 'null' ? 'null' : '*';
 
   if (request.method === 'OPTIONS') {
     response.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': response._corsOrigin,
       'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session'
+      'Access-Control-Allow-Headers': 'Content-Type, X-Vect-Own-Session, X-Rto-Verify'
     });
     response.end();
     return;
@@ -2452,6 +2690,31 @@ const server = http.createServer(function (request, response) {
 
   if (request.method === 'DELETE' && requestUrl.pathname.startsWith('/api/vect-own/submissions/')) {
     handleVectOwnSubmissionDelete(requestUrl, request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/rto/verify-dl') {
+    handleRtoVerifyDl(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/rto/verify-rc') {
+    handleRtoVerifyRc(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname === '/api/rto/ai-review') {
+    handleRtoAiReview(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && requestUrl.pathname.startsWith('/api/admin/verification-review')) {
+    handleAdminVerificationReview(request, response);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname.startsWith('/api/admin/verification-audit/')) {
+    handleVerificationAudit(requestUrl, request, response);
     return;
   }
 

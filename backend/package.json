@@ -7,8 +7,10 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "cheerio": "^1.2.0",
     "google-auth-library": "^9.15.1",
-    "nodemailer": "^8.0.5"
+    "nodemailer": "^8.0.5",
+    "tesseract.js": "^7.0.0"
   },
   "engines": {
     "node": ">=18"
