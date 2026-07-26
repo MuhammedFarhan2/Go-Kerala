@@ -76,7 +76,7 @@
         return;
       }
 
-      companyNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
+      companyNode.textContent = sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || 'This account';
 
       const hasHeavyLicenceSubmission =
         sessionStorage.getItem('owner-heavy-licence-submitted-v2') === 'yes' &&

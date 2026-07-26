@@ -32,10 +32,9 @@
     <section class="owner-sheet owner-categories-sheet owner-coverage-sheet" aria-label="Owner coverage sheet">
       <div class="owner-categories-wrap">
         <h1 class="owner-categories-title">
-          <span class="owner-categories-company" data-owner-coverage-company>- -</span> operate in
-          <span class="owner-categories-company" data-owner-district-count>0</span>
-          <span data-owner-district-label>Districts</span>
+          Welcome, <b data-owner-coverage-company>- -</b>
         </h1>
+        <p class="owner-coverage-subtitle">Select District/Districts that you prefer to earn</p>
 
         <div class="owner-districts-grid" aria-label="Kerala districts">
           <div class="owner-districts-column">
@@ -76,12 +75,10 @@
       const districtButtons = Array.from(document.querySelectorAll('.owner-district-chip'));
       const actions = document.querySelector('[data-owner-district-actions]');
       const nextButton = document.querySelector('[data-owner-district-next-btn]');
-      const districtCountNode = document.querySelector('[data-owner-district-count]');
-      const districtLabelNode = document.querySelector('[data-owner-district-label]');
       const isDistrictReview = reviewItem === 'owner-districts';
 
       if (companyNode) {
-        companyNode.textContent = sessionStorage.getItem('owner-company-name') || 'This company';
+        companyNode.textContent = sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || 'This account';
       }
 
       let savedDistricts = [];

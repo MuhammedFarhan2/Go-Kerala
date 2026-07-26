@@ -7,7 +7,7 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+  <meta name="api-base-url" content="http://localhost:3000">
   <link rel="stylesheet" href="../style.css?v=20260423-1">
   <style>
     .vect-own-main {
@@ -806,14 +806,8 @@
       border-radius: 22px;
       background: #fff;
       padding: 8px;
-      margin: 0 16px 128px;
+      margin: 0 16px 92px;
       overflow: hidden;
-    }
-
-    @media (max-width: 680px) {
-      .vect-own-tourist-bottom-box {
-        margin: 0 10px 150px;
-      }
     }
 
     .vect-own-tourist-bottom-box .vect-own-detail-actions {
@@ -866,6 +860,315 @@
     .vect-own-tourist-bottom-button.is-selected {
       box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.28);
     }
+
+    .rto-section {
+      border-top: 2px solid #e5e7eb;
+      margin-top: 16px;
+      padding-top: 14px;
+    }
+
+    .rto-btn {
+      min-height: 44px;
+      border: 1px solid #2563eb;
+      border-radius: 999px;
+      background: #2563eb;
+      color: #fff;
+      font: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 20px;
+      width: 100%;
+      transition: filter 0.15s ease;
+    }
+
+    .rto-btn:hover {
+      filter: brightness(1.08);
+    }
+
+    .rto-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: none;
+    }
+
+    .rto-btn.is-loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .rto-results {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .rto-verification-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .rto-verification-card-header {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .rto-verification-card-header.is-verified { background: #f0fdf4; color: #16a34a; }
+    .rto-verification-card-header.is-valid { background: #eff6ff; color: #2563eb; }
+    .rto-verification-card-header.is-expired { background: #fffbeb; color: #b45309; }
+    .rto-verification-card-header.is-invalid { background: #fef2f2; color: #dc2626; }
+    .rto-verification-card-header.is-mismatch { background: #fef2f2; color: #dc2626; }
+    .rto-verification-card-header.is-unable_to_verify { background: #f9fafb; color: #6b7280; }
+    .rto-verification-card-header.is-needs_manual_review { background: #fffbeb; color: #b45309; }
+
+    .rto-verification-card-body {
+      padding: 14px 16px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .rto-verification-detail {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      padding: 4px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .rto-verification-detail:last-child {
+      border-bottom: 0;
+    }
+
+    .rto-verification-detail-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .rto-verification-detail-value {
+      color: #111827;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .rto-verification-detail-value.mismatch {
+      color: #dc2626;
+    }
+
+    .rto-verification-detail-value.match {
+      color: #16a34a;
+    }
+
+    .rto-confidence-section {
+      border-top: 1px solid #e5e7eb;
+      padding: 12px 16px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .rto-confidence-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .rto-confidence-label {
+      color: #6b7280;
+    }
+
+    .rto-confidence-value {
+      font-weight: 600;
+    }
+
+    .rto-confidence-value.is-confirmed { color: #16a34a; }
+    .rto-confidence-value.is-not_confirmed { color: #6b7280; }
+    .rto-confidence-value.is-high { color: #16a34a; }
+    .rto-confidence-value.is-medium { color: #f59e0b; }
+    .rto-confidence-value.is-low { color: #dc2626; }
+    .rto-confidence-value.is-normal { color: #16a34a; }
+    .rto-confidence-value.is-suspicious { color: #dc2626; }
+    .rto-confidence-value.is-match { color: #16a34a; }
+    .rto-confidence-value.is-partial_match { color: #f59e0b; }
+    .rto-confidence-value.is-mismatch { color: #dc2626; }
+    .rto-confidence-value.is-none { color: #6b7280; }
+
+    .rto-warnings-section {
+      border-top: 1px solid #e5e7eb;
+      padding: 12px 16px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .rto-warning {
+      font-size: 0.8rem;
+      color: #b45309;
+      padding-left: 14px;
+      position: relative;
+      line-height: 1.4;
+    }
+
+    .rto-warning:before {
+      content: '!';
+      position: absolute;
+      left: 0;
+      font-weight: 700;
+    }
+
+    .rto-source-note {
+      border-top: 1px solid #e5e7eb;
+      padding: 10px 16px;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    .rto-error {
+      color: #dc2626;
+      font-size: 0.85rem;
+      margin: 6px 0 0;
+      line-height: 1.4;
+    }
+
+    .rto-loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .rto-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #bfdbfe;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: rto-spin 0.6s linear infinite;
+    }
+
+    @keyframes rto-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .rto-admin-area {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 2px dashed #e5e7eb;
+    }
+
+    .rto-admin-title {
+      margin: 0 0 8px;
+      font-size: 0.85rem;
+      color: #6b7280;
+      font-weight: 600;
+    }
+
+    .rto-admin-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .rto-admin-btn {
+      min-height: 36px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0 14px;
+      flex: 1;
+      transition: all 0.15s;
+    }
+
+    .rto-admin-btn.is-verify { border-color: #16a34a; color: #16a34a; }
+    .rto-admin-btn.is-verify:hover { background: #f0fdf4; }
+    .rto-admin-btn.is-reject { border-color: #dc2626; color: #dc2626; }
+    .rto-admin-btn.is-reject:hover { background: #fef2f2; }
+    .rto-admin-btn.is-info { border-color: #f59e0b; color: #b45309; }
+    .rto-admin-btn.is-info:hover { background: #fffbeb; }
+    .rto-admin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .rto-admin-note {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 0.8rem;
+      outline: none;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    .rto-admin-note:focus {
+      border-color: #2563eb;
+    }
+
+    .rto-admin-feedback {
+      margin-top: 8px;
+      font-size: 0.82rem;
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    .rto-admin-feedback.is-success {
+      background: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+    }
+
+    .rto-admin-feedback.is-error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    .rto-admin-audit {
+      margin-top: 10px;
+      font-size: 0.78rem;
+    }
+
+    .rto-audit-entry {
+      padding: 6px 0;
+      border-bottom: 1px solid #f3f4f6;
+      color: #6b7280;
+    }
+
+    .rto-audit-entry:last-child {
+      border-bottom: 0;
+    }
+
+    .rto-audit-status {
+      font-weight: 600;
+    }
+
+    .rto-duplicate-warning {
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      background: #fffbeb;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rto-duplicate-count {
+      font-weight: 700;
+    }
   </style>
 </head>
 <body class="vect-own-body">
@@ -892,35 +1195,24 @@
   </header>
 
   <main class="vect-own-main">
-    <section class="vect-own-page is-active" data-vect-own-page="dashboard" aria-label="Submission overview">
-      <section class="vect-own-overview vect-own-submission-overview" aria-label="Owner submissions overview">
-        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
-          <p class="vect-own-metric-label">Pending</p>
-          <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
-        </article>
-        <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
-          <p class="vect-own-metric-label">Updated</p>
-          <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
-        </article>
-      </section>
+      <section class="vect-own-page is-active" data-vect-own-page="dashboard" aria-label="Submission overview">
+        <section class="vect-own-overview vect-own-submission-overview" aria-label="Owner submissions overview">
+          <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
+            <p class="vect-own-metric-label">Pending</p>
+            <strong class="vect-own-metric-value" data-vect-own-metric="pending">0</strong>
+          </article>
+          <article class="vect-own-metric-card" data-vect-own-metric-group="owner">
+            <p class="vect-own-metric-label">Updated</p>
+            <strong class="vect-own-metric-value" data-vect-own-metric="updated">0</strong>
+          </article>
+        </section>
 
-      <section class="vect-own-toolbar" aria-label="Owner controls">
-        <label class="vect-own-search-wrap">
-          <span class="vect-own-search-label">Search</span>
-          <input type="search" class="vect-own-search-input" placeholder="Name, company, phone, or id" data-vect-own-search>
+        <label class="vect-own-search-wrap" style="margin: 0 0 16px; width: 100%; display: block;">
+          <input type="search" class="vect-own-search-input" placeholder="Name, company, phone, or id" data-vect-own-search style="width: 100%; box-sizing: border-box; min-height: 48px; border: 1px solid #e5e7eb; border-radius: 22px; padding: 0 18px; font: inherit; font-size: 0.95rem;">
         </label>
 
-        <div class="vect-own-tabs" role="tablist" aria-label="Submission filters">
-          <button type="button" class="vect-own-tab is-active" data-vect-own-tab="all">All</button>
-          <button type="button" class="vect-own-tab" data-vect-own-tab="pending">Pending</button>
-          <button type="button" class="vect-own-tab" data-vect-own-tab="accepted">Accepted</button>
-          <button type="button" class="vect-own-tab" data-vect-own-tab="rejected">Rejected</button>
-          <button type="button" class="vect-own-tab" data-vect-own-tab="updated">Updated</button>
-        </div>
-      </section>
-
-      <section class="vect-own-board">
-        <div class="vect-own-list-panel">
+        <section class="vect-own-board" style="grid-template-columns: 1fr;">
+          <div class="vect-own-list-panel">
           <div class="vect-own-section-head">
             <h2 class="vect-own-section-title">Submissions</h2>
             <p class="vect-own-section-subtitle" data-vect-own-list-subtitle>Newest first</p>
@@ -974,8 +1266,33 @@
 
             <div class="vect-own-detail-section">
               <h3 class="vect-own-detail-section-title">Uploaded documents</h3>
-              <div class="vect-own-document-grid" data-vect-own-documents></div>
-            </div>
+            <div class="vect-own-document-grid" data-vect-own-documents></div>
+          </div>
+
+    <div class="vect-own-detail-section rto-section" data-vect-own-rto-section hidden>
+      <h3 class="vect-own-detail-section-title">Driving Licence Verification</h3>
+
+      <button type="button" class="rto-btn" data-vect-own-rto-btn>Verify Driving Licence</button>
+
+      <div class="rto-loading" data-vect-own-rto-loading hidden>
+        <div class="rto-spinner"></div>
+        <span>Processing verification...</span>
+      </div>
+
+      <div class="rto-results" data-vect-own-rto-results hidden></div>
+
+      <div class="rto-admin-area" data-vect-own-rto-admin hidden>
+        <h4 class="rto-admin-title">Admin Review</h4>
+        <div class="rto-admin-buttons">
+          <button type="button" class="rto-admin-btn is-verify" data-vect-own-admin-action="verified">Verified</button>
+          <button type="button" class="rto-admin-btn is-reject" data-vect-own-admin-action="rejected">Rejected</button>
+          <button type="button" class="rto-admin-btn is-info" data-vect-own-admin-action="needs_more_info">Needs More Info</button>
+        </div>
+        <textarea class="rto-admin-note" data-vect-own-admin-note placeholder="Admin note (optional)" rows="2"></textarea>
+        <div class="rto-admin-feedback" data-vect-own-admin-feedback hidden></div>
+        <div class="rto-admin-audit" data-vect-own-admin-audit hidden></div>
+      </div>
+    </div>
 
             <div class="vect-own-detail-section vect-own-note-section" hidden data-vect-own-note-section>
               <h3 class="vect-own-detail-section-title">Owner note</h3>
@@ -1151,17 +1468,24 @@
       const updatedTab = document.querySelector('[data-vect-own-tab="updated"]');
       const metricNodes = Array.from(document.querySelectorAll('[data-vect-own-metric]'));
       const actionButtons = Array.from(document.querySelectorAll('[data-vect-own-action]'));
+      const rtoSection = document.querySelector('[data-vect-own-rto-section]');
+      const rtoButton = document.querySelector('[data-vect-own-rto-btn]');
+      const rtoLoading = document.querySelector('[data-vect-own-rto-loading]');
+      const rtoResults = document.querySelector('[data-vect-own-rto-results]');
+      var rtoAdminArea = document.querySelector('[data-vect-own-rto-admin]');
+      var rtoAdminNote = document.querySelector('[data-vect-own-rto-admin-note]');
+      var rtoAdminFeedback = document.querySelector('[data-vect-own-rto-admin-feedback]');
+      var rtoAdminAudit = document.querySelector('[data-vect-own-rto-admin-audit]');
+      var cachedRtoData = { submissionId: '', html: '' };
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const apiBaseCandidates = Array.from(new Set([
         apiBaseUrl,
         'https://go-kerala-backend.onrender.com',
-        'https://mymusics.onrender.com',
-        window.location.origin
+        'https://mymusics.onrender.com'
       ].map(function (value) {
         return String(value || '').trim().replace(/\/$/, '');
       }).filter(Boolean)));
-      let activeApiBaseUrl = apiBaseUrl || apiBaseCandidates[0] || '';
       const SESSION_KEY = 'vect-own-session-token';
       const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
       const REJECT_INTRO_MESSAGE = 'Sorry, your valuation have rejected because';
@@ -1195,76 +1519,6 @@
       let draftReviewNotes = {};
       let reviewSelections = {};
       const LOCAL_TOURIST_SUBMISSION_KEY = 'owner-latest-tourist-submission';
-
-      const localMediaStore = (function () {
-        if (window.ownerMediaStore && typeof window.ownerMediaStore.getItem === 'function') {
-          return window.ownerMediaStore;
-        }
-
-        const DB_NAME = 'vectOwnerMedia';
-        const STORE_NAME = 'images';
-
-        function openDatabase() {
-          return new Promise(function (resolve, reject) {
-            if (!window.indexedDB) {
-              reject(new Error('IndexedDB is not supported on this device.'));
-              return;
-            }
-
-            const request = window.indexedDB.open(DB_NAME, 1);
-
-            request.onerror = function () {
-              reject(new Error('Unable to open local media storage.'));
-            };
-
-            request.onupgradeneeded = function () {
-              const database = request.result;
-
-              if (!database.objectStoreNames.contains(STORE_NAME)) {
-                database.createObjectStore(STORE_NAME);
-              }
-            };
-
-            request.onsuccess = function () {
-              resolve(request.result);
-            };
-          });
-        }
-
-        function runStoreOperation(mode, handler) {
-          return openDatabase().then(function (database) {
-            return new Promise(function (resolve, reject) {
-              const transaction = database.transaction(STORE_NAME, mode);
-              const store = transaction.objectStore(STORE_NAME);
-              const request = handler(store);
-
-              transaction.oncomplete = function () {
-                resolve(request && request.result);
-              };
-
-              transaction.onerror = function () {
-                reject(transaction.error || new Error('Media storage transaction failed.'));
-              };
-
-              transaction.onabort = function () {
-                reject(transaction.error || new Error('Media storage transaction was aborted.'));
-              };
-            }).finally(function () {
-              database.close();
-            });
-          });
-        }
-
-        return {
-          getItem: function (key) {
-            return runStoreOperation('readonly', function (store) {
-              return store.get(String(key || ''));
-            }).then(function (value) {
-              return typeof value === 'string' ? value : '';
-            });
-          }
-        };
-      })();
 
       if (!listNode || !detailNode || !emptyNode) {
         return;
@@ -1431,6 +1685,401 @@
         }
       }
 
+      function renderRtoResults(verification) {
+        if (!rtoResults) return;
+        rtoResults.hidden = false;
+
+        if (!verification) {
+          rtoResults.innerHTML = '<div class="rto-error">No verification data available.</div>';
+          return;
+        }
+
+        var status = verification.status || 'unable_to_verify';
+        var statusInfo = verification.statusInfo || {};
+        var summary = verification.summary || {};
+        var details = verification.details || {};
+        var confidence = verification.confidence || {};
+        var warnings = verification.warnings || [];
+        var crossCheck = verification.crossCheck || {};
+        var duplicateCheck = verification.duplicateCheck || {};
+        var source = verification.source || 'none';
+        var ocrExtracted = verification.ocrExtracted || {};
+        var official = verification.official || {};
+
+        var statusClass = status.replace(/_/g, '-');
+        var statusLabel = summary.label || statusInfo.label || 'Unable to Verify';
+        var statusColor = summary.color || statusInfo.color || '#6b7280';
+
+        var html = '';
+        html += '<div class="rto-verification-card">';
+        html += '<div class="rto-verification-card-header is-' + statusClass + '">' +
+          '<span class="rto-result-icon">' + getStatusIcon(status) + '</span>' +
+          escapeHtml(statusLabel) +
+        '</div>';
+
+        html += '<div class="rto-verification-card-body">';
+        if (details.dlNumber) {
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Licence Number</span>' +
+            '<span class="rto-verification-detail-value">' + escapeHtml(details.dlNumber) + '</span>' +
+          '</div>';
+        }
+        if (details.name) {
+          var nameMatch = crossCheck.checks && crossCheck.checks.nameMatch;
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Name</span>' +
+            '<span class="rto-verification-detail-value' + (nameMatch === false ? ' mismatch' : nameMatch === true ? ' match' : '') + '">' + escapeHtml(details.name) + '</span>' +
+          '</div>';
+        }
+        if (details.dob) {
+          var dobMatch = crossCheck.checks && crossCheck.checks.dobMatch;
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Date of Birth</span>' +
+            '<span class="rto-verification-detail-value' + (dobMatch === false ? ' mismatch' : dobMatch === true ? ' match' : '') + '">' + escapeHtml(details.dob) + '</span>' +
+          '</div>';
+        }
+        if (details.issueDate) {
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Issue Date</span>' +
+            '<span class="rto-verification-detail-value">' + escapeHtml(details.issueDate) + '</span>' +
+          '</div>';
+        }
+        if (details.expiryDate) {
+          var expiryMatch = crossCheck.checks && crossCheck.checks.expiryMatch;
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Expiry Date</span>' +
+            '<span class="rto-verification-detail-value' + (expiryMatch === false ? ' mismatch' : expiryMatch === true ? ' match' : '') + '">' + escapeHtml(details.expiryDate) + '</span>' +
+          '</div>';
+        }
+        if (details.issuingAuthority) {
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Issuing Authority</span>' +
+            '<span class="rto-verification-detail-value">' + escapeHtml(details.issuingAuthority) + '</span>' +
+          '</div>';
+        }
+        if (details.vehicleClasses && details.vehicleClasses.length > 0) {
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Vehicle Classes</span>' +
+            '<span class="rto-verification-detail-value">' + escapeHtml(details.vehicleClasses.join(', ')) + '</span>' +
+          '</div>';
+        }
+        if (details.status) {
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Licence Status</span>' +
+            '<span class="rto-verification-detail-value">' + escapeHtml(details.status) + '</span>' +
+          '</div>';
+        }
+        if (details.lastChecked) {
+          html += '<div class="rto-verification-detail">' +
+            '<span class="rto-verification-detail-label">Last Checked</span>' +
+            '<span class="rto-verification-detail-value">' + escapeHtml(formatDate(details.lastChecked)) + '</span>' +
+          '</div>';
+        }
+        html += '</div>';
+
+        html += '<div class="rto-confidence-section">';
+        html += '<div class="rto-confidence-row">' +
+          '<span class="rto-confidence-label">Official Verification</span>' +
+          '<span class="rto-confidence-value is-' + (confidence.officialVerification || 'not_confirmed') + '">' +
+          (confidence.officialVerification === 'confirmed' ? 'Confirmed' : 'Not Confirmed') +
+          '</span></div>';
+        html += '<div class="rto-confidence-row">' +
+          '<span class="rto-confidence-label">OCR Confidence</span>' +
+          '<span class="rto-confidence-value is-' + (confidence.ocrConfidence || 'low') + '">' +
+          escapeHtml(capitalise(confidence.ocrConfidence || 'Low')) +
+          '</span></div>';
+        html += '<div class="rto-confidence-row">' +
+          '<span class="rto-confidence-label">Document Integrity</span>' +
+          '<span class="rto-confidence-value is-' + (confidence.documentIntegrity || 'unable_to_determine') + '">' +
+          escapeHtml(formatIntegrity(confidence.documentIntegrity)) +
+          '</span></div>';
+        html += '<div class="rto-confidence-row">' +
+          '<span class="rto-confidence-label">Data Match</span>' +
+          '<span class="rto-confidence-value is-' + (confidence.dataMatch || 'none') + '">' +
+          escapeHtml(formatDataMatch(confidence.dataMatch)) +
+          '</span></div>';
+        html += '</div>';
+
+        if (duplicateCheck && duplicateCheck.count > 0) {
+          html += '<div class="rto-duplicate-warning">' +
+            '<span>&#x26A0;</span>' +
+            '<span>This licence number is used by <strong class="rto-duplicate-count">' + duplicateCheck.count + '</strong> other account(s).</span>' +
+          '</div>';
+        }
+
+        if (warnings && warnings.length > 0) {
+          html += '<div class="rto-warnings-section">';
+          for (var w = 0; w < warnings.length; w++) {
+            html += '<div class="rto-warning">' + escapeHtml(warnings[w]) + '</div>';
+          }
+          html += '</div>';
+        }
+
+        var sourceNote = getSourceNote(source, official);
+        if (sourceNote) {
+          html += '<div class="rto-source-note">' + escapeHtml(sourceNote) + '</div>';
+        }
+
+        html += '</div>';
+
+        if (ocrExtracted && ocrExtracted.dlNumber && !details.dlNumber) {
+          html += '<div class="rto-result-row is-pending">' +
+            '<span class="rto-result-icon">&#x1F4DD;</span>' +
+            '<p class="rto-result-text">OCR found: <strong>' + escapeHtml(ocrExtracted.dlNumber) + '</strong></p>' +
+          '</div>';
+        }
+
+        if (ocrExtracted && ocrExtracted.text) {
+          html += '<details style="margin-top:8px;font-size:0.8rem;color:#64748b">' +
+            '<summary style="cursor:pointer;font-weight:600">Raw OCR text</summary>' +
+            '<pre style="margin:6px 0 0;padding:8px;background:#f8fafc;border-radius:8px;white-space:pre-wrap;word-break:break-word;font-size:0.78rem;line-height:1.4">' + escapeHtml(ocrExtracted.text) + '</pre>' +
+          '</details>';
+        }
+
+        rtoResults.innerHTML = html;
+        cachedRtoData = { submissionId: selectedSubmissionId, html: html };
+
+        if (rtoAdminArea) {
+          rtoAdminArea.hidden = true;
+          rtoAdminAudit.hidden = true;
+        }
+      }
+
+      function getStatusIcon(status) {
+        var icons = {
+          'verified': '&#x2705;',
+          'valid': '&#x2705;',
+          'expired': '&#x26A0;',
+          'invalid': '&#x274C;',
+          'mismatch': '&#x274C;',
+          'unable_to_verify': '&#x2753;',
+          'needs_manual_review': '&#x26A0;'
+        };
+        return icons[status] || '&#x2753;';
+      }
+
+      function formatIntegrity(value) {
+        var labels = {
+          'normal': 'Normal',
+          'suspicious': 'Suspicious',
+          'unable_to_determine': 'Unable to Determine'
+        };
+        return labels[value] || 'Unable to Determine';
+      }
+
+      function formatDataMatch(value) {
+        var labels = {
+          'match': 'Match',
+          'partial_match': 'Partial Match',
+          'mismatch': 'Mismatch',
+          'none': 'No Data to Compare'
+        };
+        return labels[value] || 'No Data to Compare';
+      }
+
+      function capitalise(str) {
+        return String(str || '').charAt(0).toUpperCase() + String(str || '').slice(1);
+      }
+
+      function getSourceNote(source, official) {
+        if (source === 'parivahan_unofficial') {
+          return 'Data retrieved from Parivahan portal (unofficial source). This is not a certified government verification. Results may not be current.';
+        }
+        if (source === 'ocr_only') {
+          return 'Only OCR-based analysis was performed. No official verification could be completed.';
+        }
+        if (source === 'user_input') {
+          return 'No official verification was performed. Results are based on submitted information only.';
+        }
+        return '';
+      }
+
+      var tessWorkerPromise = null;
+
+      function getTesseractWorker() {
+        if (tessWorkerPromise) return tessWorkerPromise;
+        tessWorkerPromise = new Promise(function (resolve, reject) {
+          if (typeof Tesseract !== 'undefined') {
+            resolve();
+            return;
+          }
+          var script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+          script.onload = function () { resolve(); };
+          script.onerror = function () { reject(new Error('Failed to load OCR engine.')); };
+          document.head.appendChild(script);
+        }).then(function () {
+          return Tesseract.createWorker('eng');
+        });
+        return tessWorkerPromise;
+      }
+
+      function extractDLNumberFromText(text) {
+        var cleaned = text.replace(/[^A-Za-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+        var candidates = cleaned.split(' ');
+        for (var i = 0; i < candidates.length; i++) {
+          var raw = candidates[i].toUpperCase().replace(/[^A-Z0-9]/g, '');
+          if (/^[A-Z]{2}\d{2}\d{4,15}$/.test(raw)) {
+            return raw;
+          }
+        }
+        var fullCleaned = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        var matches = fullCleaned.match(/[A-Z]{2}\d{2}\d{4,15}/g);
+        if (matches && matches.length) {
+          return matches[0];
+        }
+        return '';
+      }
+
+      function validateDLFormat(dlNumber) {
+        if (!dlNumber) return { valid: false, error: 'No number to validate' };
+        if (/^[A-Z]{2}\d{2}\d{4,15}$/.test(dlNumber)) {
+          var stateCode = dlNumber.substring(0, 2);
+          var rtoCode = dlNumber.substring(2, 4);
+          return { valid: true, format: stateCode + ' ' + rtoCode + ' ' + dlNumber.substring(4) };
+        }
+        return { valid: false, error: 'Invalid format. Expected format: MH0220110012345 (2 letters + 2 digits + 4-15 digits)' };
+      }
+
+      function handleRtoVerification() {
+        var currentSubmission = getSelectedSubmission('owner');
+        if (!currentSubmission) {
+          currentSubmission = getSelectedSubmission('submission');
+        }
+        if (!currentSubmission || !currentSubmission.id) {
+          if (rtoResults) {
+            rtoResults.hidden = false;
+            rtoResults.innerHTML = '<div class="rto-error">Select a submission first.</div>';
+          }
+          return;
+        }
+
+        var summary = currentSubmission.summary || {};
+        var fields = currentSubmission.fields || {};
+        var images = summary.images || {};
+        var dlNumber = fields['owner-heavy-licence-photo-name-1'] || fields['owner-heavy-licence-photo-name-2'] || '';
+        var photoUrl = fields['owner-heavy-licence-photo-url-1'] || images.heavyLicencePhotoUrl1 || '';
+        var submissionId = currentSubmission.id;
+
+        if (!photoUrl && !dlNumber) {
+          if (rtoResults) {
+            rtoResults.hidden = false;
+            rtoResults.innerHTML = '<div class="rto-error">No licence photo or DL number found in this submission.</div>';
+          }
+          return;
+        }
+
+        if (rtoButton) rtoButton.disabled = true;
+        if (rtoLoading) rtoLoading.hidden = false;
+        if (rtoResults) { rtoResults.hidden = true; rtoResults.innerHTML = ''; }
+        cachedRtoData = { submissionId: submissionId, html: '' };
+        if (rtoAdminArea) rtoAdminArea.hidden = true;
+
+        if (rtoLoading) {
+          var loadingText = rtoLoading.querySelector('span');
+          if (loadingText) loadingText.textContent = 'Reading licence photo with OCR...';
+        }
+
+        var payload = {
+          submissionId: submissionId,
+          dlNumber: dlNumber || undefined,
+          dob: undefined
+        };
+        Object.keys(payload).forEach(function (k) { if (payload[k] === undefined) delete payload[k]; });
+
+        getApi('/api/rto/ai-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(function (response) {
+          if (!response.ok) {
+            throw new Error('Verification request failed (status ' + response.status + ').');
+          }
+          return response.json();
+        }).then(function (data) {
+          if (data && data.success && data.verification) {
+            renderRtoResults(data.verification);
+            if (submissionId && (data.verification.status === 'unable_to_verify' || data.verification.status === 'needs_manual_review')) {
+              loadAdminReviewArea(submissionId);
+            }
+          } else {
+            renderRtoResults(null);
+          }
+          if (rtoButton) rtoButton.disabled = false;
+          if (rtoLoading) rtoLoading.hidden = true;
+        }).catch(function (error) {
+          var message = error.message || 'Verification request failed.';
+          if (rtoResults) {
+            rtoResults.hidden = false;
+            rtoResults.innerHTML = '<div class="rto-error">' + escapeHtml(message) + '</div>';
+          }
+          cachedRtoData = { submissionId: cachedRtoData.submissionId, html: rtoResults ? rtoResults.innerHTML : '' };
+          if (rtoButton) rtoButton.disabled = false;
+          if (rtoLoading) rtoLoading.hidden = true;
+        });
+      }
+
+      function loadAdminReviewArea(submissionId) {
+        if (!rtoAdminArea || !submissionId) return;
+        rtoAdminArea.hidden = false;
+        if (rtoAdminFeedback) rtoAdminFeedback.hidden = true;
+
+        getApi('/api/admin/verification-audit/' + encodeURIComponent(submissionId))
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data && data.success && data.entries && data.entries.length > 0 && rtoAdminAudit) {
+              var auditHtml = '<h5 style="margin:8px 0 4px;font-size:0.8rem;color:#6b7280;font-weight:600">Verification History</h5>';
+              for (var i = 0; i < data.entries.length; i++) {
+                var entry = data.entries[i];
+                auditHtml += '<div class="rto-audit-entry">' +
+                  '<span class="rto-audit-status">' + escapeHtml(entry.status || entry.action || '') + '</span> ' +
+                  'by ' + escapeHtml(entry.reviewedBy || 'unknown') +
+                  ' on ' + escapeHtml(formatDate(entry.timestamp)) +
+                '</div>';
+              }
+              rtoAdminAudit.innerHTML = auditHtml;
+              rtoAdminAudit.hidden = false;
+            }
+          })
+          .catch(function () {});
+      }
+
+      document.addEventListener('click', function (event) {
+        var adminBtn = event.target.closest('.rto-admin-btn');
+        if (!adminBtn) return;
+        var action = adminBtn.getAttribute('data-vect-own-admin-action');
+        var submissionId = selectedSubmissionId;
+        if (!action || !submissionId) return;
+        var note = rtoAdminNote ? String(rtoAdminNote.value || '').trim() : '';
+        var btns = document.querySelectorAll('.rto-admin-btn');
+        btns.forEach(function (b) { b.disabled = true; });
+        getApi('/api/admin/verification-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId: submissionId, action: action, reviewNote: note })
+        }).then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (rtoAdminFeedback) {
+              rtoAdminFeedback.hidden = false;
+              rtoAdminFeedback.className = 'rto-admin-feedback ' + (data.success ? 'is-success' : 'is-error');
+              rtoAdminFeedback.textContent = data.success ? 'Review recorded.' : (data.error || 'Review failed.');
+            }
+            if (data.success) {
+              loadAdminReviewArea(submissionId);
+            }
+          })
+          .catch(function (err) {
+            if (rtoAdminFeedback) {
+              rtoAdminFeedback.hidden = false;
+              rtoAdminFeedback.className = 'rto-admin-feedback is-error';
+              rtoAdminFeedback.textContent = err.message || 'Review failed.';
+            }
+          })
+          .finally(function () {
+            btns.forEach(function (b) { b.disabled = false; });
+          });
+      });
+
       function applyFilterHighlight() {
         const activeTabName = highlightedFilter || activeFilter;
 
@@ -1567,23 +2216,10 @@
           const parsed = JSON.parse(raw);
           return Array.isArray(parsed) ? parsed.map(function (item) {
             if (item && typeof item === 'object' && !Array.isArray(item)) {
-              const name = String(item.name || item.fileName || '').trim();
-              const mediaKey = String(item.mediaKey || '').trim();
-              const previewDataUrl = String(item.previewDataUrl || '').trim();
-
-              if (!name && !mediaKey && !previewDataUrl) {
-                return null;
-              }
-
-              return {
-                fileName: name,
-                mediaKey: mediaKey,
-                previewDataUrl: previewDataUrl
-              };
+              return String(item.name || item.fileName || '').trim();
             }
 
-            const text = String(item || '').trim();
-            return text ? text : null;
+            return String(item || '').trim();
           }).filter(Boolean) : [];
         } catch (error) {
           return [];
@@ -1602,11 +2238,7 @@
 
       function getLocalTouristSubmission() {
         try {
-          const raw = String(
-            sessionStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) ||
-            localStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) ||
-            ''
-          ).trim();
+          const raw = String(sessionStorage.getItem(LOCAL_TOURIST_SUBMISSION_KEY) || '').trim();
 
           if (!raw) {
             return null;
@@ -1622,24 +2254,6 @@
         } catch (error) {
           return null;
         }
-      }
-
-      function mergeSubmissionWithLocalTouristMedia(submission) {
-        const localSubmission = getLocalTouristSubmission();
-        const safeSubmission = submission && typeof submission === 'object' ? submission : null;
-
-        if (!safeSubmission || !localSubmission) {
-          return submission;
-        }
-
-        if (String(safeSubmission.id || '').trim() !== String(localSubmission.id || '').trim()) {
-          return submission;
-        }
-
-        return Object.assign({}, safeSubmission, localSubmission, {
-          summary: Object.assign({}, safeSubmission.summary || {}, localSubmission.summary || {}),
-          bus: Object.assign({}, safeSubmission.bus || {}, localSubmission.bus || {})
-        });
       }
 
       function mergeLocalTouristSubmission(submissions) {
@@ -1706,12 +2320,10 @@
 
         if (value && typeof value === 'object') {
           return String(
-            value.fileUrl ||
-            value.previewDataUrl ||
+            value.url ||
             value.src ||
             value.path ||
-            value.url ||
-            value.viewUrl ||
+            value.fileUrl ||
             value.fileName ||
             value.filename ||
             value.name ||
@@ -1982,22 +2594,30 @@
       }
 
       function buildTouristImageCard(title, value, itemKey) {
-          const entry = value && typeof value === 'object' && !Array.isArray(value) ? value : null;
-          const mediaKey = String(entry && entry.mediaKey || '').trim();
-          const safeValue = entry
-            ? String(
-                entry.previewDataUrl ||
-                entry.fileUrl ||
-                entry.src ||
-                entry.path ||
-                entry.url ||
-                entry.viewUrl ||
-                entry.fileName ||
-                entry.filename ||
-                entry.name ||
-                ''
-              ).trim()
-            : String(extractImageSource(value) || '').trim();
+          const normalizeImageSource = typeof extractImageSource === 'function'
+            ? extractImageSource
+            : function (fallbackValue) {
+                if (Array.isArray(fallbackValue)) {
+                  return fallbackValue.length ? normalizeImageSource(fallbackValue[0]) : '';
+                }
+
+                if (fallbackValue && typeof fallbackValue === 'object') {
+                  return String(
+                    fallbackValue.previewDataUrl ||
+                    fallbackValue.url ||
+                    fallbackValue.src ||
+                    fallbackValue.path ||
+                    fallbackValue.fileUrl ||
+                    fallbackValue.fileName ||
+                    fallbackValue.filename ||
+                    fallbackValue.name ||
+                    ''
+                  ).trim();
+                }
+
+                return String(fallbackValue || '').trim();
+              };
+          const safeValue = normalizeImageSource(value);
           const imageUrl = resolveStoredUploadUrl(safeValue, safeValue) || getImageUrl(safeValue);
 
           if (!safeValue) {
@@ -2010,134 +2630,14 @@
         }
 
           return [
-            '<div class="vect-own-tourist-image-card"' +
-              (mediaKey ? ' data-vect-own-media-key="' + escapeHtml(mediaKey) + '"' : '') +
-              ' data-vect-own-media-label="' + escapeHtml(title) + '"' +
-              ' data-vect-own-image-value="' + escapeHtml(safeValue) + '">',
+            '<div class="vect-own-tourist-image-card">',
             '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
-            '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview"' + (imageUrl ? '' : ' hidden') + ' data-vect-own-media-image>',
-            '<p class="vect-own-tourist-file-empty" data-vect-own-media-fallback' + (imageUrl ? ' hidden' : '') + '>' + escapeHtml(valueToText(safeValue) || 'Loading image...') + '</p>',
-            '<button type="button" class="vect-own-tourist-image-link"' + (imageUrl ? '' : ' hidden') + ' data-vect-own-media-button data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>',
+            imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
+            imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
             buildReviewActionButtons(itemKey, title, getItemReviewState(selectedSubmissionId, itemKey), { position: 'bottom' }),
           '</div>'
           ].join('');
         }
-
-      function hydrateTouristImagePreviews(rootNode) {
-        if (!rootNode) {
-          return;
-        }
-
-        Array.from(rootNode.querySelectorAll('.vect-own-tourist-image-card')).forEach(function (card) {
-          const imageValue = String(card.getAttribute('data-vect-own-image-value') || '').trim();
-          const mediaKey = String(card.getAttribute('data-vect-own-media-key') || '').trim();
-          const label = String(card.getAttribute('data-vect-own-media-label') || '').trim() || 'Submitted image';
-          const imageNode = card.querySelector('[data-vect-own-media-image]');
-          const buttonNode = card.querySelector('[data-vect-own-media-button]');
-          const fallbackNode = card.querySelector('[data-vect-own-media-fallback]');
-          const initialUrl = resolveStoredUploadUrl(imageValue, imageValue) || getImageUrl(imageValue);
-
-          if (!imageNode) {
-            return;
-          }
-
-          function applyLoadedUrl(nextUrl) {
-            const safeUrl = String(nextUrl || '').trim();
-
-            if (!safeUrl) {
-              imageNode.hidden = true;
-              if (buttonNode) {
-                buttonNode.hidden = true;
-              }
-              if (fallbackNode) {
-                fallbackNode.hidden = false;
-                fallbackNode.textContent = 'No preview available.';
-              }
-              return;
-            }
-
-            imageNode.src = safeUrl;
-            imageNode.alt = label;
-            imageNode.hidden = false;
-
-            if (buttonNode) {
-              buttonNode.hidden = false;
-              buttonNode.setAttribute('data-vect-own-image-url', safeUrl);
-              buttonNode.setAttribute('data-vect-own-image-label', label);
-            }
-
-            if (fallbackNode) {
-              fallbackNode.hidden = true;
-            }
-          }
-
-          function tryLocalFallback() {
-            if (!mediaKey || !localMediaStore || typeof localMediaStore.getItem !== 'function') {
-              applyLoadedUrl('');
-              return;
-            }
-
-            localMediaStore.getItem(mediaKey).then(function (storedUrl) {
-              applyLoadedUrl(storedUrl);
-            }).catch(function () {
-              applyLoadedUrl('');
-            });
-          }
-
-          if (!initialUrl) {
-            tryLocalFallback();
-            return;
-          }
-
-          loadPreviewImageWithRetry(imageNode, initialUrl, 2).then(function (loadedUrl) {
-            applyLoadedUrl(loadedUrl || initialUrl);
-          }).catch(function () {
-            tryLocalFallback();
-          });
-        });
-      }
-
-      function hydrateLocalMediaPreviews(rootNode) {
-        if (!rootNode || !localMediaStore || typeof localMediaStore.getItem !== 'function') {
-          return;
-        }
-
-        Array.from(rootNode.querySelectorAll('[data-vect-own-media-key]')).forEach(function (card) {
-          const mediaKey = String(card.getAttribute('data-vect-own-media-key') || '').trim();
-          const label = String(card.getAttribute('data-vect-own-media-label') || '').trim() || 'Submitted image';
-          const imageNode = card.querySelector('[data-vect-own-media-image]');
-          const buttonNode = card.querySelector('[data-vect-own-media-button]');
-          const fallbackNode = card.querySelector('[data-vect-own-media-fallback]');
-
-          if (!mediaKey || !imageNode) {
-            return;
-          }
-
-          localMediaStore.getItem(mediaKey).then(function (storedUrl) {
-            const safeUrl = String(storedUrl || '').trim();
-
-            if (!safeUrl) {
-              return;
-            }
-
-            imageNode.src = safeUrl;
-            imageNode.alt = label;
-            imageNode.hidden = false;
-
-            if (buttonNode) {
-              buttonNode.hidden = false;
-              buttonNode.setAttribute('data-vect-own-image-url', safeUrl);
-              buttonNode.setAttribute('data-vect-own-image-label', label);
-            }
-
-            if (fallbackNode) {
-              fallbackNode.hidden = true;
-            }
-          }).catch(function () {
-            return;
-          });
-        });
-      }
 
       function buildTouristFileSection(title, values, itemKeyPrefix) {
         const safeValues = Array.isArray(values) ? values.filter(function (item) {
@@ -2204,8 +2704,6 @@
           '</div>'
         ].join('');
 
-        hydrateTouristImagePreviews(touristSubmissionContentNode);
-        hydrateLocalMediaPreviews(touristSubmissionContentNode);
         syncTouristBottomActionButtons(submission);
       }
 
@@ -2309,17 +2807,6 @@
         }
 
         if (/^https?:\/\//i.test(text)) {
-          try {
-            const absoluteUrl = new URL(text, window.location.href);
-            const uploadedFile = String(absoluteUrl.searchParams.get('file') || '').trim();
-
-            if (/owner-uploaded-photo\.html$/i.test(absoluteUrl.pathname) && uploadedFile) {
-              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
-            }
-          } catch (error) {
-            // Keep the original URL when parsing fails.
-          }
-
           return text;
         }
 
@@ -2329,42 +2816,14 @@
           'Aadhaar-Card.png',
           'yellow-hydraulic-excavator.png',
           'modern-white-box-truck.png',
-          'white-flatbed-truck.png',
-          'heavy-driving-licence-reference.png',
-          'heavy-driving-licence-reference-v2.png',
-          'images-3.jpg',
-          'profile-photo-reference.avif'
+          'white-flatbed-truck.png'
         ]);
-
-        if (/^owner-uploaded-photo\.html\?/i.test(text)) {
-          try {
-            const uploadedPhotoUrl = new URL(text, window.location.href);
-            const uploadedFile = String(uploadedPhotoUrl.searchParams.get('file') || '').trim();
-
-            if (uploadedFile) {
-              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
-            }
-          } catch (error) {
-            // Fall through to the remaining handlers below.
-          }
-        }
 
         if (staticAssetFiles.has(text)) {
           return new URL('../' + text, window.location.href).toString();
         }
 
         if (/^\//.test(text)) {
-          try {
-            const relativeUrl = new URL(text, window.location.origin);
-            const uploadedFile = String(relativeUrl.searchParams.get('file') || '').trim();
-
-            if (/owner-uploaded-photo\.html$/i.test(relativeUrl.pathname) && uploadedFile) {
-              return getApiUrl('/uploads/' + encodeURIComponent(uploadedFile));
-            }
-          } catch (error) {
-            // Fall through to the normal relative path handling below.
-          }
-
           return getApiUrl(text);
         }
 
@@ -2373,15 +2832,7 @@
           return getApiUrl('/' + text);
         }
 
-        if (/^[^\/?#]+\.(png|jpe?g|webp|gif)$/i.test(text)) {
-          return getApiUrl('/uploads/' + encodeURIComponent(text));
-        }
-
-        if (/^[a-f0-9]{24,}-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
-          return getApiUrl('/uploads/' + encodeURIComponent(text));
-        }
-
-        if (/^Screenshot-.*-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(text)) {
+        if (/\.(png|jpe?g|webp|gif|svg)$/i.test(text)) {
           return getApiUrl('/uploads/' + encodeURIComponent(text));
         }
 
@@ -2389,32 +2840,6 @@
       }
 
       const imageObjectUrlCache = new Map();
-
-      function getUploadUrlCandidates(imageUrl) {
-        const safeUrl = String(imageUrl || '').trim();
-
-        if (!safeUrl || /^data:image\//i.test(safeUrl)) {
-          return safeUrl ? [safeUrl] : [];
-        }
-
-        let parsedUrl;
-
-        try {
-          parsedUrl = new URL(safeUrl, window.location.href);
-        } catch (error) {
-          return [safeUrl];
-        }
-
-        if (!/^\/uploads\//i.test(parsedUrl.pathname)) {
-          return [parsedUrl.toString()];
-        }
-
-        return Array.from(new Set(
-          [parsedUrl.pathname + parsedUrl.search].concat(apiBaseCandidates.map(function (baseUrl) {
-            return getApiUrlForBase(baseUrl, parsedUrl.pathname + parsedUrl.search);
-          }))
-        ));
-      }
 
       function resolveRenderableImageUrl(value) {
         const directUrl = getImageUrl(value);
@@ -2424,8 +2849,7 @@
         }
 
         if (!/^data:image\//i.test(directUrl)) {
-          const imageCandidates = getUploadUrlCandidates(directUrl);
-          return Promise.resolve(imageCandidates[0] || directUrl);
+          return Promise.resolve(directUrl);
         }
 
         if (imageObjectUrlCache.has(directUrl)) {
@@ -2448,31 +2872,18 @@
 
       function loadPreviewImageWithRetry(imageNode, imageUrl, maxAttempts) {
         return new Promise(function (resolve, reject) {
-          const candidateBases = getUploadUrlCandidates(imageUrl);
           const maxTry = Math.max(1, Number(maxAttempts) || 1);
           let attempt = 0;
-          let baseIndex = 0;
 
           function tryLoad() {
-            if (baseIndex >= candidateBases.length) {
-              reject(new Error('Image preview failed to load.'));
-              return;
-            }
-
             attempt += 1;
-            const baseUrl = candidateBases[baseIndex];
             const candidateUrl = attempt === 1
-              ? baseUrl
-              : baseUrl + (baseUrl.indexOf('?') === -1 ? '?' : '&') + '_img_retry=' + Date.now() + '_' + attempt;
+              ? imageUrl
+              : imageUrl + (imageUrl.indexOf('?') === -1 ? '?' : '&') + '_img_retry=' + Date.now() + '_' + attempt;
 
             imageNode.onload = function () {
               imageNode.onload = null;
               imageNode.onerror = null;
-              try {
-                activeApiBaseUrl = new URL(candidateUrl, window.location.href).origin;
-              } catch (error) {
-                // Keep the previously working base.
-              }
               resolve(candidateUrl);
             };
 
@@ -2485,9 +2896,7 @@
                 return;
               }
 
-              attempt = 0;
-              baseIndex += 1;
-              tryLoad();
+              reject(new Error('Image preview failed to load.'));
             };
 
             imageNode.src = candidateUrl;
@@ -2593,18 +3002,6 @@
 
         if (!/\.(png|jpe?g|webp|gif)$/i.test(safeFileName)) {
           return '';
-        }
-
-        if (
-          !/^[a-f0-9]{24,}-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(safeFileName) &&
-          !/^Screenshot-.*-\d{10,}\.(png|jpe?g|webp|gif)$/i.test(safeFileName) &&
-          !/^(uploads\/).+/i.test(safeFileName)
-        ) {
-          return '';
-        }
-
-        if (/^(uploads\/).+/i.test(safeFileName)) {
-          return getApiUrl('/' + safeFileName.replace(/^\/+/, ''));
         }
 
         return getApiUrl('/uploads/' + encodeURIComponent(safeFileName));
@@ -2867,10 +3264,7 @@
               viewButton.setAttribute('data-vect-own-image-label', item.label);
 
               return loadPreviewImageWithRetry(imageNode, imageUrl, 2)
-                .then(function (loadedUrl) {
-                  if (loadedUrl) {
-                    viewButton.setAttribute('data-vect-own-image-url', loadedUrl);
-                  }
+                .then(function () {
                   imageNode.hidden = false;
                   fallbackNode.hidden = true;
                 })
@@ -2889,7 +3283,7 @@
       }
 
       function getApiUrl(pathName) {
-        return activeApiBaseUrl ? activeApiBaseUrl + pathName : pathName;
+        return apiBaseUrl ? apiBaseUrl + pathName : pathName;
       }
 
       function getApiUrlForBase(baseUrl, pathName) {
@@ -2924,10 +3318,6 @@
               bases.length
             ) {
               return tryNext();
-            }
-
-            if (response.ok) {
-              activeApiBaseUrl = baseUrl;
             }
 
             return response;
@@ -3648,6 +4038,17 @@
           if (noteToggleButton) {
             noteToggleButton.hidden = true;
           }
+          if (rtoSection) {
+            rtoSection.hidden = true;
+          }
+          if (rtoResults) {
+            rtoResults.hidden = true;
+          }
+          if (rtoButton) {
+            rtoButton.disabled = false;
+          }
+          cachedRtoData = { submissionId: '', html: '' };
+          if (rtoAdminArea) rtoAdminArea.hidden = true;
           renderTouristSubmissionList();
           renderTouristSubmissionDetail(null);
           saveDashboardState();
@@ -3670,6 +4071,21 @@
         detailNode.hidden = false;
         if (documentsSection) {
           documentsSection.hidden = true;
+        }
+        if (rtoSection) {
+          rtoSection.hidden = false;
+          if (rtoResults) {
+            if (cachedRtoData && cachedRtoData.html && cachedRtoData.submissionId === submission.id) {
+              rtoResults.hidden = false;
+              rtoResults.innerHTML = cachedRtoData.html;
+              if (rtoAdminArea) rtoAdminArea.hidden = false;
+            } else {
+              rtoResults.hidden = true;
+              rtoResults.innerHTML = '';
+              if (rtoAdminArea) rtoAdminArea.hidden = true;
+            }
+          }
+          if (rtoButton) rtoButton.disabled = false;
         }
 
         if (detailSubtitle) {
@@ -3810,7 +4226,7 @@
           .then(function (payload) {
             console.log('Detail payload received:', payload);
             console.log('Submission to render:', payload.submission);
-            renderDetail(mergeSubmissionWithLocalTouristMedia(payload.submission));
+            renderDetail(payload.submission);
           })
           .catch(function (error) {
             console.log('Error loading details, using cached:', error);
@@ -3957,11 +4373,13 @@
         });
       });
 
-      searchInput.addEventListener('input', function () {
-        searchTerm = String(searchInput.value || '').trim().toLowerCase();
-        saveDashboardState();
-        renderList();
-      });
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          searchTerm = String(searchInput.value || '').trim().toLowerCase();
+          saveDashboardState();
+          renderList();
+        });
+      }
 
       if (noteInput) {
         noteInput.addEventListener('input', function () {
@@ -4089,12 +4507,25 @@
         });
       });
 
+      if (rtoButton) {
+        rtoButton.addEventListener('click', handleRtoVerification);
+      }
+
       touristBottomActionButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           const nextStatus = String(button.getAttribute('data-vect-own-tourist-bottom-action') || '').trim().toLowerCase();
           handleTouristBottomStatusUpdate(nextStatus);
         });
       });
+
+      var loaderTimeout = window.setTimeout(function () {
+        hidePageLoader();
+      }, 8000);
+
+      function safeHidePageLoader() {
+        window.clearTimeout(loaderTimeout);
+        hidePageLoader();
+      }
 
       restoreDashboardState();
 
@@ -4104,11 +4535,11 @@
       });
 
       window.addEventListener('pageshow', function () {
-        window.requestAnimationFrame(hidePageLoader);
+        window.requestAnimationFrame(safeHidePageLoader);
       });
 
       window.addEventListener('load', function () {
-        window.requestAnimationFrame(hidePageLoader);
+        window.requestAnimationFrame(safeHidePageLoader);
       });
 
       fetch(getApiUrl('/api/vect-own/me'), {
@@ -4130,7 +4561,7 @@
           // Redirect already handled above if needed.
         })
         .finally(function () {
-          hidePageLoader();
+          safeHidePageLoader();
         });
 
       document.addEventListener('click', function (event) {
