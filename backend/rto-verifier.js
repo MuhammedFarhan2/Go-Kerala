@@ -5,14 +5,19 @@ const PARIVAHAN_POST = 'https://parivahan.gov.in/rcdlstatus/vahan/rcDlHome.xhtml
 const REQUEST_TIMEOUT = 15000;
 
 function extractViewState(html) {
-  const match = html.match(/name="javax\.faces\.ViewState"\s+value="([^"]+)"/i);
+  var match = html.match(/name="(?:jakarta|javax)\.faces\.ViewState"\s+value="([^"]+)"/i);
+  if (match) return match[1];
+  match = html.match(/ViewState[^>]+value="([^"]+)"/);
   return match ? match[1] : '';
 }
 
 function extractFirstButtonId(html) {
-  const $ = cheerio.load(html);
-  const btn = $('button[id^="form_rcdl:j_idt"]').first();
-  return btn.attr('id') || '';
+  var $ = cheerio.load(html);
+  var btn = $('button[id^="form_rcdl:j_idt"], button[id*="form_rcdl"], input[type="submit"][id*="form_rcdl"]').first();
+  if (btn.attr('id')) return btn.attr('id');
+  btn = $('button:contains("Search"), input[value="Search"]').first();
+  if (btn.attr('id')) return btn.attr('id');
+  return '';
 }
 
 function extractCookies(response) {
@@ -285,8 +290,8 @@ async function checkParivahanHttp(dlNumber) {
   const cookies = extractCookies(initialRes);
 
   if (!viewState || !firstButtonId) {
-    var htmlPreview = initialHtml.substring(0, 300).replace(/\s+/g, ' ').trim();
-    throw new Error('Could not initialize RTO portal session. HTML preview: ' + htmlPreview);
+    var htmlPreview = initialHtml.substring(0, 1500).replace(/\s+/g, ' ').trim();
+    throw new Error('Could not initialize RTO portal session. HTML: ' + htmlPreview);
   }
 
   var params = new URLSearchParams();
