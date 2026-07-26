@@ -2724,7 +2724,12 @@ const server = http.createServer(function (request, response) {
   }
 
   if (request.method === 'GET' && requestUrl.pathname === '/') {
-    redirect(response, '/index.html');
+    redirect(response, '/beginning.html');
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/beginning.html') {
+    sendFrontendPage(response, 'beginning.html');
     return;
   }
 
