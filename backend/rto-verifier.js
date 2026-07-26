@@ -285,10 +285,11 @@ async function checkParivahanHttp(dlNumber) {
   const cookies = extractCookies(initialRes);
 
   if (!viewState || !firstButtonId) {
-    throw new Error('Could not initialize RTO portal session');
+    var htmlPreview = initialHtml.substring(0, 300).replace(/\s+/g, ' ').trim();
+    throw new Error('Could not initialize RTO portal session. HTML preview: ' + htmlPreview);
   }
 
-  const params = new URLSearchParams();
+  var params = new URLSearchParams();
   params.append('javax.faces.partial.ajax', 'true');
   params.append('javax.faces.source', firstButtonId);
   params.append('javax.faces.partial.execute', '@all');

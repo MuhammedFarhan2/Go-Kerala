@@ -60,8 +60,15 @@ function extractDetailsFromOcrText(text) {
 
   var details = {};
   var lines = text.split('\n').filter(Boolean);
+  var allNames = [];
 
-  var namePatterns = [/name[:\s]+([A-Za-z\s.]+)/i, /([A-Za-z\s]+)\s+[A-Z]{2}\d{2}/];
+  var namePatterns = [
+    /name[:\s]+([A-Za-z\s.]+)/i,
+    /([A-Za-z\s]+)\s+[A-Z]{2}\d{2}/,
+    /नाम[:\s]*([A-Za-z\s.]+)/i,
+    /driver[:\s]+([A-Za-z\s.]+)/i,
+    /owner[:\s]+([A-Za-z\s.]+)/i
+  ];
   var dobPatterns = /(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/g;
   var dlPattern = /[A-Z]{2}\d{2}\d{4,15}/;
   var datePatterns = /(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/g;
@@ -84,23 +91,30 @@ function extractDetailsFromOcrText(text) {
         var m = line.match(namePatterns[p]);
         if (m && m[1] && m[1].length > 2 && m[1].length < 50) {
           details.name = m[1].trim();
+          allNames.push(details.name);
           break;
         }
       }
-      if (!details.name && /name/i.test(line)) {
+      if (!details.name && /\b(name|नाम|driver|owner)\b/i.test(line)) {
         var nextIdx = i + 1;
         while (nextIdx < lines.length) {
           var nextLine = lines[nextIdx].trim();
-          if (nextLine && /^[A-Z][a-zA-Z\s.]{2,}$/.test(nextLine)) {
+          if (nextLine && /^[A-Z][A-Za-z\s.]{2,}$/.test(nextLine)) {
             details.name = nextLine;
+            allNames.push(details.name);
             break;
           }
           nextIdx++;
         }
       }
     }
+    var ucMatch = line.match(/\b[A-Z][A-Za-z]{2,}(?:\s+[A-Z][A-Za-z]{2,}){0,3}\b/);
+    if (ucMatch && ucMatch[0].length > 3 && ucMatch[0].length < 50) {
+      if (allNames.indexOf(ucMatch[0]) === -1) allNames.push(ucMatch[0]);
+    }
   }
 
+  details.candidateNames = allNames;
   return details;
 }
 
@@ -419,11 +433,23 @@ async function verifyLicense(params) {
       var o = ocrDetails.name.toLowerCase().replace(/[^a-z\s]/g, '').trim();
       nameMatched = !!(u && o && (u.includes(o) || o.includes(u)));
     }
+    if (!nameMatched && ocrDetails.candidateNames && ocrDetails.candidateNames.length > 0) {
+      var uLower = userName.toLowerCase();
+      var uParts = uLower.split(/\s+/).filter(Boolean);
+      for (var ci = 0; ci < ocrDetails.candidateNames.length; ci++) {
+        var c = ocrDetails.candidateNames[ci].toLowerCase();
+        if (c.includes(uLower) || uLower.includes(c)) { nameMatched = true; break; }
+        for (var pi = 0; pi < uParts.length; pi++) {
+          if (c.includes(uParts[pi])) { nameMatched = true; break; }
+        }
+        if (nameMatched) break;
+      }
+    }
     if (!nameMatched && ocrText) {
       var nameParts = userName.toLowerCase().split(/\s+/).filter(Boolean);
       nameMatched = nameParts.length > 0 && nameParts.every(function(p) { return ocrText.toLowerCase().includes(p); });
     }
-    result.warnings.push('Name match check: userName="' + userName + '" ocrName="' + (ocrDetails.name || 'none') + '" result=' + nameMatched);
+    result.warnings.push('Name check: userName="' + userName + '" ocrName="' + (ocrDetails.name || 'none') + '" candidates=' + (ocrDetails.candidateNames || []).join(',') + ' matched=' + nameMatched);
   }
 
   var statusResult = determineStatus({
