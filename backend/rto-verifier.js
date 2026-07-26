@@ -96,10 +96,12 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
 
   let browser;
   try {
-    const puppeteer = require('puppeteer');
+    const puppeteer = require('puppeteer-core');
+    const chromium = require('@sparticuz/chromium');
     browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
       timeout: 30000
     });
 
