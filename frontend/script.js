@@ -347,6 +347,9 @@
     return;
   }
 
+  const signedIn = localStorage.getItem('customer-authenticated') === 'true';
+  accountBtn.hidden = !signedIn;
+
   function openPanel() {
     header.classList.add('panel-open');
     accountPanel.classList.add('is-open');
@@ -366,6 +369,10 @@
   }
 
   accountBtn.addEventListener('click', function () {
+    if (!signedIn) {
+      return;
+    }
+
     if (accountPanel.classList.contains('is-open')) {
       closePanel();
     } else {
@@ -373,6 +380,19 @@
     }
   });
   backdrop.addEventListener('click', closePanel);
+
+  window.addEventListener('load', function () {
+    const currentPath = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (currentPath !== 'index.html') {
+      return;
+    }
+
+    openPanel();
+    const emailInput = accountPanel.querySelector('[data-owner-email]');
+    if (emailInput && typeof emailInput.focus === 'function') {
+      emailInput.focus();
+    }
+  });
 })();
 
 (function () {
@@ -380,14 +400,21 @@
   const searchInputs = Array.from(document.querySelectorAll('.route-search-input'));
   const counterLabel = document.querySelector('[data-bus-counter-label]');
   const pageParams = new URLSearchParams(window.location.search);
-  const routeScope = pageParams.get('scope');
+  const routeScope = pageParams.get('scope') || pageParams.get('service');
   const fromFieldLabel = document.querySelector('[data-route-label="from"]');
   const toField = document.querySelector('[data-route-field="to"]');
   const fromInput = document.querySelector('[data-route-input="from"]');
   const toInput = document.querySelector('[data-route-input="to"]');
+  const fromError = document.getElementById('route-from-error');
+  const toError = document.getElementById('route-to-error');
+  const fromInvalidError = document.getElementById('route-from-invalid');
+  const toInvalidError = document.getElementById('route-to-invalid');
+  const dateError = document.getElementById('route-date-error');
   const routeFromKey = 'route-location-from';
   const routeToKey = 'route-location-to';
   let suppressedToggle = null;
+  const openStreetSuggestionCache = new Map();
+  const openStreetRequestTokens = new Map();
   const singleLocationScopes = new Set(['excavator', 'backhoe']);
 
   if (counterLabel) {
@@ -424,6 +451,64 @@
   const submitLink = document.querySelector('.route-select-btn');
   if (submitLink && routeScope) {
     submitLink.href = `submit.html?scope=${encodeURIComponent(routeScope)}`;
+  }
+
+  function getSelectedDates() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('submit-selected-dates') || '[]');
+      return Array.isArray(saved) ? saved.filter(Boolean) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function setErrorVisible(node, isVisible) {
+    if (!node) {
+      return;
+    }
+
+    node.hidden = !isVisible;
+  }
+
+  function validateRouteForm() {
+    const fromValue = String(fromInput && fromInput.value || '').trim();
+    const toValue = String(toInput && toInput.value || '').trim();
+    const needsTo = toField && !toField.hidden;
+    const dates = getSelectedDates();
+
+    const isFromValid = Boolean(fromValue);
+    const isToValid = !needsTo || Boolean(toValue);
+    const isDatesValid = dates.length > 0;
+
+    setErrorVisible(fromError, !isFromValid);
+    setErrorVisible(toError, needsTo && !isToValid);
+    setErrorVisible(dateError, !isDatesValid);
+
+    const selectionValid = validateRouteSelection(true);
+
+    return isFromValid && isToValid && isDatesValid && selectionValid;
+  }
+
+  if (submitLink) {
+    submitLink.addEventListener('click', function (event) {
+      if (!validateRouteForm()) {
+        event.preventDefault();
+      }
+    });
+  }
+
+  if (fromInput) {
+    fromInput.addEventListener('input', function () {
+      setErrorVisible(fromError, false);
+      setErrorVisible(fromInvalidError, false);
+    });
+  }
+
+  if (toInput) {
+    toInput.addEventListener('input', function () {
+      setErrorVisible(toError, false);
+      setErrorVisible(toInvalidError, false);
+    });
   }
 
   const touristData = [
@@ -2212,6 +2297,48 @@
     return;
   }
 
+  function buildAllowedSet(sourceData) {
+    const set = new Set();
+
+    sourceData.forEach(function (item) {
+      const displayName = normalizeDisplayName(item);
+      set.add(displayName.trim().toLowerCase());
+      set.add(displayName.split(',')[0].trim().toLowerCase());
+    });
+
+    return set;
+  }
+
+  const allowedFromSet = buildAllowedSet(uniqueDistrictData);
+  const allowedToSet = buildAllowedSet(uniqueTouristData);
+
+  function isSelectionAllowed(fieldName, value) {
+    const normalized = String(value || '').trim().toLowerCase();
+
+    if (!normalized) {
+      return true;
+    }
+
+    const allowed = fieldName === 'to' ? allowedToSet : allowedFromSet;
+    return allowed.has(normalized);
+  }
+
+  function validateRouteSelection(updateUi) {
+    const fromValue = String(fromInput && fromInput.value || '').trim();
+    const toValue = String(toInput && toInput.value || '').trim();
+    const needsTo = toField && !toField.hidden;
+
+    const fromOk = isSelectionAllowed('from', fromValue);
+    const toOk = !needsTo || isSelectionAllowed('to', toValue);
+
+    if (updateUi) {
+      setErrorVisible(fromInvalidError, Boolean(fromValue) && !fromOk);
+      setErrorVisible(toInvalidError, needsTo && Boolean(toValue) && !toOk);
+    }
+
+    return fromOk && toOk;
+  }
+
   function persistRouteInputs() {
     if (fromInput) {
       sessionStorage.setItem(routeFromKey, fromInput.value.trim());
@@ -2230,6 +2357,189 @@
     toInput.value = sessionStorage.getItem(routeToKey) || '';
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function normalizeOpenStreetResult(item) {
+    const displayName = String(item && item.display_name || '').trim();
+    const address = item && item.address ? item.address : {};
+    const primary = String(
+      address.village ||
+      address.hamlet ||
+      address.suburb ||
+      address.neighbourhood ||
+      address.town ||
+      address.city ||
+      address.county ||
+      displayName
+    ).trim();
+
+    return primary || displayName;
+  }
+
+  function fetchOpenStreetSuggestions(fieldName, query) {
+    const normalizedQuery = String(query || '').trim().toLowerCase();
+    const cacheKey = fieldName + '::' + normalizedQuery;
+
+    if (openStreetSuggestionCache.has(cacheKey)) {
+      return openStreetSuggestionCache.get(cacheKey);
+    }
+
+    if (!normalizedQuery) {
+      const emptyResult = Promise.resolve([]);
+      openStreetSuggestionCache.set(cacheKey, emptyResult);
+      return emptyResult;
+    }
+
+    const requestToken = String(Date.now()) + Math.random().toString(36).slice(2);
+    openStreetRequestTokens.set(fieldName, requestToken);
+
+    function requestSuggestions(searchText) {
+      const indiaUrl = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=in&layer=address,poi,natural,manmade,railway&limit=50&q=' +
+        encodeURIComponent(searchText);
+
+      function fetchJson(url) {
+        return fetch(url, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        }).then(function (response) {
+          if (!response.ok) {
+            throw new Error('Unable to load OpenStreet suggestions.');
+          }
+
+          return response.json();
+        });
+      }
+
+      return fetchJson(indiaUrl);
+    }
+
+    function normalizeResults(results) {
+      const normalized = Array.isArray(results) ? results.map(normalizeOpenStreetResult).filter(Boolean) : [];
+      const seen = new Set();
+
+      return normalized.filter(function (item) {
+        const key = String(item || '').trim().toLowerCase();
+
+        if (!key || seen.has(key)) {
+          return false;
+        }
+
+        seen.add(key);
+        return true;
+      });
+    }
+
+    const queryVariants = [];
+    const rawQuery = String(query || '').trim();
+    const tokens = rawQuery.split(/\s+/).filter(Boolean);
+
+    if (rawQuery) {
+      queryVariants.push(rawQuery);
+    }
+
+    if (tokens.length > 1) {
+      queryVariants.push(tokens.join(' '));
+      queryVariants.push(tokens.slice(0, Math.max(1, tokens.length - 1)).join(' '));
+      queryVariants.push(tokens[tokens.length - 1]);
+    }
+
+    if (tokens.length > 2) {
+      queryVariants.push(tokens.slice(0, 2).join(' '));
+      queryVariants.push(tokens.slice(-2).join(' '));
+    }
+
+    const request = queryVariants.reduce(function (promiseChain, searchText) {
+      return promiseChain.then(function (accumulated) {
+        if (accumulated.length >= 20) {
+          return accumulated;
+        }
+
+        return requestSuggestions(searchText).then(function (results) {
+          if (openStreetRequestTokens.get(fieldName) !== requestToken) {
+            return [];
+          }
+
+          return accumulated.concat(normalizeResults(results));
+        });
+      });
+    }, Promise.resolve([]))
+      .then(function (results) {
+        if (openStreetRequestTokens.get(fieldName) !== requestToken) {
+          return [];
+        }
+
+        return normalizeResults(results);
+      })
+      .catch(function () {
+        return [];
+      });
+
+    openStreetSuggestionCache.set(cacheKey, request);
+    return request;
+  }
+
+  function buildSuggestionItems(items) {
+    return items.map(function (item) {
+      return '<button type="button" class="route-dropdown-item" data-select-value="' + escapeHtml(item) + '">' + escapeHtml(item) + '</button>';
+    }).join('');
+  }
+
+  function showLoadingState(list) {
+    if (!list) {
+      return;
+    }
+
+    list.innerHTML = '<button type="button" class="route-dropdown-item is-placeholder is-loading" disabled>Searching OpenStreet...</button>';
+  }
+
+  function applyPickedMapLocation(fieldName, fullAddress) {
+    const normalizedAddress = String(fullAddress || '').trim();
+
+    if (!normalizedAddress) {
+      return;
+    }
+
+    const targetInput = fieldName === 'to' ? toInput : fromInput;
+    const sourceData = fieldName === 'to' ? uniqueTouristData : uniqueDistrictData;
+    const parts = normalizedAddress.split(',').map(function (part) {
+      return part.trim();
+    }).filter(Boolean);
+    const ignoredTailCount = 4;
+    const trimmedParts = parts.length > ignoredTailCount ? parts.slice(0, Math.max(0, parts.length - ignoredTailCount)) : parts;
+    const placeGuess = trimmedParts.length ? trimmedParts[trimmedParts.length - 1] : '';
+    const matched = findMatchingOption(placeGuess, sourceData, normalizedAddress);
+
+    if (targetInput) {
+      targetInput.value = matched || normalizedAddress;
+    }
+
+    persistRouteInputs();
+  }
+
+  try {
+    const pickedFrom = sessionStorage.getItem('route-map-picked-from') || '';
+    if (pickedFrom && fromInput) {
+      applyPickedMapLocation('from', pickedFrom);
+    }
+    sessionStorage.removeItem('route-map-picked-from');
+  } catch (error) {}
+
+  try {
+    const pickedTo = sessionStorage.getItem('route-map-picked-to') || '';
+    if (pickedTo && toInput) {
+      applyPickedMapLocation('to', pickedTo);
+    }
+    sessionStorage.removeItem('route-map-picked-to');
+  } catch (error) {}
+
   function renderList(toggle, query) {
     const listId = toggle.getAttribute('aria-controls');
     const list = listId ? document.getElementById(listId) : null;
@@ -2241,7 +2551,28 @@
     const normalizedQuery = (query || '').trim().toLowerCase();
     const fieldName = toggle.getAttribute('data-dropdown') || 'from';
     const sourceData = fieldName === 'to' ? uniqueTouristData : uniqueDistrictData;
-    const matches = sourceData.filter(function (item) {
+
+    const utilityItems = [
+      '<button type="button" class="route-dropdown-item route-dropdown-item-utility" data-action="use-current-location" data-field="' + fieldName + '">' +
+        '<span class="route-dropdown-item-icon" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none"><path d="M12 2v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 19v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M2 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.2" stroke="currentColor" stroke-width="1.8"/></svg>' +
+        '</span>' +
+        '<span class="route-dropdown-item-text">' +
+          '<span class="route-dropdown-item-title">Allow location access</span>' +
+          '<span class="route-dropdown-item-subtitle">It provides your ' + (fieldName === 'to' ? 'dropoff' : 'pickup') + ' address</span>' +
+        '</span>' +
+      '</button>' +
+      '<button type="button" class="route-dropdown-item route-dropdown-item-utility" data-action="choose-on-map" data-field="' + fieldName + '">' +
+        '<span class="route-dropdown-item-icon" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.2 7-12.1A7 7 0 0 0 5 8.9C5 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg>' +
+        '</span>' +
+        '<span class="route-dropdown-item-text">' +
+          '<span class="route-dropdown-item-title">Choose on Map</span>' +
+        '</span>' +
+      '</button>'
+    ];
+
+    const localMatches = sourceData.filter(function (item) {
       const displayName = normalizeDisplayName(item);
 
       if (!normalizedQuery) {
@@ -2249,18 +2580,169 @@
       }
 
       const primaryName = displayName.split(',')[0].trim().toLowerCase();
-      return primaryName.indexOf(normalizedQuery) === 0;
+      return primaryName.indexOf(normalizedQuery) === 0 || displayName.toLowerCase().indexOf(normalizedQuery) >= 0;
     });
 
-    if (!matches.length) {
-      list.innerHTML = '<button type="button" class="route-dropdown-item is-placeholder">No places found</button>';
+    const localMarkup = localMatches.length ? buildSuggestionItems(localMatches.map(function (item) {
+      return normalizeDisplayName(item);
+    })) : '';
+
+    if (!normalizedQuery || normalizedQuery.length < 1) {
+      if (!localMatches.length) {
+        list.innerHTML = utilityItems.join('') + '<button type="button" class="route-dropdown-item is-placeholder">Start typing a place name</button>';
+        return;
+      }
+
+      list.innerHTML = utilityItems.join('') + localMarkup;
       return;
     }
 
-    list.innerHTML = matches.map(function (item) {
-      const displayName = normalizeDisplayName(item);
-      return '<button type="button" class="route-dropdown-item" data-select-value="' + displayName + '">' + displayName + '</button>';
-    }).join('');
+    showLoadingState(list);
+
+    fetchOpenStreetSuggestions(fieldName, query).then(function (remoteMatches) {
+      const remoteDeduped = remoteMatches.filter(function (item) {
+        const normalizedItem = String(item || '').trim().toLowerCase();
+        return normalizedItem && localMatches.every(function (localItem) {
+          return normalizeDisplayName(localItem).trim().toLowerCase() !== normalizedItem;
+        });
+      });
+
+      const combined = localMatches.map(function (item) {
+        return normalizeDisplayName(item);
+      }).concat(remoteDeduped);
+
+      if (!combined.length) {
+        list.innerHTML = utilityItems.join('') + '<button type="button" class="route-dropdown-item is-placeholder">No matches found yet. Try a different place name.</button>';
+        return;
+      }
+
+      list.innerHTML = utilityItems.join('') + buildSuggestionItems(combined);
+    });
+  }
+
+  function getBrowserLocation() {
+    return new Promise(function (resolve, reject) {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation not supported'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(function (position) {
+        resolve({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude
+        });
+      }, function () {
+        reject(new Error('Enable location permission'));
+      }, {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 2000
+      });
+    });
+  }
+
+  function reverseGeocode(lat, lon) {
+    const url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' +
+      encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon);
+
+    return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (response) {
+      if (!response.ok) {
+        throw new Error('Unable to read address');
+      }
+
+      return response.json();
+    });
+  }
+
+  function pickBestPlace(address) {
+    const candidates = [
+      address && address.village,
+      address && address.hamlet,
+      address && address.suburb,
+      address && address.neighbourhood,
+      address && address.quarter,
+      address && address.residential,
+      address && address.municipality,
+      address && address.city_district,
+      address && address.town,
+      address && address.city_block,
+      address && address.city,
+      address && address.county,
+      address && address.state_district
+    ].filter(Boolean);
+
+    return candidates.length ? String(candidates[0]) : '';
+  }
+
+  function pickBestCurrentLocationLabel(address, fullAddress) {
+    const place = pickBestPlace(address);
+    const parts = String(fullAddress || '')
+      .split(',')
+      .map(function (part) {
+        return part.trim();
+      })
+      .filter(Boolean);
+
+    const preciseParts = parts.filter(function (part) {
+      const normalized = part.toLowerCase();
+      return normalized !== 'kerala' &&
+        normalized !== 'india' &&
+        !/^\d{5,6}$/.test(normalized);
+    });
+
+    return place || (preciseParts.length ? preciseParts[0] : '') || fullAddress || '';
+  }
+
+  function findMatchingOption(placeName, sourceData, fullAddress) {
+    const addressParts = String(fullAddress || '')
+      .split(',')
+      .map(function (part) {
+        return part.trim();
+      })
+      .filter(Boolean);
+
+    const ignoredTailCount = 4;
+    const trimmedParts = addressParts.length > ignoredTailCount
+      ? addressParts.slice(0, Math.max(0, addressParts.length - ignoredTailCount))
+      : [];
+
+    const cleanedParts = trimmedParts.filter(function (part) {
+      const normalized = part.toLowerCase();
+      return normalized !== 'kerala' &&
+        normalized !== 'india' &&
+        !/^\d{5,6}$/.test(normalized);
+    });
+
+    const partsToCheck = cleanedParts;
+
+    function findForNeedle(needle) {
+      const normalizedNeedle = String(needle || '').trim().toLowerCase();
+
+      if (!normalizedNeedle) {
+        return '';
+      }
+
+      const match = sourceData.find(function (item) {
+        const displayName = normalizeDisplayName(item);
+        const primaryName = displayName.split(',')[0].trim().toLowerCase();
+        return primaryName === normalizedNeedle ||
+          primaryName.indexOf(normalizedNeedle) === 0 ||
+          normalizedNeedle.indexOf(primaryName) === 0;
+      });
+
+      return match ? normalizeDisplayName(match) : '';
+    }
+
+    for (let index = partsToCheck.length - 1; index >= 0; index -= 1) {
+      const match = findForNeedle(partsToCheck[index]);
+      if (match) {
+        return match;
+      }
+    }
+
+    const placeMatch = findForNeedle(placeName);
+    return placeMatch || '';
   }
 
   function closeDropdown(toggle) {
@@ -2356,9 +2838,72 @@
 
       persistRouteInputs();
     });
+
+    input.addEventListener('blur', function () {
+      validateRouteSelection(true);
+    });
   });
 
   document.addEventListener('click', function (event) {
+    const actionButton = event.target.closest('.route-dropdown-item[data-action]');
+
+    if (actionButton) {
+      const list = actionButton.closest('.route-dropdown-list');
+      const toggle = list ? document.querySelector('[aria-controls="' + list.id + '"]') : null;
+      const input = toggle ? toggle.querySelector('.route-search-input') : null;
+      const fieldName = actionButton.getAttribute('data-field') || (toggle && toggle.getAttribute('data-dropdown')) || 'from';
+
+      if (!toggle || !input) {
+        return;
+      }
+
+      const action = actionButton.getAttribute('data-action');
+
+      if (action === 'choose-on-map') {
+        try {
+          sessionStorage.setItem('route-map-return-url', window.location.href);
+        } catch (error) {}
+
+        window.location.href = 'preview.html?field=' + encodeURIComponent(fieldName);
+        return;
+      }
+
+      if (action !== 'use-current-location') {
+        return;
+      }
+
+      actionButton.disabled = true;
+      actionButton.classList.add('is-loading');
+
+      const previousValue = input.value;
+      input.value = 'Finding current location…';
+
+      const sourceData = fieldName === 'to' ? uniqueTouristData : uniqueDistrictData;
+
+      getBrowserLocation()
+        .then(function (coords) {
+          return reverseGeocode(coords.lat, coords.lon);
+        })
+      .then(function (data) {
+        const address = data && data.address ? data.address : {};
+          const fullAddress = String(data && data.display_name || '').trim();
+          const bestPlace = pickBestCurrentLocationLabel(address, fullAddress);
+          const matched = findMatchingOption(bestPlace, sourceData, fullAddress);
+
+          input.value = matched || bestPlace || fullAddress || '';
+          persistRouteInputs();
+          closeDropdown(toggle);
+        })
+        .catch(function (error) {
+          input.value = previousValue;
+          actionButton.disabled = false;
+          actionButton.classList.remove('is-loading');
+          alert(error && error.message ? error.message : 'Unable to detect location');
+        });
+
+      return;
+    }
+
     const listItem = event.target.closest('.route-dropdown-item[data-select-value]');
 
     if (listItem) {
@@ -2371,6 +2916,7 @@
       }
 
       persistRouteInputs();
+      validateRouteSelection(true);
 
       if (toggle) {
         closeDropdown(toggle);
@@ -2445,7 +2991,7 @@
   const submitLocationFrom = document.querySelector('[data-submit-location-from]');
   const submitLocationTo = document.querySelector('[data-submit-location-to]');
   const submitDates = document.querySelector('[data-submit-dates]');
-  const submitScope = pageParams.get('scope') || sessionStorage.getItem('route-scope');
+  const submitScope = pageParams.get('scope') || pageParams.get('service') || sessionStorage.getItem('route-scope');
   const singleLocationScopes = new Set(['excavator', 'backhoe']);
   const isSingleLocationScope = singleLocationScopes.has(submitScope);
 
@@ -2543,10 +3089,13 @@
 
   if (submitButton) {
     submitButton.addEventListener('click', function () {
-      sessionStorage.setItem('submit-location-from', getSafeLocationValue(fromInput));
-      sessionStorage.setItem('submit-location-to', getSafeLocationValue(toInput));
-      sessionStorage.setItem('route-location-from', getSafeLocationValue(fromInput) === '- -' ? '' : getSafeLocationValue(fromInput));
-      sessionStorage.setItem('route-location-to', getSafeLocationValue(toInput) === '- -' ? '' : getSafeLocationValue(toInput));
+      const fromValue = getSafeLocationValue(fromInput);
+      const toValue = isSingleLocationScope ? '- -' : getSafeLocationValue(toInput);
+
+      sessionStorage.setItem('submit-location-from', fromValue);
+      sessionStorage.setItem('submit-location-to', toValue);
+      sessionStorage.setItem('route-location-from', fromValue === '- -' ? '' : fromValue);
+      sessionStorage.setItem('route-location-to', toValue === '- -' ? '' : toValue);
       if (submitScope) {
         sessionStorage.setItem('route-scope', submitScope);
       }
@@ -2556,6 +3105,33 @@
   if (submitLocationFrom && submitLocationTo) {
     submitLocationFrom.textContent = formatSubmitLocationValue(sessionStorage.getItem('submit-location-from') || '- -');
     submitLocationTo.textContent = formatSubmitLocationValue(sessionStorage.getItem('submit-location-to') || '- -');
+
+    function applyLocationMarquee(node) {
+      if (!node) {
+        return;
+      }
+
+      node.classList.remove('is-marquee');
+
+      const rawText = String(node.textContent || '').trim();
+      node.textContent = '';
+      const inner = document.createElement('span');
+      inner.textContent = rawText;
+      node.appendChild(inner);
+
+      if (window.innerWidth < 1024) {
+        return;
+      }
+
+      requestAnimationFrame(function () {
+        if (inner.scrollWidth > node.clientWidth + 2) {
+          node.classList.add('is-marquee');
+        }
+      });
+    }
+
+    applyLocationMarquee(submitLocationFrom);
+    applyLocationMarquee(submitLocationTo);
 
     if (isSingleLocationScope) {
       submitLocationBox && submitLocationBox.classList.add('submit-box-location-single');
@@ -2787,13 +3363,20 @@
     const place = String(record.place || '').trim();
     const seats = String(record.seats || '').trim();
     const vehicleType = String(record.type || '').trim();
-    const companyName = String(record.companyName || 'VECT Movers').trim();
     const imageUrl = resolveImageUrl(record.photo || getDefaultImageForScope(record.scope));
     const metaParts = [
       place || 'Kerala',
       seats ? seats + ' seats' : '',
       vehicleType || ''
     ].filter(Boolean);
+    const isTouristBus = record.scope === 'tourist';
+    const dealerName = String(record.dealerName || 'abc').trim() || 'abc';
+    const touristSeatsText = seats || '34 seats';
+    const touristAcsText = vehicleType || 'A/C';
+    const featureParts = isTouristBus
+      ? [touristSeatsText, touristAcsText, 'Music']
+      : metaParts.slice(0, 3);
+    const locationText = isTouristBus ? 'Location' : (place || 'Location');
 
     return [
       '<article class="submit-demo-card is-accepted-source" data-demo-card data-demo-source="accepted-vehicle">',
@@ -2802,11 +3385,20 @@
       '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="' + title.replace(/"/g, '&quot;') + '" class="submit-demo-image" onerror="this.onerror=null;this.src=\'' + getDefaultImageForScope(record.scope).replace(/'/g, '&#39;') + '\';" />',
       '</div>',
       '<div class="submit-demo-content">',
-      '<div class="submit-demo-topline">',
-      '<h3 class="submit-demo-title">' + title + '</h3>',
-      '<span class="submit-demo-price">Accepted</span>',
-      '</div>',
-      '<p class="submit-demo-meta">' + metaParts.join(' \u00b7 ') + '</p>',
+      [
+        '<div class="submit-demo-tourist-block">',
+        '<h3 class="submit-demo-title">' + title + '</h3>',
+        '<p class="submit-demo-dealer">Dealer : ' + dealerName + '</p>',
+        '<ul class="submit-demo-specs" aria-label="Vehicle features">',
+        featureParts.map(function (part) {
+          return '<li class="submit-demo-spec">' + part + '</li>';
+        }).join(''),
+        '</ul>',
+        '<div class="submit-demo-location-icon" aria-label="Location icon">',
+        '<img src="location-2955.svg" alt="" class="submit-demo-location-image" />',
+        '</div>',
+        '</div>'
+      ].join(''),
       '</div>',
       '</div>',
       '<div class="submit-demo-expand" aria-hidden="true">',
@@ -2921,6 +3513,40 @@
 
     nameTabLabel.textContent = primaryTabLabel;
     nameTabLabel.classList.toggle('is-long', primaryTabLabel.length > 8);
+  }
+
+  function syncDesktopFilterPaneVisibility() {
+    if (window.innerWidth < 1024) {
+      const activeTab = panel.dataset.activeTab || 'name';
+
+      panes.forEach(function (pane) {
+        const isActive = pane.getAttribute('data-submit-pane') === activeTab;
+
+        if (!isActive && pane.contains(document.activeElement)) {
+          const fallbackTab = tabs.find(function (button) {
+            return button.getAttribute('data-submit-tab') === activeTab;
+          }) || tabs[0];
+
+          if (fallbackTab && typeof fallbackTab.focus === 'function') {
+            fallbackTab.focus();
+          } else if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+          }
+        }
+
+        pane.hidden = !isActive;
+        pane.classList.toggle('is-active', isActive);
+        pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+      });
+
+      return;
+    }
+
+    panes.forEach(function (pane) {
+      pane.hidden = false;
+      pane.setAttribute('aria-hidden', 'false');
+      pane.classList.add('is-active');
+    });
   }
 
   if ('scrollRestoration' in history) {
@@ -3056,10 +3682,21 @@
 
     panes.forEach(function (pane) {
       const isActive = pane.getAttribute('data-submit-pane') === target;
+
+      if (!isActive && pane.contains(document.activeElement)) {
+        if (typeof targetTab.focus === 'function') {
+          targetTab.focus();
+        } else if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+      }
+
       pane.hidden = !isActive;
       pane.classList.toggle('is-active', isActive);
       pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');
     });
+
+    syncDesktopFilterPaneVisibility();
   }
 
   tabs.forEach(function (tab) {
@@ -3120,23 +3757,155 @@
   }
 
   function updateFilterCountBadge() {
+    let checkedCount = 0;
+
+    categoryButtons.forEach(function (button) {
+      const category = button.getAttribute('data-filter-category');
+      const group = category ? document.querySelector('.submit-filter-group[data-filter-group="' + category + '"]') : null;
+      const categoryCount = group ? Array.from(group.querySelectorAll('input[type="checkbox"]:checked')).length : 0;
+      let categoryBadge = button.querySelector('.submit-filter-category-count');
+
+      if (categoryCount > 0 && !categoryBadge) {
+        categoryBadge = document.createElement('span');
+        categoryBadge.className = 'submit-filter-category-count';
+        categoryBadge.setAttribute('aria-hidden', 'true');
+        button.appendChild(categoryBadge);
+      }
+
+      if (categoryBadge) {
+        categoryBadge.textContent = String(categoryCount);
+        categoryBadge.hidden = categoryCount === 0;
+      }
+
+      checkedCount += categoryCount;
+    });
+
     if (!filterCountBadge) {
       return;
     }
-
-    const checkedCount = Array.from(document.querySelectorAll('.submit-filter-group input[type="checkbox"]:checked')).length;
 
     filterCountBadge.textContent = String(checkedCount);
     filterCountBadge.hidden = checkedCount === 0;
   }
 
+  function getActiveFilterValues() {
+    return Array.from(document.querySelectorAll('.submit-filter-group input[type="checkbox"]:checked')).map(function (checkbox) {
+      return String(checkbox.value || '').trim();
+    }).filter(Boolean);
+  }
+
+  function getCardFilterText(card) {
+    return String(card ? card.textContent : '').toLowerCase();
+  }
+
+  function getCardSeatCount(card) {
+    const text = getCardFilterText(card);
+    const match = text.match(/(\d+)\s*seats?/i);
+    return match ? Number(match[1]) : null;
+  }
+
+  function getCardPrice(card) {
+    const priceNode = card ? card.querySelector('.submit-demo-price') : null;
+    const text = String(priceNode ? priceNode.textContent : card ? card.textContent : '').replace(/,/g, '');
+    const match = text.match(/₹\s*(\d+(?:\.\d+)?)/);
+    return match ? Number(match[1]) : null;
+  }
+
+  function cardMatchesSelectedFilters(card, selectedFilters) {
+    if (!selectedFilters.length) {
+      return true;
+    }
+
+    const text = getCardFilterText(card);
+    const seatCount = getCardSeatCount(card);
+    const price = getCardPrice(card);
+
+    return selectedFilters.some(function (filterValue) {
+      if (filterValue === 'seats-12-20') {
+        return seatCount !== null && seatCount >= 12 && seatCount <= 20;
+      }
+
+      if (filterValue === 'seats-21-30') {
+        return seatCount !== null && seatCount >= 21 && seatCount <= 30;
+      }
+
+      if (filterValue === 'seats-31-40') {
+        return seatCount !== null && seatCount >= 31 && seatCount <= 40;
+      }
+
+      if (filterValue === 'seats-41-plus') {
+        return seatCount !== null && seatCount >= 41;
+      }
+
+      if (filterValue === 'ac-yes') {
+        return text.indexOf(' ac') > -1 || text.indexOf('a/c') > -1 || text.indexOf('air conditioned') > -1;
+      }
+
+      if (filterValue === 'ac-no') {
+        return text.indexOf('non-ac') > -1 || text.indexOf('non ac') > -1 || text.indexOf('without ac') > -1;
+      }
+
+      if (filterValue === 'ac-sleeper') {
+        return text.indexOf('sleeper') > -1;
+      }
+
+      if (filterValue === 'price-under-10000') {
+        return price !== null && price < 10000;
+      }
+
+      if (filterValue === 'price-10000-15000') {
+        return price !== null && price >= 10000 && price <= 15000;
+      }
+
+      if (filterValue === 'price-15000-20000') {
+        return price !== null && price >= 15000 && price <= 20000;
+      }
+
+      if (filterValue === 'price-20000-plus') {
+        return price !== null && price > 20000;
+      }
+
+      if (filterValue === 'dealer-raj-travels') {
+        return text.indexOf('raj travels') > -1;
+      }
+
+      if (filterValue === 'dealer-cityline') {
+        return text.indexOf('cityline') > -1;
+      }
+
+      if (filterValue === 'dealer-skyway') {
+        return text.indexOf('skyway') > -1;
+      }
+
+      if (filterValue === 'dealer-metro') {
+        return text.indexOf('metro') > -1;
+      }
+
+      return false;
+    });
+  }
+
+  function applySelectedFilters() {
+    const selectedFilters = getActiveFilterValues();
+
+    demoCards.forEach(function (card) {
+      const shouldShow = cardMatchesSelectedFilters(card, selectedFilters);
+      card.hidden = !shouldShow;
+    });
+
+    updateFilterCountBadge();
+  }
+
   if (clearButton) {
     clearButton.addEventListener('click', function () {
-      const activeGroup = document.querySelector('.submit-filter-group.is-active');
-      const checkboxes = activeGroup ? Array.from(activeGroup.querySelectorAll('input[type="checkbox"]')) : [];
+      const checkboxes = Array.from(document.querySelectorAll('.submit-filter-group input[type="checkbox"]'));
 
       checkboxes.forEach(function (checkbox) {
         checkbox.checked = false;
+      });
+
+      demoCards.forEach(function (card) {
+        card.hidden = false;
       });
 
       updateFilterCountBadge();
@@ -3145,7 +3914,7 @@
 
   if (applyButton) {
     applyButton.addEventListener('click', function () {
-      updateFilterCountBadge();
+      applySelectedFilters();
 
       const nameTab = tabs.find(function (tab) {
         return tab.getAttribute('data-submit-tab') === 'name';
@@ -3158,6 +3927,8 @@
   }
 
   updateFilterCountBadge();
+  syncDesktopFilterPaneVisibility();
+  window.addEventListener('resize', syncDesktopFilterPaneVisibility);
 
   function setDemoCardExpanded(card, expanded) {
     demoCards.forEach(function (otherCard) {
@@ -3198,7 +3969,8 @@
 
     function runAutoScroll() {
       const sheetHeight = demoSheet && demoSheet.classList.contains('is-open') ? demoSheet.getBoundingClientRect().height : 0;
-      const extraExpandSpace = expanded ? 84 : 0;
+      const isPhone = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      const extraExpandSpace = expanded ? (isPhone ? 128 : 84) : 0;
       const bottomSafe = sheetHeight + 18 + extraExpandSpace;
       const rect = card.getBoundingClientRect();
       const viewportTop = topSafe;
@@ -3230,7 +4002,7 @@
       }
 
       if (rect.top < viewportTop || rect.bottom > viewportBottom) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        card.scrollIntoView({ behavior: 'smooth', block: isPhone ? 'center' : 'start', inline: 'nearest' });
       }
 
       const nextRect = card.getBoundingClientRect();
@@ -3288,6 +4060,7 @@
     const actionsRect = actions.getBoundingClientRect();
     const viewportBottomLimit = window.innerHeight - (sheetHeight + 18);
     let visibleBottom = viewportBottomLimit;
+    const isPhone = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
 
     if (scrollHost !== document.scrollingElement && scrollHost !== document.documentElement) {
       const hostRect = scrollHost.getBoundingClientRect();
@@ -3296,15 +4069,33 @@
 
     const overflow = actionsRect.bottom - visibleBottom;
     const comfortGap = visibleBottom - actionsRect.bottom;
-    const needsComfortLift = comfortGap < 36;
+    const needsComfortLift = comfortGap < (isPhone ? 88 : 36);
 
     if (overflow > 0 || needsComfortLift) {
-      const delta = overflow > 0 ? overflow + 14 : 36 - comfortGap;
+      const delta = overflow > 0 ? overflow + (isPhone ? 28 : 14) : (isPhone ? 88 : 36) - comfortGap;
       if (scrollHost === document.scrollingElement || scrollHost === document.documentElement) {
         window.scrollBy({ top: delta, behavior: 'smooth' });
       } else {
         scrollHost.scrollBy({ top: delta, behavior: 'smooth' });
       }
+    }
+
+    if (isPhone) {
+      requestAnimationFrame(function () {
+        const refreshedRect = actions.getBoundingClientRect();
+        const refreshedSheetHeight = demoSheet && demoSheet.classList.contains('is-open') ? demoSheet.getBoundingClientRect().height : 0;
+        const refreshedVisibleBottom = window.innerHeight - (refreshedSheetHeight + 12);
+        const buttonBottomGap = refreshedVisibleBottom - refreshedRect.bottom;
+
+        if (buttonBottomGap < 0) {
+          const extraDelta = Math.abs(buttonBottomGap) + 24;
+          if (scrollHost === document.scrollingElement || scrollHost === document.documentElement) {
+            window.scrollBy({ top: extraDelta, behavior: 'smooth' });
+          } else {
+            scrollHost.scrollBy({ top: extraDelta, behavior: 'smooth' });
+          }
+        }
+      });
     }
 
     if ((attempt || 0) < 12) {
@@ -3483,6 +4274,11 @@
       return '';
     }
 
+    const placeNode = card.querySelector('.submit-demo-place');
+    if (placeNode && String(placeNode.textContent || '').trim()) {
+      return String(placeNode.textContent || '').trim();
+    }
+
     const metas = Array.from(card.querySelectorAll('.submit-demo-meta'));
     const locationMeta = metas.find(function (node) {
       return node.textContent && node.textContent.indexOf('\u00b7') !== -1;
@@ -3537,6 +4333,50 @@
     updateDemoSheetPreview();
   }
 
+  function getCardSpecs(card) {
+    return Array.from(card.querySelectorAll('.submit-demo-spec'))
+      .map(function (node) {
+        return String(node.textContent || '').trim();
+      })
+      .filter(Boolean);
+  }
+
+  function getCardDealer(card) {
+    const dealerNode = card.querySelector('.submit-demo-dealer');
+    return dealerNode ? String(dealerNode.textContent || '').replace(/^Dealer\s*:\s*/i, '').trim() : '';
+  }
+
+  function getCardTitle(card) {
+    const titleNode = card.querySelector('.submit-demo-title');
+    return titleNode ? String(titleNode.textContent || '').trim() : 'Vehicle';
+  }
+
+  function getCardImage(card) {
+    const imageNode = card.querySelector('.submit-demo-image');
+    return {
+      src: imageNode ? String(imageNode.getAttribute('src') || '').trim() : '',
+      alt: imageNode ? String(imageNode.getAttribute('alt') || '').trim() : ''
+    };
+  }
+
+  function openVehicleDetailPage(card) {
+    if (!card) {
+      return;
+    }
+
+    const payload = {
+      title: getCardTitle(card),
+      dealer: getCardDealer(card),
+      specs: getCardSpecs(card),
+      place: getCardLocation(card),
+      image: getCardImage(card),
+      scope: String(card.getAttribute('data-demo-source') || card.getAttribute('data-favorite-id') || '').trim()
+    };
+
+    sessionStorage.setItem('submit-vehicle-detail', JSON.stringify(payload));
+    window.location.href = 'vehicle-detail.html';
+  }
+
   if (bookButton) {
     bookButton.addEventListener('click', function () {
       if (bookButton.disabled) {
@@ -3569,27 +4409,32 @@
 
           setDemoCardExpanded(card, false);
           updateDemoSheetPreview();
+          if (isSelected) {
+            window.requestAnimationFrame(function () {
+              ensureDemoCardVisible(card, true);
+              ensureDemoActionsVisible(card, 0);
+            });
+          }
           openDemoSheet();
           return;
         }
 
         if (actionType === 'view') {
-          const isExpanded = card.classList.contains('is-expanded');
-          const shouldExpand = !isExpanded;
-          openDemoSheet();
-          setDemoCardExpanded(card, shouldExpand);
-          if (shouldExpand) {
-            ensureDemoCardVisible(card, true);
-            ensureDemoActionsVisible(card, 0);
-          }
+          openVehicleDetailPage(card);
           return;
         }
       }
 
-      const isExpanded = card.classList.contains('is-expanded');
-      const shouldExpand = !isExpanded;
-      openDemoSheet();
+      const shouldExpand = !card.classList.contains('is-expanded');
+
+      demoCards.forEach(function (otherCard) {
+        if (otherCard !== card) {
+          setDemoCardExpanded(otherCard, false);
+        }
+      });
+
       setDemoCardExpanded(card, shouldExpand);
+
       if (shouldExpand) {
         ensureDemoCardVisible(card, true);
         ensureDemoActionsVisible(card, 0);
@@ -3705,7 +4550,8 @@
     const firstWeekday = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
-    const todayKey = getDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayKey = getDateKey(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate());
     const monthWrap = document.createElement('section');
     const header = document.createElement('div');
     const title = document.createElement('h2');
@@ -3736,6 +4582,8 @@
 
     for (let day = 1; day <= daysInMonth; day += 1) {
       const key = getDateKey(year, month, day);
+      const candidateDate = new Date(year, month, day);
+      const isPastDate = candidateDate.getTime() < todayStart.getTime();
       const button = document.createElement('button');
 
       button.type = 'button';
@@ -3749,6 +4597,11 @@
         month: 'long',
         year: 'numeric'
       }));
+
+      if (isPastDate) {
+        button.disabled = true;
+        button.classList.add('is-disabled');
+      }
 
       if (key === todayKey) {
         button.classList.add('is-today');
@@ -3773,9 +4626,16 @@
   calendars.forEach(function (calendar) {
     const monthsHost = calendar.querySelector('[data-calendar-months]');
     const savedDateKeys = JSON.parse(sessionStorage.getItem('submit-selected-dates') || '[]');
+    const today = new Date();
+    const todayKey = getDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    const normalizedSavedKeys = Array.isArray(savedDateKeys)
+      ? savedDateKeys.filter(function (key) {
+          return typeof key === 'string' && key >= todayKey;
+        })
+      : [];
     const state = {
       monthCursor: startOfMonth(new Date()),
-      selectedDates: new Set(Array.isArray(savedDateKeys) ? savedDateKeys : [])
+      selectedDates: new Set(normalizedSavedKeys)
     };
     const swipeState = {
       startX: 0,
@@ -3787,8 +4647,8 @@
       return;
     }
 
-    if (savedDateKeys.length) {
-      const firstSavedDate = new Date(savedDateKeys.slice().sort()[0]);
+    if (normalizedSavedKeys.length) {
+      const firstSavedDate = new Date(normalizedSavedKeys.slice().sort()[0]);
 
       if (!Number.isNaN(firstSavedDate.getTime())) {
         state.monthCursor = startOfMonth(firstSavedDate);
@@ -3816,6 +4676,10 @@
         return;
       }
 
+      if (dayButton.disabled) {
+        return;
+      }
+
       const dateKey = dayButton.dataset.dateKey;
 
       if (!dateKey) {
@@ -3826,6 +4690,11 @@
         state.selectedDates.delete(dateKey);
       } else {
         state.selectedDates.add(dateKey);
+      }
+
+      const dateError = document.getElementById('route-date-error');
+      if (dateError) {
+        dateError.hidden = true;
       }
 
       refresh();
@@ -3863,3 +4732,9 @@
     refresh();
   });
 })();
+
+(function () {
+  window.addEventListener('load', function () {
+  });
+})();
+

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -7,9 +7,9 @@
   <script>
     document.documentElement.classList.add('show-page-loader');
   </script>
-  <link rel="stylesheet" href="style.css?v=20260406-2">
+  <link rel="stylesheet" href="style.css?v=20260611-1">
 </head>
-<body>
+<body class="submit-page">
   <div class="page-loader" id="page-loader" aria-hidden="true">
     <div class="page-loader-content">
       <div class="page-loader-spinner" aria-hidden="true">
@@ -26,7 +26,12 @@
       <h1 class="logo">VECT</h1>
       <p class="logo-sub">MOVERS</p>
     </div>
-    <button type="button" class="user-icon" id="account-btn" aria-label="Account menu">
+    <nav class="header-switch" aria-label="Site switch" data-customer-header-links>
+      <a class="header-switch-link header-switch-link--login" href="customer-login.html" aria-label="Open login page">Log in</a>
+      <a class="header-switch-link header-switch-link--signup" href="customer-signup.html" aria-label="Open create account page">Sign up</a>
+    </nav>
+
+    <button type="button" class="customer-account-btn" id="customer-account-btn" hidden aria-label="Open customer account">
       <svg xmlns="http://www.w3.org/2000/svg" width="35" height="30" viewBox="0 0 24 24">
         <defs>
           <clipPath id="circle-clip-submit">
@@ -34,20 +39,11 @@
           </clipPath>
         </defs>
         <g clip-path="url(#circle-clip-submit)">
-          <circle cx="17.5" cy="6.5" r="2.0" fill="#fff"/>
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#fff"/>
+          <circle cx="17.5" cy="6.5" r="2.0" fill="#111"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#111"/>
         </g>
       </svg>
     </button>
-    <aside class="account-panel" id="account-panel" aria-hidden="true">
-      <nav class="account-panel-nav">
-        <a href="#" class="account-option">Account</a>
-        <a href="#" class="account-option">History</a>
-        <a href="#" class="account-option">About</a>
-        <a href="#" class="account-option">Feedback</a>
-      </nav>
-    </aside>
-    <div class="account-panel-backdrop" id="account-backdrop" aria-hidden="true"></div>
   </header>
 
   <main class="submit-main" aria-label="Admin page">
@@ -104,7 +100,12 @@
           aria-hidden="false"
         >
         <div class="submit-demo-list" aria-label="Vehicle listings demo">
-            <article class="submit-demo-card" data-demo-card>
+            <article class="submit-demo-card" data-demo-card data-favorite-id="tourist-bus">
+              <button type="button" class="demo-favorite-heart" data-demo-favorite aria-pressed="false" aria-label="Mark as favorite">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+              </button>
               <div class="submit-demo-card-main">
                 <div class="submit-demo-image-wrap">
                   <img src="tour-bus.png" alt="Tour bus" class="submit-demo-image" />
@@ -112,10 +113,17 @@
                 <div class="submit-demo-content">
                   <div class="submit-demo-topline">
                     <h3 class="submit-demo-title">Tourist Bus</h3>
-                    <span class="submit-demo-price">&#8377;12,000 / day</span>
                   </div>
-                  <p class="submit-demo-meta">Owner: Raj Travels</p>
-                  <p class="submit-demo-meta">Kerala &middot; 45 seats &middot; AC</p>
+                  <p class="submit-demo-dealer">Dealer : abc</p>
+                  <ul class="submit-demo-specs" aria-label="Tourist bus features">
+                    <li class="submit-demo-spec">34 seats</li>
+                    <li class="submit-demo-spec">A/C</li>
+                    <li class="submit-demo-spec">Music</li>
+                  </ul>
+                  <div class="submit-demo-location-icon" aria-label="Location icon">
+                    <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Ernakulam</span>
+                  </div>
                 </div>
               </div>
               <div class="submit-demo-expand" aria-hidden="true">
@@ -128,18 +136,27 @@
               </div>
             </article>
 
-            <article class="submit-demo-card" data-demo-card>
+            <article class="submit-demo-card" data-demo-card data-favorite-id="open-body-truck">
+              <button type="button" class="demo-favorite-heart" data-demo-favorite aria-pressed="false" aria-label="Mark as favorite">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+              </button>
               <div class="submit-demo-card-main">
                 <div class="submit-demo-image-wrap">
                   <img src="white-flatbed-truck.png" alt="Flatbed truck" class="submit-demo-image" />
                 </div>
                 <div class="submit-demo-content">
-                  <div class="submit-demo-topline">
-                    <h3 class="submit-demo-title">Open Body Truck</h3>
-                    <span class="submit-demo-price">&#8377;8,500 / day</span>
+                  <h3 class="submit-demo-title">Open Body Truck</h3>
+                  <p class="submit-demo-dealer">Dealer : Prime Logistics</p>
+                  <ul class="submit-demo-specs" aria-label="Vehicle features">
+                    <li class="submit-demo-spec">5 ton</li>
+                    <li class="submit-demo-spec">Open body</li>
+                  </ul>
+                  <div class="submit-demo-location-icon" aria-label="Location icon">
+                    <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Kochi</span>
                   </div>
-                  <p class="submit-demo-meta">Owner: Prime Logistics</p>
-                  <p class="submit-demo-meta">Available in Kochi &middot; 5 ton</p>
                 </div>
               </div>
               <div class="submit-demo-expand" aria-hidden="true">
@@ -152,18 +169,28 @@
               </div>
             </article>
 
-            <article class="submit-demo-card" data-demo-card>
+            <article class="submit-demo-card" data-demo-card data-favorite-id="box-container-truck">
+              <button type="button" class="demo-favorite-heart" data-demo-favorite aria-pressed="false" aria-label="Mark as favorite">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+              </button>
               <div class="submit-demo-card-main">
                 <div class="submit-demo-image-wrap">
                   <img src="modern-white-box-truck.png" alt="Box truck" class="submit-demo-image" />
                 </div>
                 <div class="submit-demo-content">
-                  <div class="submit-demo-topline">
-                    <h3 class="submit-demo-title">Box Container Truck</h3>
-                    <span class="submit-demo-price">&#8377;9,800 / day</span>
+                  <h3 class="submit-demo-title">Box Container Truck</h3>
+                  <p class="submit-demo-dealer">Dealer : Metro Cargo Movers</p>
+                  <ul class="submit-demo-specs" aria-label="Vehicle features">
+                    <li class="submit-demo-spec">7 ton</li>
+                    <li class="submit-demo-spec">Closed body</li>
+                    <li class="submit-demo-spec">Ernakulam</li>
+                  </ul>
+                  <div class="submit-demo-location-icon" aria-label="Location icon">
+                    <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Ernakulam</span>
                   </div>
-                  <p class="submit-demo-meta">Owner: Metro Cargo Movers</p>
-                  <p class="submit-demo-meta">Ernakulam &middot; 7 ton &middot; Closed body</p>
                 </div>
               </div>
               <div class="submit-demo-expand" aria-hidden="true">
@@ -176,18 +203,28 @@
               </div>
             </article>
 
-            <article class="submit-demo-card" data-demo-card>
+            <article class="submit-demo-card" data-demo-card data-favorite-id="hydraulic-excavator">
+              <button type="button" class="demo-favorite-heart" data-demo-favorite aria-pressed="false" aria-label="Mark as favorite">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+              </button>
               <div class="submit-demo-card-main">
                 <div class="submit-demo-image-wrap">
                   <img src="yellow-hydraulic-excavator.png" alt="Hydraulic excavator" class="submit-demo-image" />
                 </div>
                 <div class="submit-demo-content">
-                  <div class="submit-demo-topline">
-                    <h3 class="submit-demo-title">Hydraulic Excavator</h3>
-                    <span class="submit-demo-price">&#8377;14,500 / day</span>
+                  <h3 class="submit-demo-title">Hydraulic Excavator</h3>
+                  <p class="submit-demo-dealer">Dealer : BuildPro Infra</p>
+                  <ul class="submit-demo-specs" aria-label="Vehicle features">
+                    <li class="submit-demo-spec">Operator included</li>
+                    <li class="submit-demo-spec">Heavy duty</li>
+                    <li class="submit-demo-spec">Kottayam</li>
+                  </ul>
+                  <div class="submit-demo-location-icon" aria-label="Location icon">
+                    <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Kottayam</span>
                   </div>
-                  <p class="submit-demo-meta">Owner: BuildPro Infra</p>
-                  <p class="submit-demo-meta">Kottayam &middot; Operator included</p>
                 </div>
               </div>
               <div class="submit-demo-expand" aria-hidden="true">
@@ -200,18 +237,28 @@
               </div>
             </article>
 
-            <article class="submit-demo-card" data-demo-card>
+            <article class="submit-demo-card" data-demo-card data-favorite-id="backhoe-loader">
+              <button type="button" class="demo-favorite-heart" data-demo-favorite aria-pressed="false" aria-label="Mark as favorite">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+              </button>
               <div class="submit-demo-card-main">
                 <div class="submit-demo-image-wrap">
                   <img src="yellow-backhoe-loader.png" alt="Backhoe loader" class="submit-demo-image" />
                 </div>
                 <div class="submit-demo-content">
-                  <div class="submit-demo-topline">
-                    <h3 class="submit-demo-title">Backhoe Loader</h3>
-                    <span class="submit-demo-price">&#8377;11,200 / day</span>
+                  <h3 class="submit-demo-title">Backhoe Loader</h3>
+                  <p class="submit-demo-dealer">Dealer : M.R. Equipments</p>
+                  <ul class="submit-demo-specs" aria-label="Vehicle features">
+                    <li class="submit-demo-spec">Fuel extra</li>
+                    <li class="submit-demo-spec">Construction</li>
+                    <li class="submit-demo-spec">Palakkad</li>
+                  </ul>
+                  <div class="submit-demo-location-icon" aria-label="Location icon">
+                    <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Palakkad</span>
                   </div>
-                  <p class="submit-demo-meta">Owner: M.R. Equipments</p>
-                  <p class="submit-demo-meta">Palakkad &middot; Fuel extra</p>
                 </div>
               </div>
               <div class="submit-demo-expand" aria-hidden="true">
@@ -224,18 +271,28 @@
               </div>
             </article>
 
-            <article class="submit-demo-card" data-demo-card>
+            <article class="submit-demo-card" data-demo-card data-favorite-id="city-service-bus">
+              <button type="button" class="demo-favorite-heart" data-demo-favorite aria-pressed="false" aria-label="Mark as favorite">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+              </button>
               <div class="submit-demo-card-main">
                 <div class="submit-demo-image-wrap">
                   <img src="tour-bus.png" alt="City bus" class="submit-demo-image" />
                 </div>
                 <div class="submit-demo-content">
-                  <div class="submit-demo-topline">
-                    <h3 class="submit-demo-title">City Service Bus</h3>
-                    <span class="submit-demo-price">&#8377;10,500 / day</span>
+                  <h3 class="submit-demo-title">City Service Bus</h3>
+                  <p class="submit-demo-dealer">Dealer : GreenLine Travels</p>
+                  <ul class="submit-demo-specs" aria-label="Vehicle features">
+                    <li class="submit-demo-spec">40 seats</li>
+                    <li class="submit-demo-spec">Non-AC</li>
+                    <li class="submit-demo-spec">Trivandrum</li>
+                  </ul>
+                  <div class="submit-demo-location-icon" aria-label="Location icon">
+                    <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Thrissur</span>
                   </div>
-                  <p class="submit-demo-meta">Owner: GreenLine Travels</p>
-                  <p class="submit-demo-meta">Trivandrum &middot; 40 seats &middot; Non-AC</p>
                 </div>
               </div>
               <div class="submit-demo-expand" aria-hidden="true">
@@ -248,18 +305,28 @@
               </div>
             </article>
 
-            <article class="submit-demo-card" data-demo-card>
+            <article class="submit-demo-card" data-demo-card data-favorite-id="heavy-flatbed-truck">
+              <button type="button" class="demo-favorite-heart" data-demo-favorite aria-pressed="false" aria-label="Mark as favorite">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+              </button>
               <div class="submit-demo-card-main">
                 <div class="submit-demo-image-wrap">
                   <img src="white-flatbed-truck.png" alt="Heavy flatbed truck" class="submit-demo-image" />
                 </div>
                 <div class="submit-demo-content">
-                  <div class="submit-demo-topline">
-                    <h3 class="submit-demo-title">Heavy Flatbed Truck</h3>
-                    <span class="submit-demo-price">&#8377;13,200 / day</span>
+                  <h3 class="submit-demo-title">Heavy Flatbed Truck</h3>
+                  <p class="submit-demo-dealer">Dealer : South Haul Logistics</p>
+                  <ul class="submit-demo-specs" aria-label="Vehicle features">
+                    <li class="submit-demo-spec">10 ton capacity</li>
+                    <li class="submit-demo-spec">Flatbed</li>
+                    <li class="submit-demo-spec">Thrissur</li>
+                  </ul>
+                  <div class="submit-demo-location-icon" aria-label="Location icon">
+                    <img src="location-2955.svg" alt="" class="submit-demo-location-image" />
+                    <span class="submit-demo-place">Kozhikode</span>
                   </div>
-                  <p class="submit-demo-meta">Owner: South Haul Logistics</p>
-                  <p class="submit-demo-meta">Thrissur &middot; 10 ton capacity</p>
                 </div>
               </div>
               <div class="submit-demo-expand" aria-hidden="true">
@@ -272,18 +339,6 @@
               </div>
             </article>
           </div>
-        </div>
-
-        <div class="submit-demo-sheet is-open" aria-hidden="false" data-demo-sheet>
-          <div class="submit-demo-sheet-grid" aria-hidden="true">
-            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
-            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
-            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
-            <span class="submit-demo-sheet-rect"><span class="submit-demo-sheet-plus" aria-hidden="true"></span></span>
-          </div>
-          <p class="submit-demo-sheet-selected-title">Selected</p>
-          <p class="submit-demo-sheet-selected-location" data-demo-selected-location></p>
-          <button type="button" class="submit-demo-sheet-book-btn">Book</button>
         </div>
 
         <div
@@ -384,13 +439,295 @@
               </div>
             </div>
           </div>
+          <div class="submit-filter-footer" aria-label="Filter actions">
+            <button type="button" class="submit-filter-action is-clear" data-filter-action="clear">CLEAR ALL</button>
+            <button type="button" class="submit-filter-action is-apply" data-filter-action="apply">APPLY</button>
+          </div>
         </div>
       </div>
-      <button type="button" class="submit-filter-action is-clear" data-filter-action="clear">CLEAR ALL</button>
-      <button type="button" class="submit-filter-action is-apply" data-filter-action="apply">APPLY</button>
     </section>
   </main>
 
+  <aside class="customer-account-panel" id="customer-account-panel" aria-hidden="true">
+    <div class="customer-account-panel-head">
+      <button type="button" class="customer-account-close" id="customer-account-close" aria-label="Close account panel">×</button>
+    </div>
+    <div class="customer-account-panel-body">
+      <div class="customer-account-panel-top">
+        <div class="customer-account-panel-profile">
+          <div class="customer-account-profile-avatar" aria-hidden="true">
+            <img src="account.png" alt="" class="customer-account-profile-avatar-image">
+          </div>
+          <p class="customer-account-panel-name" data-customer-panel-name>Guest</p>
+          <p class="customer-account-panel-email" data-customer-panel-email>Sign in to save your profile</p>
+        </div>
+      </div>
+      <div class="customer-account-panel-bottom">
+        <div class="customer-account-actions">
+          <a class="customer-account-feedback" href="mailto:vectmovers@gmail.com?subject=VECT%20Movers%20Feedback" data-customer-feedback>Feedback</a>
+          <a class="customer-account-favorites" href="favorites.html" data-customer-favorites>Favorites</a>
+          <button type="button" class="customer-account-logout" data-customer-logout>Log out</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="customer-account-backdrop" id="customer-account-backdrop" aria-hidden="true"></div>
+
   <script src="script.js?v=20260406-2"></script>
+  <script>
+    (function () {
+      document.body.classList.add('is-current-sidebar-page', 'is-submit-page');
+      const pageName = 'submit.html';
+      const accountBtn = document.getElementById('customer-account-btn');
+      const accountPanel = document.getElementById('customer-account-panel');
+      const closeBtn = document.getElementById('customer-account-close');
+      const backdrop = document.getElementById('customer-account-backdrop');
+      const headerLinks = document.querySelector('[data-customer-header-links]');
+      const loginLink = headerLinks ? headerLinks.querySelector('.header-switch-link--login') : null;
+      const signupLink = headerLinks ? headerLinks.querySelector('.header-switch-link--signup') : null;
+      const panelNameNode = document.querySelector('[data-customer-panel-name]');
+      const panelEmailNode = document.querySelector('[data-customer-panel-email]');
+      const logoutButton = document.querySelector('[data-customer-logout]');
+      const favoritesLink = document.querySelector('[data-customer-favorites]');
+
+      function buildAuthUrl(base) {
+        const url = new URL(base, window.location.href);
+        url.searchParams.set('return', pageName);
+        return url.toString();
+      }
+
+      function renderHeaderState() {
+        const signedIn = localStorage.getItem('customer-authenticated') === 'true';
+
+        if (accountBtn) {
+          accountBtn.hidden = !signedIn;
+        }
+
+        if (headerLinks) {
+          headerLinks.hidden = signedIn;
+          headerLinks.style.display = signedIn ? 'none' : '';
+        }
+
+        if (loginLink) {
+          loginLink.href = buildAuthUrl('customer-login.html');
+        }
+
+        if (signupLink) {
+          signupLink.href = buildAuthUrl('customer-signup.html');
+        }
+
+        if (panelNameNode) {
+          panelNameNode.textContent = String(localStorage.getItem('customer-login-name') || 'Customer').trim() || 'Customer';
+        }
+
+        if (panelEmailNode) {
+          panelEmailNode.textContent = String(localStorage.getItem('customer-login-email') || 'Connected account').trim() || 'Connected account';
+        }
+
+        if (favoritesLink) {
+          favoritesLink.href = 'favorites.html';
+        }
+      }
+
+      function openPanel() {
+        if (!accountPanel || !backdrop) {
+          return;
+        }
+
+        accountPanel.setAttribute('aria-hidden', 'false');
+        accountPanel.classList.add('is-open');
+        backdrop.classList.add('is-visible');
+        backdrop.setAttribute('aria-hidden', 'false');
+      }
+
+      function closePanel() {
+        if (!accountPanel || !backdrop) {
+          return;
+        }
+
+        accountPanel.setAttribute('aria-hidden', 'true');
+        accountPanel.classList.remove('is-open');
+        backdrop.classList.remove('is-visible');
+        backdrop.setAttribute('aria-hidden', 'true');
+      }
+
+      renderHeaderState();
+
+      window.addEventListener('storage', renderHeaderState);
+      window.addEventListener('focus', renderHeaderState);
+
+      if (accountBtn) {
+        accountBtn.addEventListener('click', function () {
+          renderHeaderState();
+          openPanel();
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closePanel);
+      }
+
+      if (backdrop) {
+        backdrop.addEventListener('click', closePanel);
+      }
+
+      if (logoutButton) {
+        logoutButton.addEventListener('click', function () {
+          localStorage.removeItem('customer-authenticated');
+          localStorage.removeItem('customer-login-method');
+          localStorage.removeItem('customer-login-email');
+          localStorage.removeItem('customer-login-name');
+          localStorage.removeItem('customer-login-picture');
+          closePanel();
+          renderHeaderState();
+        });
+      }
+    })();
+
+    (function () {
+      const favoriteButtons = Array.from(document.querySelectorAll('[data-demo-favorite]'));
+      const FAVORITES_STORAGE_KEY = 'vect-favorites-v1';
+      const PENDING_FAVORITE_KEY = 'pending-favorite-toggle';
+
+      function isSignedIn() {
+        return localStorage.getItem('customer-authenticated') === 'true';
+      }
+
+      function loadFavorites() {
+        try {
+          const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function saveFavorites(favorites) {
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+      }
+
+      function setFavoriteState(card, button, isSelected) {
+        if (!card || !button) {
+          return;
+        }
+
+        button.classList.toggle('is-selected', isSelected);
+        button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        card.classList.toggle('is-favorited', isSelected);
+      }
+
+      function redirectToSignIn(nextTarget) {
+        sessionStorage.setItem(PENDING_FAVORITE_KEY, JSON.stringify(nextTarget));
+        window.location.href = 'customer-login.html?return=submit.html';
+      }
+
+      function applyPendingFavoriteIfAny() {
+        if (!isSignedIn()) {
+          return;
+        }
+
+        try {
+          const raw = sessionStorage.getItem(PENDING_FAVORITE_KEY);
+          const pending = raw ? JSON.parse(raw) : null;
+
+          if (!pending || !pending.id) {
+            return;
+          }
+
+          const button = Array.from(document.querySelectorAll('[data-demo-favorite]')).find(function (item) {
+            const card = item.closest('[data-favorite-id]');
+            return card && String(card.getAttribute('data-favorite-id') || '').trim() === pending.id;
+          });
+
+          if (button) {
+            const card = button.closest('[data-favorite-id]');
+            const favorites = loadFavorites();
+            const existingIndex = favorites.findIndex(function (item) {
+              return item.id === pending.id;
+            });
+
+            if (pending.action === 'add' && existingIndex === -1 && card) {
+              const titleNode = card.querySelector('.submit-demo-title');
+              const imageNode = card.querySelector('.submit-demo-image');
+              const metaNodes = Array.from(card.querySelectorAll('.submit-demo-meta')).map(function (node) {
+                return node.textContent || '';
+              });
+
+              favorites.push({
+                id: pending.id,
+                title: titleNode ? titleNode.textContent.trim() : '',
+                image: imageNode ? imageNode.getAttribute('src') : '',
+                alt: imageNode ? imageNode.getAttribute('alt') || '' : '',
+                meta: metaNodes
+              });
+              saveFavorites(favorites);
+              setFavoriteState(card, button, true);
+            } else if (pending.action === 'remove' && existingIndex >= 0) {
+              favorites.splice(existingIndex, 1);
+              saveFavorites(favorites);
+              setFavoriteState(card, button, false);
+            }
+          }
+        } catch (error) {
+          // Ignore malformed pending state.
+        } finally {
+          sessionStorage.removeItem(PENDING_FAVORITE_KEY);
+        }
+      }
+
+      favoriteButtons.forEach(function (button) {
+        const card = button.closest('[data-favorite-id]');
+        const favoriteId = card ? String(card.getAttribute('data-favorite-id') || '').trim() : '';
+        const favorites = loadFavorites();
+        const isInitiallySelected = favoriteId ? favorites.some(function (item) { return item.id === favoriteId; }) : false;
+
+        setFavoriteState(card, button, isInitiallySelected);
+
+        button.addEventListener('click', function () {
+          if (!card || !favoriteId) {
+            return;
+          }
+
+          if (!isSignedIn()) {
+            redirectToSignIn({
+              id: favoriteId,
+              action: button.classList.contains('is-selected') ? 'remove' : 'add'
+            });
+            return;
+          }
+
+          const currentFavorites = loadFavorites();
+          const existingIndex = currentFavorites.findIndex(function (item) {
+            return item.id === favoriteId;
+          });
+          const isSelected = existingIndex === -1;
+
+          if (isSelected) {
+            const titleNode = card.querySelector('.submit-demo-title');
+            const imageNode = card.querySelector('.submit-demo-image');
+            const metaNodes = Array.from(card.querySelectorAll('.submit-demo-meta')).map(function (node) {
+              return node.textContent || '';
+            });
+
+            currentFavorites.push({
+              id: favoriteId,
+              title: titleNode ? titleNode.textContent.trim() : '',
+              image: imageNode ? imageNode.getAttribute('src') : '',
+              alt: imageNode ? imageNode.getAttribute('alt') || '' : '',
+              meta: metaNodes
+            });
+          } else {
+            currentFavorites.splice(existingIndex, 1);
+          }
+
+          saveFavorites(currentFavorites);
+          setFavoriteState(card, button, isSelected);
+        });
+      });
+
+      applyPendingFavoriteIfAny();
+    })();
+  </script>
 </body>
 </html>
