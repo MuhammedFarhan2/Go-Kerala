@@ -588,6 +588,7 @@
       const flowNode = document.getElementById('owner-bus-flow');
       const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
       const editableSectionsParam = String(pageParams.get('editable') || '').trim();
+      const reuploadWhatsappNumber = String(pageParams.get('whatsapp') || '').trim();
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : 'https://go-kerala-backend.onrender.com';
       const apiBaseCandidates = Array.from(new Set([
@@ -1954,7 +1955,11 @@
                   sessionStorage.removeItem(reuploadHydratedSubmissionKey);
                 }
               }
-              window.location.href = 'owner-blank-sheet.html?tab=add-bus';
+              if (reuploadWhatsappNumber) {
+                window.location.href = 'https://wa.me/' + encodeURIComponent(reuploadWhatsappNumber) + '?text=' + encodeURIComponent('I have re-uploaded the documents. Please review.');
+              } else {
+                window.location.href = 'owner-blank-sheet.html?tab=add-bus';
+              }
             })
             .catch(function (error) {
               window.alert(error.message || 'Unable to save submission.');

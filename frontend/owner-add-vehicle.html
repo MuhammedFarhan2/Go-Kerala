@@ -313,7 +313,14 @@
       const backdrop = document.getElementById('account-backdrop');
       const reuploadSubmissionId = String(pageParams.get('submissionId') || '').trim();
       const editableSections = String(pageParams.get('editable') || '').trim();
+      const whatsappNumber = String(pageParams.get('whatsapp') || '').trim();
       let selectedType = '';
+      var vehicleTypeParam = String(pageParams.get('vehicleType') || '').trim().toLowerCase();
+
+      if (vehicleTypeParam) {
+        selectedType = vehicleTypeParam;
+        window.sessionStorage.setItem('owner-add-vehicle-type', vehicleTypeParam);
+      }
 
       if (!reuploadSubmissionId) {
         sessionStorage.removeItem('owner-reupload-editable-sections');
@@ -362,6 +369,10 @@
               return String(item || '').trim();
             }).filter(Boolean)));
           }
+        }
+
+        if (whatsappNumber) {
+          nextUrl.searchParams.set('whatsapp', whatsappNumber);
         }
 
         nextButton.setAttribute('href', nextUrl.toString());

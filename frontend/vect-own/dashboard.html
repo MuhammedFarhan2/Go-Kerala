@@ -1210,7 +1210,7 @@
       }).filter(Boolean)));
       const SESSION_KEY = 'vect-own-session-token';
       const DASHBOARD_STATE_KEY = 'vect-own-dashboard-state';
-      const REJECT_INTRO_MESSAGE = 'Sorry, your valuation have rejected because';
+      const REJECT_INTRO_MESSAGE = 'Hey, We are sorry to inform that your valliyavandi driver application have rejected because of';
       const pageTabs = Array.from(document.querySelectorAll('[data-vect-own-page-tab]'));
       const pages = Array.from(document.querySelectorAll('[data-vect-own-page]'));
       const touristBusCard = document.querySelector('[data-owner-category="tourist"]');
@@ -2947,17 +2947,34 @@
       }
 
       function getRejectMessageText(itemKey, itemLabel) {
-        const messages = {
-          'owner-company-name': 'The Company Name you have entered is invalid/incorrect. Please check it and clarify.',
-          'owner-profile-photo': 'Profile photo isnt complete or clear please send again.',
-          'owner-aadhaar-photo-url': 'Aadhaar photo isnt complete or clear please send again.',
-          'owner-heavy-licence-photo-url-1': 'Licence front photo isnt complete or clear please send again.',
-          'owner-heavy-licence-photo-url-2': 'Licence back photo isnt complete or clear please send again.',
-          'owner-categories': 'Categories selection is incomplete please update it.',
-          'owner-districts': 'District selection is incomplete please update it.'
+        var section = mapReviewItemKeyToEditableSection(itemKey);
+        var sectionMessages = {
+          'modelVariant': 'For re-upload please upload a valid Bus Model / Variant.',
+          'type': 'For re-upload please select a valid Bus Type.',
+          'seats': 'For re-upload please enter valid Number of Seats.',
+          'tv': 'For re-upload please select valid TV/Music Systems.',
+          'place': 'For re-upload please upload a valid Place.',
+          'photos': 'For re-upload please upload a valid/clear Photo.',
+          'rc': 'For re-upload please upload a valid R.C Book.',
+          'insurance': 'For re-upload please upload a valid Insurance.',
+          'permit': 'For re-upload please upload a valid Permit.'
         };
+        return sectionMessages[section] || (String(itemLabel || 'This detail') + ' is not correct. Please update it.');
+      }
 
-        return messages[itemKey] || (String(itemLabel || 'This detail') + ' is not correct please update it.');
+      function getPerFieldReuploadUrl(submission, section) {
+        var currentSubmission = submission || getSelectedSubmission('submission');
+        var submissionId = currentSubmission && currentSubmission.id ? String(currentSubmission.id).trim() : '';
+        var summary = currentSubmission && currentSubmission.summary ? currentSubmission.summary : {};
+        var fields = currentSubmission && currentSubmission.fields ? currentSubmission.fields : {};
+        var rawNumber = String(summary.whatsappNumber || summary.phone || fields['owner-whatsapp-number'] || '').trim();
+        var digits = rawNumber.replace(/[^\d]/g, '');
+        return buildLocalPageUrl('../owner-add-vehicle.html', {
+          submissionId: submissionId,
+          vehicleType: 'bus',
+          editable: section || '',
+          whatsapp: digits || ''
+        });
       }
 
       function buildRejectWhatsappMessage(submission) {
@@ -3049,16 +3066,16 @@
       }
 
       function buildTouristRejectWhatsappMessage(submission, rejectReason) {
-        const currentSubmission = submission || getSelectedSubmission('submission');
-        const rejectedKeys = getSubmissionCorrectionItemKeys(currentSubmission);
-        const editableSections = getSubmissionEditableSections(currentSubmission);
+        var currentSubmission = submission || getSelectedSubmission('submission');
+        var rejectedKeys = getSubmissionCorrectionItemKeys(currentSubmission);
+        var editableSections = getSubmissionEditableSections(currentSubmission);
 
         if (!rejectedKeys.length || !editableSections.length) {
           return REJECT_INTRO_MESSAGE;
         }
 
-        const submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
-        const lines = [REJECT_INTRO_MESSAGE, ''];
+        var submissionSelections = getSubmissionReviewSelections(currentSubmission && currentSubmission.id);
+        var lines = [REJECT_INTRO_MESSAGE, ''];
 
         if (rejectReason) {
           lines.push('Reason: ' + rejectReason);
@@ -3066,13 +3083,15 @@
         }
 
         rejectedKeys.forEach(function (itemKey) {
-          const itemLabel = String(submissionSelections[itemKey + '__label'] || itemKey).trim();
-          lines.push(getRejectMessageText(itemKey, itemLabel));
+          var itemLabel = String(submissionSelections[itemKey + '__label'] || itemKey).trim();
+          var section = mapReviewItemKeyToEditableSection(itemKey);
+          var rejectText = getRejectMessageText(itemKey, itemLabel);
+          var reuploadUrl = section ? getPerFieldReuploadUrl(currentSubmission, section) : '';
+          lines.push('- ' + rejectText);
+          if (reuploadUrl) {
+            lines.push('  ' + reuploadUrl);
+          }
         });
-
-        lines.push('');
-        lines.push('Open this link and update only the marked parts:');
-        lines.push(getBlankSheetLink(currentSubmission, editableSections));
 
         return lines.join('\n').trim();
       }
