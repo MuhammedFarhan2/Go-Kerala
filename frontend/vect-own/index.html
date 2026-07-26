@@ -81,8 +81,7 @@
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const apiBaseCandidates = Array.from(new Set([
         apiBaseUrl,
-        'https://go-kerala-backend.onrender.com',
-        'https://mymusics.onrender.com'
+        'https://go-kerala-backend.onrender.com'
       ].map(function (value) {
         return String(value || '').trim().replace(/\/$/, '');
       }).filter(Boolean)));
