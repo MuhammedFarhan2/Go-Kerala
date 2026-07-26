@@ -281,6 +281,7 @@ async function verifyLicense(params) {
           ocrDetails.dlNumber = ocrResult.dlNumber;
         }
         result.ocrExtracted = ocrDetails;
+        result.ocrExtracted.rawText = ocrText.substring(0, 500);
       } else {
         result.confidence.ocrConfidence = 'low';
         result.warnings.push(ocrResult.error || 'OCR could not read the licence image reliably.');

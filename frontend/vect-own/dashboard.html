@@ -1288,6 +1288,10 @@
           <button type="button" class="rto-admin-btn is-reject" data-vect-own-admin-action="rejected">Rejected</button>
           <button type="button" class="rto-admin-btn is-info" data-vect-own-admin-action="needs_more_info">Needs More Info</button>
         </div>
+        <div style="margin-top:8px">
+          <label style="font-size:0.82rem;font-weight:600;color:#374151">Correct DL Number (if OCR is wrong)</label>
+          <input type="text" class="rto-admin-note" data-vect-own-admin-dl-correction placeholder="KL0120110012345" style="width:100%;height:38px;border:1px solid #d1d5db;border-radius:8px;padding:0 10px;font:inherit;font-size:0.88rem;margin-top:4px">
+        </div>
         <textarea class="rto-admin-note" data-vect-own-admin-note placeholder="Admin note (optional)" rows="2"></textarea>
         <div class="rto-admin-feedback" data-vect-own-admin-feedback hidden></div>
         <div class="rto-admin-audit" data-vect-own-admin-audit hidden></div>
@@ -1829,10 +1833,11 @@
           '</div>';
         }
 
-        if (ocrExtracted && ocrExtracted.text) {
+        if (ocrExtracted && (ocrExtracted.rawText || ocrExtracted.text)) {
+          var displayText = ocrExtracted.rawText || ocrExtracted.text;
           html += '<details style="margin-top:8px;font-size:0.8rem;color:#64748b">' +
             '<summary style="cursor:pointer;font-weight:600">Raw OCR text</summary>' +
-            '<pre style="margin:6px 0 0;padding:8px;background:#f8fafc;border-radius:8px;white-space:pre-wrap;word-break:break-word;font-size:0.78rem;line-height:1.4">' + escapeHtml(ocrExtracted.text) + '</pre>' +
+            '<pre style="margin:6px 0 0;padding:8px;background:#f8fafc;border-radius:8px;white-space:pre-wrap;word-break:break-word;font-size:0.78rem;line-height:1.4">' + escapeHtml(displayText) + '</pre>' +
           '</details>';
         }
 
@@ -2051,12 +2056,14 @@
         var submissionId = selectedSubmissionId;
         if (!action || !submissionId) return;
         var note = rtoAdminNote ? String(rtoAdminNote.value || '').trim() : '';
+        var dlCorrectionInput = document.querySelector('[data-vect-own-admin-dl-correction]');
+        var dlCorrection = dlCorrectionInput ? String(dlCorrectionInput.value || '').trim() : '';
         var btns = document.querySelectorAll('.rto-admin-btn');
         btns.forEach(function (b) { b.disabled = true; });
         getApi('/api/admin/verification-review', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ submissionId: submissionId, action: action, reviewNote: note })
+          body: JSON.stringify({ submissionId: submissionId, action: action, reviewNote: note, dlCorrection: dlCorrection || undefined })
         }).then(function (res) { return res.json(); })
           .then(function (data) {
             if (rtoAdminFeedback) {

@@ -2547,6 +2547,7 @@ async function handleAdminVerificationReview(request, response) {
   var submissionId = String(payload.submissionId || '').trim();
   var action = String(payload.action || '').trim().toLowerCase();
   var reviewNote = String(payload.reviewNote || '').trim();
+  var dlCorrection = String(payload.dlCorrection || '').trim();
 
   if (!submissionId || !['verified', 'rejected', 'needs_more_info'].includes(action)) {
     sendJson(response, 400, { success: false, error: 'submissionId and action (verified/rejected/needs_more_info) are required.' });
@@ -2580,6 +2581,9 @@ async function handleAdminVerificationReview(request, response) {
     submission.fields['verification-admin-reviewer'] = session.email || session.role || '';
     submission.fields['verification-admin-reviewed-at'] = new Date().toISOString();
     submission.fields['verification-admin-note'] = reviewNote;
+    if (dlCorrection && /^[A-Za-z]{2}\d{2}\d{4,15}$/.test(dlCorrection.replace(/[\s-]/g, ''))) {
+      submission.fields['owner-heavy-licence-photo-name-1'] = dlCorrection.toUpperCase();
+    }
 
     await updateSubmissionRecord(submission);
 
