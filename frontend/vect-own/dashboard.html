@@ -873,9 +873,7 @@
       gap: 8px;
     }
 
-    .rto-duplicate-count {
-      font-weight: 700;
-    }
+
   </style>
 </head>
 <body class="vect-own-body">
@@ -1151,7 +1149,6 @@
       const updatedTab = document.querySelector('[data-vect-own-tab="updated"]');
       const metricNodes = Array.from(document.querySelectorAll('[data-vect-own-metric]'));
       const actionButtons = Array.from(document.querySelectorAll('[data-vect-own-action]'));
-      const cachedRtoData = { submissionId: '', html: '' };
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const apiBaseCandidates = Array.from(new Set([
@@ -3322,17 +3319,6 @@
           if (noteToggleButton) {
             noteToggleButton.hidden = true;
           }
-          if (rtoSection) {
-            rtoSection.hidden = true;
-          }
-          if (rtoResults) {
-            rtoResults.hidden = true;
-          }
-          if (rtoButton) {
-            rtoButton.disabled = false;
-          }
-          cachedRtoData = { submissionId: '', html: '' };
-          if (rtoAdminArea) rtoAdminArea.hidden = true;
           renderTouristSubmissionList();
           renderTouristSubmissionDetail(null);
           saveDashboardState();
@@ -3355,21 +3341,6 @@
         detailNode.hidden = false;
         if (documentsSection) {
           documentsSection.hidden = true;
-        }
-        if (rtoSection) {
-          rtoSection.hidden = false;
-          if (rtoResults) {
-            if (cachedRtoData && cachedRtoData.html && cachedRtoData.submissionId === submission.id) {
-              rtoResults.hidden = false;
-              rtoResults.innerHTML = cachedRtoData.html;
-              if (rtoAdminArea) rtoAdminArea.hidden = false;
-            } else {
-              rtoResults.hidden = true;
-              rtoResults.innerHTML = '';
-              if (rtoAdminArea) rtoAdminArea.hidden = true;
-            }
-          }
-          if (rtoButton) rtoButton.disabled = false;
         }
 
         if (detailSubtitle) {

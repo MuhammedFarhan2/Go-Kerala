@@ -1145,7 +1145,6 @@
       const updatedTab = document.querySelector('[data-vect-own-tab="updated"]');
       const metricNodes = Array.from(document.querySelectorAll('[data-vect-own-metric]'));
       const actionButtons = Array.from(document.querySelectorAll('[data-vect-own-action]'));
-      const cachedRtoData = { submissionId: '', html: '' };
       const apiBaseMetaTag = document.querySelector('meta[name="api-base-url"]');
       const apiBaseUrl = apiBaseMetaTag ? String(apiBaseMetaTag.getAttribute('content') || '').trim().replace(/\/$/, '') : '';
       const apiBaseCandidates = Array.from(new Set([
@@ -3318,7 +3317,6 @@
           if (noteToggleButton) {
             noteToggleButton.hidden = true;
           }
-          cachedRtoData = { submissionId: '', html: '' };
           renderTouristSubmissionList();
           renderTouristSubmissionDetail(null);
           saveDashboardState();

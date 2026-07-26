@@ -9,6 +9,7 @@
   "dependencies": {
     "@sparticuz/chromium": "^121.0.0",
     "cheerio": "^1.2.0",
+    "firebase-admin": "^14.2.0",
     "google-auth-library": "^9.15.1",
     "nodemailer": "^8.0.5",
     "puppeteer-core": "^22.0.0",

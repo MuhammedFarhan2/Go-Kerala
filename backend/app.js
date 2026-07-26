@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { URL } = require('url');
+const firebaseDb = require('./firebase-db');
 
 
 const HOST = '0.0.0.0';
@@ -833,12 +834,19 @@ function loadVectOwnSubmissions() {
 
 function persistVectOwnSubmissions() {
   writeJsonFile(VECT_OWN_DB_PATH, loadVectOwnSubmissions());
+  if (firebaseDb.isEnabled()) {
+    firebaseDb.writeDocument('submissions', loadVectOwnSubmissions());
+  }
 }
 
 
 
 function loadProfilePhotoSessions() {
-  const saved = readJsonFile(PROFILE_PHOTO_SESSION_DB_PATH, {});
+  if (firebaseDb.isEnabled()) {
+    return;
+  }
+
+  var saved = readJsonFile(PROFILE_PHOTO_SESSION_DB_PATH, {});
 
   profilePhotoSessions.clear();
 
@@ -847,7 +855,7 @@ function loadProfilePhotoSessions() {
   }
 
   Object.keys(saved).forEach(function (token) {
-    const session = saved[token];
+    var session = saved[token];
 
     if (!session || typeof session !== 'object') {
       return;
@@ -858,13 +866,16 @@ function loadProfilePhotoSessions() {
 }
 
 function persistProfilePhotoSessions() {
-  const snapshot = {};
+  var snapshot = {};
 
   profilePhotoSessions.forEach(function (session, token) {
     snapshot[token] = session;
   });
 
   writeJsonFile(PROFILE_PHOTO_SESSION_DB_PATH, snapshot);
+  if (firebaseDb.isEnabled()) {
+    firebaseDb.writeDocument('profilePhotoSessions', snapshot);
+  }
 }
 
 function cleanupVectOwnSessions() {
@@ -2546,6 +2557,27 @@ const server = http.createServer(function (request, response) {
   sendFile(response, safePath);
 });
 
-server.listen(PORT, HOST, function () {
+server.listen(PORT, HOST, async function () {
   console.log('VECT MOVERS server running at http://' + HOST + ':' + PORT);
+
+  firebaseDb.initialize();
+  if (firebaseDb.isEnabled()) {
+    try {
+      var fbData = await firebaseDb.readDocument('submissions');
+      if (fbData && Array.isArray(fbData) && fbData.length > 0) {
+        vectOwnSubmissions = fbData;
+        console.log('Loaded ' + fbData.length + ' submissions from Firebase');
+      }
+      var fbSessions = await firebaseDb.readDocument('profilePhotoSessions');
+      if (fbSessions && typeof fbSessions === 'object') {
+        profilePhotoSessions.clear();
+        Object.keys(fbSessions).forEach(function (token) {
+          profilePhotoSessions.set(token, fbSessions[token]);
+        });
+        console.log('Loaded profile photo sessions from Firebase');
+      }
+    } catch (e) {
+      console.error('Firebase load error:', e.message);
+    }
+  }
 });
