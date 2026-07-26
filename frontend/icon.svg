@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="VECT Movers">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#111111"/>
+      <stop offset="100%" stop-color="#2d2d2d"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M112 200c0-26 21-48 48-48h192c26 0 48 21 48 48v112c0 18-14 32-32 32h-16l-22 40h-32l-22-40H176l-22 40h-32l-22-40h-10c-18 0-32-14-32-32V200z" fill="#ffffff"/>
+  <path d="M156 214h200v74H156z" fill="#f3f4f6"/>
+  <circle cx="184" cy="350" r="28" fill="#ffffff"/>
+  <circle cx="328" cy="350" r="28" fill="#ffffff"/>
+  <path d="M160 174h192c10 0 18 8 18 18v16H142v-16c0-10 8-18 18-18z" fill="#d7d7d7"/>
+  <text x="256" y="282" text-anchor="middle" font-family="Arial, sans-serif" font-size="52" font-weight="700" fill="#111111">VECT</text>
+</svg>
