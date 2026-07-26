@@ -78,7 +78,7 @@ async function fetchWithTimeout(url, options, timeoutMs) {
   }
 }
 
-async function verifyDrivingLicense(dlNumber) {
+async function verifyDrivingLicenseWithBrowser(dlNumber) {
   const cleaned = String(dlNumber || '').replace(/[\s-]/g, '').toUpperCase().trim();
 
   if (!cleaned) {
@@ -86,17 +86,148 @@ async function verifyDrivingLicense(dlNumber) {
   }
 
   if (!/^[A-Z]{2}\d{2}\d{4,15}$/.test(cleaned)) {
+    return { verified: false, error: 'Invalid DL number format (expected: MH0220110012345)', formatValid: false };
+  }
+
+  let browser;
+  try {
+    const puppeteer = require('puppeteer');
+    browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      timeout: 30000
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 900 });
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+
+    await page.goto(PARIVAHAN_BASE + '/?pur_cd=102', { waitUntil: 'networkidle2', timeout: 30000 });
+
+    await page.waitForSelector('input[id*="tf_reg_no1"]', { timeout: 15000 });
+    await page.click('input[id*="tf_reg_no1"]', { clickCount: 3 });
+    await page.type('input[id*="tf_reg_no1"]', cleaned, { delay: 20 });
+    await page.waitForTimeout(300);
+
+    var clicked = false;
+    try {
+      var btns = await page.$$('button');
+      for (var b = 0; b < btns.length; b++) {
+        var txt = await page.evaluate(function (el) { return (el.textContent || '').toLowerCase(); }, btns[b]);
+        if (txt.includes('search')) {
+          await btns[b].click();
+          clicked = true;
+          break;
+        }
+      }
+    } catch (_) {}
+    if (!clicked) {
+      await page.keyboard.press('Enter');
+    }
+
+    try {
+      await page.waitForSelector('table, span:has-text("does not exist"), span:has-text("No Record")', { timeout: 20000 });
+    } catch (_) {}
+    await page.waitForTimeout(2000);
+
+    var pageText = await page.evaluate(function () { return document.body.innerText; });
+
+    if (pageText.includes('does not exist') || pageText.includes('No Record')) {
+      return { verified: false, found: false, error: 'No record found in RTO database', formatValid: true };
+    }
+
+    var tableData = {};
+    var tableHtml = await page.evaluate(function () {
+      var tables = document.querySelectorAll('table');
+      if (!tables.length) return '';
+      var html = '';
+      for (var t = 0; t < tables.length; t++) {
+        html += tables[t].outerHTML;
+      }
+      return html;
+    });
+
+    if (tableHtml) {
+      var $ = cheerio.load('<div>' + tableHtml + '</div>');
+      $('table tr').each(function () {
+        var tds = $(this).find('td');
+        if (tds.length === 2) {
+          var key = $(tds[0]).text().replace(':', '').trim();
+          var val = $(tds[1]).text().trim();
+          if (key && val) tableData[key] = val;
+        }
+        if (tds.length === 4) {
+          var k1 = $(tds[0]).text().replace(':', '').trim();
+          var v1 = $(tds[1]).text().trim();
+          var k2 = $(tds[2]).text().replace(':', '').trim();
+          var v2 = $(tds[3]).text().trim();
+          if (k1 && v1) tableData[k1] = v1;
+          if (k2 && v2) tableData[k2] = v2;
+        }
+      });
+    }
+
+    var hasData = Object.keys(tableData).length > 0;
+    return {
+      verified: hasData,
+      found: hasData,
+      details: hasData ? tableData : null,
+      error: hasData ? '' : 'Could not parse RTO response from browser',
+      formatValid: true
+    };
+  } catch (err) {
     return {
       verified: false,
-      error: 'Invalid DL number format (expected: MH0220110012345)',
-      formatValid: false
+      found: false,
+      error: 'Unable to reach RTO portal via browser.',
+      formatValid: true,
+      manualUrl: PARIVAHAN_BASE + '/?pur_cd=102',
+      systemError: err.message
     };
+  } finally {
+    if (browser) try { await browser.close(); } catch (_) {}
+  }
+}
+
+async function verifyDrivingLicenseHttp(dlNumber) {
+  const cleaned = String(dlNumber || '').replace(/[\s-]/g, '').toUpperCase().trim();
+  if (!cleaned) {
+    return { verified: false, error: 'No DL number provided', formatValid: false };
+  }
+  if (!/^[A-Z]{2}\d{2}\d{4,15}$/.test(cleaned)) {
+    return { verified: false, error: 'Invalid DL number format (expected: MH0220110012345)', formatValid: false };
+  }
+  try {
+    const result = await checkParivahanHttp(cleaned);
+    return Object.assign({ formatValid: true }, result);
+  } catch (err) {
+    return {
+      verified: false, error: 'Unable to reach RTO portal. Please verify manually.',
+      formatValid: true, manualUrl: PARIVAHAN_BASE + '/?pur_cd=102', systemError: err.message
+    };
+  }
+}
+
+async function verifyDrivingLicense(dlNumber) {
+  var browserResult = null;
+  try {
+    browserResult = await verifyDrivingLicenseWithBrowser(dlNumber);
+  } catch (_) {}
+
+  if (browserResult && browserResult.found) {
+    return browserResult;
   }
 
   try {
-    const result = await checkParivahan(cleaned, 'dl');
-    return Object.assign({ formatValid: true }, result);
+    var httpResult = await verifyDrivingLicenseHttp(dlNumber);
+    if (httpResult && (httpResult.found || httpResult.systemError)) {
+      return httpResult;
+    }
+    if (browserResult) return browserResult;
+    return httpResult;
   } catch (err) {
+    if (browserResult) return browserResult;
     return {
       verified: false,
       error: 'Unable to reach RTO portal. Please verify manually.',
@@ -137,7 +268,7 @@ async function verifyVehicleRegistration(regNumber) {
   }
 }
 
-async function checkParivahan(dlNumber, type) {
+async function checkParivahanHttp(dlNumber) {
   const initialRes = await fetchWithTimeout(PARIVAHAN_BASE + '/?pur_cd=102', {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
