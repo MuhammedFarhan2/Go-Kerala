@@ -210,6 +210,10 @@ function determineStatus(params) {
     return { status: VERIFICATION_STATUS.EXPIRED, reason: 'Licence validity has expired as per official records.' };
   }
 
+  if (crossCheck.checks && crossCheck.checks.nameMatch === false) {
+    return { status: VERIFICATION_STATUS.MISMATCH, reason: 'Name on the licence photo does not match the name in official records.' };
+  }
+
   if (crossCheck.overall === 'mismatch') {
     return { status: VERIFICATION_STATUS.MISMATCH, reason: 'Submitted information does not match the official record.' };
   }
@@ -311,7 +315,8 @@ async function verifyLicense(params) {
     }
   }
 
-  var cleanedDl = dlNumber ? dlNumber.replace(/[\s-]/g, '').toUpperCase() : '';
+  var lookupDl = (ocrDetails && ocrDetails.dlNumber) || dlNumber;
+  var cleanedDl = lookupDl ? lookupDl.replace(/[\s-]/g, '').toUpperCase() : '';
 
   var officialResult = null;
   if (cleanedDl && /^[A-Z]{2}\d{2}\d{4,15}$/.test(cleanedDl)) {
