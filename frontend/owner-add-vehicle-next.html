@@ -315,6 +315,30 @@
       line-height: 1.45;
     }
 
+    .owner-question.is-locked {
+      position: relative;
+      opacity: 0.4;
+      pointer-events: none;
+      user-select: none;
+      filter: blur(2px);
+    }
+
+    .owner-question.is-locked::after {
+      content: 'Locked for re-upload';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      z-index: 5;
+      filter: none;
+    }
+
     .owner-upload-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -1749,47 +1773,49 @@
           const photoPreviewUrl = primaryPhotoEntry ? String(primaryPhotoEntry.previewDataUrl || '').trim() : '';
           let firstError = null;
 
-          if (!selectedModelVariant) {
+          var isRestricted = Boolean(reuploadSubmissionId && editableSections.length);
+
+          if (shouldAllowSection('modelVariant') && !selectedModelVariant) {
             setError('modelVariant', 'Enter the bus model or variant');
             firstError = firstError || document.querySelector('[data-owner-upload-error="modelVariant"]');
           }
 
-          if (!selectedType) {
+          if (shouldAllowSection('type') && !selectedType) {
             setError('busType', 'Select anyone');
             firstError = firstError || document.querySelector('[data-owner-upload-error="busType"]');
           }
 
-          if (!selectedSeats || Number(selectedSeats) <= 0) {
+          if (shouldAllowSection('seats') && (!selectedSeats || Number(selectedSeats) <= 0)) {
             setError('seats', 'Enter the number of seats');
             firstError = firstError || document.querySelector('[data-owner-upload-error="seats"]');
           }
 
-          if (!selectedTv) {
+          if (shouldAllowSection('tv') && !selectedTv) {
             setError('tvMusic', 'Select anyone');
             firstError = firstError || document.querySelector('[data-owner-upload-error="tvMusic"]');
           }
 
-          if (!selectedPlace) {
+          if (shouldAllowSection('place') && !selectedPlace) {
             setError('place', 'Select anyone');
             firstError = firstError || document.querySelector('[data-owner-upload-error="place"]');
           }
 
-          if (!selectedPermitType) {
+          if (shouldAllowSection('permit') && !selectedPermitType) {
             setError('permit', 'Select anyone');
             firstError = firstError || document.querySelector('[data-owner-upload-error="permit"]');
           }
 
-          if (!photos.length) {
+          if (shouldAllowSection('photos') && !photos.length) {
             setError('photos', 'Enter the photo');
             firstError = firstError || document.querySelector('[data-owner-upload-error="photos"]');
           }
 
-          if (!rc.length) {
+          if (shouldAllowSection('rc') && !rc.length) {
             setError('rc', 'Enter the photo');
             firstError = firstError || document.querySelector('[data-owner-upload-error="rc"]');
           }
 
-          if (!insurance.length) {
+          if (shouldAllowSection('insurance') && !insurance.length) {
             setError('insurance', 'Enter the photo');
             firstError = firstError || document.querySelector('[data-owner-upload-error="insurance"]');
           }
