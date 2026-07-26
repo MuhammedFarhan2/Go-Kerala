@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../style.css?v=20260423-1">
   <style>
     .vect-own-main {
-      padding-bottom: 12px;
+      padding-bottom: 100px;
     }
 
     .vect-own-page {
@@ -142,7 +142,7 @@
 
     @media (max-width: 680px) {
       .vect-own-main {
-        padding: 8px 4px 12px;
+        padding: 8px 4px 100px;
       }
 
       .vect-own-page-card {
@@ -802,18 +802,16 @@
     }
 
     .vect-own-tourist-bottom-box {
-      border: 1px solid #e5e7eb;
-      border-radius: 22px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
       background: #fff;
-      padding: 8px;
-      margin: 0 16px 128px;
-      overflow: hidden;
-    }
-
-    @media (max-width: 680px) {
-      .vect-own-tourist-bottom-box {
-        margin: 0 10px 150px;
-      }
+      border-top: 1px solid #e5e7eb;
+      padding: 8px 16px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
     }
 
     .vect-own-tourist-bottom-box .vect-own-detail-actions {
@@ -1109,6 +1107,8 @@
     <div class="vect-own-lightbox-backdrop" data-vect-own-lightbox-close></div>
     <div class="vect-own-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Full image preview">
       <button type="button" class="vect-own-lightbox-close" aria-label="Close image preview" data-vect-own-lightbox-close>&times;</button>
+      <button type="button" class="vect-own-lightbox-nav is-prev" aria-label="Previous image" data-vect-own-lightbox-prev>&lsaquo;</button>
+      <button type="button" class="vect-own-lightbox-nav is-next" aria-label="Next image" data-vect-own-lightbox-next>&rsaquo;</button>
       <img src="" alt="" class="vect-own-lightbox-image" data-vect-own-lightbox-image>
       <button type="button" class="vect-own-lightbox-rotate" aria-label="Rotate image" title="Rotate" data-vect-own-lightbox-rotate>&#x21BB;</button>
     </div>
@@ -1141,6 +1141,11 @@
       const pageLoaderNode = document.getElementById('page-loader');
       const lightboxNode = document.querySelector('[data-vect-own-lightbox]');
       const lightboxImageNode = document.querySelector('[data-vect-own-lightbox-image]');
+      const lightboxPrevNode = document.querySelector('[data-vect-own-lightbox-prev]');
+      const lightboxNextNode = document.querySelector('[data-vect-own-lightbox-next]');
+      let lightboxPhotoUrls = [];
+      let lightboxPhotoIndex = -1;
+      let lightboxSavedScrollY = 0;
       const tabs = Array.from(document.querySelectorAll('[data-vect-own-tab]'));
       const updatedTab = document.querySelector('[data-vect-own-tab="updated"]');
       const metricNodes = Array.from(document.querySelectorAll('[data-vect-own-metric]'));
@@ -1868,7 +1873,7 @@
         ].join('');
       }
 
-      function buildTouristImageCard(title, value, itemKey) {
+      function buildTouristImageCard(title, value, itemKey, photoIndex) {
           const normalizeImageSource = typeof extractImageSource === 'function'
             ? extractImageSource
             : function (fallbackValue) {
@@ -1894,6 +1899,7 @@
               };
           const safeValue = normalizeImageSource(value);
           const imageUrl = resolveStoredUploadUrl(safeValue, safeValue) || getImageUrl(safeValue);
+          var idx = typeof photoIndex === 'number' ? photoIndex : -1;
 
           if (!safeValue) {
             return [
@@ -1908,7 +1914,7 @@
             '<div class="vect-own-tourist-image-card">',
             '<p class="vect-own-tourist-label">' + escapeHtml(title) + '</p>',
             imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '" class="vect-own-tourist-image-preview">' : '<p class="vect-own-tourist-file-empty">' + escapeHtml(valueToText(safeValue)) + '</p>',
-            imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '">' + 'View full image' + '</button>' : '',
+            imageUrl ? '<button type="button" class="vect-own-tourist-image-link" data-vect-own-image-url="' + escapeHtml(imageUrl) + '" data-vect-own-image-label="' + escapeHtml(title) + '" data-vect-own-image-index="' + idx + '">' + 'View full image' + '</button>' : '',
             buildReviewActionButtons(itemKey, title, getItemReviewState(selectedSubmissionId, itemKey), { position: 'bottom' }),
           '</div>'
           ].join('');
@@ -1920,7 +1926,7 @@
         }) : [];
 
         const items = safeValues.length ? safeValues.map(function (value, index) {
-          return buildTouristImageCard(title + ' ' + (index + 1), value, itemKeyPrefix + '-' + index);
+          return buildTouristImageCard(title + ' ' + (index + 1), value, itemKeyPrefix + '-' + index, index);
         }).join('') : '<p class="vect-own-tourist-file-empty">No file uploaded</p>';
 
         return [
@@ -1957,8 +1963,9 @@
           touristSubmissionDetailSubtitleNode.textContent = 'REVIEW';
         }
 
-        const photoRows = (touristBusDetails.photos || []).slice(0, 4).map(function (name, index) {
-          return buildTouristImageCard('Photo ' + (index + 1), name, 'tourist-photo-' + index);
+        var photoList = (touristBusDetails.photos || []).slice(0, 4);
+        var photoRows = photoList.map(function (name, index) {
+          return buildTouristImageCard('Photo ' + (index + 1), name, 'tourist-photo-' + index, index);
         }).join('');
 
         touristSubmissionContentNode.innerHTML = [
@@ -2386,17 +2393,48 @@
         return fields;
       }
 
-      function openImagePreview(imageUrl, label) {
+      function openImagePreview(imageUrl, label, photoUrls, photoIndex) {
         if (!imageUrl || !lightboxNode || !lightboxImageNode) {
           return;
         }
+
+        lightboxSavedScrollY = window.scrollY;
+        lightboxPhotoUrls = Array.isArray(photoUrls) ? photoUrls : [];
+        lightboxPhotoIndex = typeof photoIndex === 'number' ? photoIndex : -1;
 
         lightboxImageNode.src = imageUrl;
         lightboxImageNode.alt = label || 'Submitted image';
         lightboxImageNode.style.transform = 'rotate(0deg)';
         lightboxImageNode._rotation = 0;
+        updateLightboxNav();
         lightboxNode.hidden = false;
         document.documentElement.classList.add('is-vect-own-lightbox-open');
+      }
+
+      function updateLightboxNav() {
+        if (lightboxPrevNode) {
+          lightboxPrevNode.hidden = lightboxPhotoUrls.length < 2 || lightboxPhotoIndex <= 0;
+        }
+        if (lightboxNextNode) {
+          lightboxNextNode.hidden = lightboxPhotoUrls.length < 2 || lightboxPhotoIndex >= lightboxPhotoUrls.length - 1;
+        }
+      }
+
+      function navigateLightbox(direction) {
+        var newIndex = lightboxPhotoIndex + direction;
+        if (newIndex < 0 || newIndex >= lightboxPhotoUrls.length) {
+          return;
+        }
+        var url = lightboxPhotoUrls[newIndex];
+        if (!url) {
+          return;
+        }
+        lightboxPhotoIndex = newIndex;
+        lightboxImageNode.src = url;
+        lightboxImageNode.alt = 'Photo ' + (newIndex + 1);
+        lightboxImageNode.style.transform = 'rotate(0deg)';
+        lightboxImageNode._rotation = 0;
+        updateLightboxNav();
       }
 
       function closeImagePreview() {
@@ -2409,7 +2447,14 @@
         lightboxImageNode.alt = '';
         lightboxImageNode.style.transform = '';
         lightboxImageNode._rotation = 0;
+        lightboxPhotoUrls = [];
+        lightboxPhotoIndex = -1;
         document.documentElement.classList.remove('is-vect-own-lightbox-open');
+
+        if (lightboxSavedScrollY) {
+          window.scrollTo(0, lightboxSavedScrollY);
+          lightboxSavedScrollY = 0;
+        }
       }
 
       function renderFieldValue(key, value) {
@@ -3841,6 +3886,18 @@
             closeImagePreview();
           }
 
+          var prevTrigger = event.target.closest('[data-vect-own-lightbox-prev]');
+          if (prevTrigger) {
+            navigateLightbox(-1);
+            return;
+          }
+
+          var nextTrigger = event.target.closest('[data-vect-own-lightbox-next]');
+          if (nextTrigger) {
+            navigateLightbox(1);
+            return;
+          }
+
           const rotateTrigger = event.target.closest('[data-vect-own-lightbox-rotate]');
           if (rotateTrigger && lightboxImageNode) {
             var cur = lightboxImageNode._rotation || 0;
@@ -3852,15 +3909,33 @@
           return;
         }
 
-        openImagePreview(
-          String(trigger.getAttribute('data-vect-own-image-url') || '').trim(),
-          String(trigger.getAttribute('data-vect-own-image-label') || '').trim()
-        );
+        var imgUrl = String(trigger.getAttribute('data-vect-own-image-url') || '').trim();
+        var imgLabel = String(trigger.getAttribute('data-vect-own-image-label') || '').trim();
+        var imgIndex = parseInt(trigger.getAttribute('data-vect-own-image-index'), 10);
+        var photoUrls = [];
+        var container = trigger.closest('[data-vect-own-tourist-content]');
+        if (container) {
+          var links = container.querySelectorAll('[data-vect-own-image-url]');
+          links.forEach(function (link) {
+            var u = String(link.getAttribute('data-vect-own-image-url') || '').trim();
+            if (u) photoUrls.push(u);
+          });
+        }
+        openImagePreview(imgUrl, imgLabel, photoUrls, isNaN(imgIndex) ? -1 : imgIndex);
       });
 
       document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
           closeImagePreview();
+          return;
+        }
+        if (!lightboxNode || lightboxNode.hidden) {
+          return;
+        }
+        if (event.key === 'ArrowLeft') {
+          navigateLightbox(-1);
+        } else if (event.key === 'ArrowRight') {
+          navigateLightbox(1);
         }
       });
     })();
