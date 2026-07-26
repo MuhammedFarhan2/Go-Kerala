@@ -1,7 +1,8 @@
 const cheerio = require('cheerio');
+const Tesseract = require('tesseract.js');
 
 const PARIVAHAN_BASE = 'https://parivahan.gov.in/rcdlstatus';
-const PARIVAHAN_POST = 'https://parivahan.gov.in/rcdlstatus/vahan/rcDlHome.xhtml';
+const PARIVAHAN_POST = 'https://parivahan.gov.in/rcdlstatus/vahan/rcstatus.xhtml';
 const REQUEST_TIMEOUT = 15000;
 
 function delay(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
@@ -92,8 +93,8 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
     return { verified: false, error: 'No DL number provided', formatValid: false };
   }
 
-  if (!/^[A-Z]{2}\d{2}\d{4,15}$/.test(cleaned)) {
-    return { verified: false, error: 'Invalid DL number format (expected: MH0220110012345)', formatValid: false };
+  if (!/^[A-Z]{2}\d{2}\d{4,15}$/.test(cleaned) && !/^[A-Z]{2}\d{5,13}$/.test(cleaned)) {
+    return { verified: false, error: 'Invalid DL number format (expected: MH0220110012345 or MC5518528)', formatValid: false };
   }
 
   let browser;
@@ -120,18 +121,55 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
       return { verified: false, found: false, error: 'Parivahan navigation failed', formatValid: true, systemError: 'URL=' + pageUrl + ' Body=' + pageContent };
     }
 
+    // Wait for the DL number input field (new ID: tf_dlNO)
+    var dlInputFound = false;
     try {
-      await page.waitForSelector('input[id*="tf_reg_no1"], input[name*="tf_reg_no"], input[type="text"]', { timeout: 30000 });
-    } catch (selErr) {
+      await page.waitForSelector('input[id*="tf_dlNO"], input[id*="tf_reg_no1"], input[placeholder*="Driving Licence"]', { timeout: 15000 });
+      dlInputFound = true;
+    } catch (_) {}
+    if (!dlInputFound) {
       var pageContent = await page.evaluate(function () { return document.body ? document.body.innerHTML.substring(0, 3000) : 'no body'; }).catch(function () { return 'page unavailable'; });
       var pageUrl = page.url();
       return { verified: false, found: false, error: 'Parivahan form input not found', formatValid: true, systemError: 'URL=' + pageUrl + ' HTML=' + pageContent.replace(/\s+/g, ' ').trim() };
     }
 
-    await page.click('input[id*="tf_reg_no1"], input[name*="tf_reg_no"], input[type="text"]', { clickCount: 3 });
-    await page.type('input[id*="tf_reg_no1"], input[name*="tf_reg_no"], input[type="text"]', cleaned, { delay: 20 });
+    // Type DL number
+    await page.click('input[id*="tf_dlNO"], input[id*="tf_reg_no1"], input[placeholder*="Driving Licence"]', { clickCount: 3 });
+    await page.type('input[id*="tf_dlNO"], input[id*="tf_reg_no1"], input[placeholder*="Driving Licence"]', cleaned, { delay: 20 });
     await delay(300);
 
+    // Solve captcha using Tesseract OCR
+    var captchaText = '';
+    try {
+      var captchaBase64 = await page.evaluate(function () {
+        var img = document.querySelector('img[src*="DispplayCaptcha"]');
+        if (!img) return null;
+        var canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 200;
+        canvas.height = img.naturalHeight || img.height || 60;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        return canvas.toDataURL('image/png');
+      });
+      if (captchaBase64) {
+        var result = await Tesseract.recognize(captchaBase64, 'eng', {
+          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        });
+        captchaText = (result.data.text || '').replace(/\s/g, '').replace(/[^A-Za-z0-9]/g, '').substring(0, 6);
+        if (captchaText) {
+          var captchaInput = await page.$('input[id*="CaptchaID"]');
+          if (captchaInput) {
+            await captchaInput.type(captchaText, { delay: 15 });
+          }
+        }
+      }
+    } catch (captchaErr) {
+      captchaText = '';
+    }
+
+    await delay(200);
+
+    // Click search button
     var clicked = false;
     try {
       var btns = await page.$$('button');
@@ -145,20 +183,24 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
       }
     } catch (_) {}
     if (!clicked) {
-      await page.keyboard.press('Enter');
+      try {
+        await page.keyboard.press('Enter');
+      } catch (_) {}
     }
 
+    // Wait for result table or error message
     try {
-      await page.waitForSelector('table, span:has-text("does not exist"), span:has-text("No Record")', { timeout: 20000 });
+      await page.waitForSelector('table, span[id*="rcdl_pnl"]', { timeout: 25000 });
     } catch (_) {}
-    await delay(2000);
+    await delay(3000);
 
     var pageText = await page.evaluate(function () { return document.body.innerText; });
 
-    if (pageText.includes('does not exist') || pageText.includes('No Record')) {
+    if (pageText.includes('does not exist') || pageText.includes('No Record') || pageText.includes('not found') || pageText.includes('SORRY')) {
       return { verified: false, found: false, error: 'No record found in RTO database', formatValid: true };
     }
 
+    // Parse result table
     var tableData = {};
     var tableHtml = await page.evaluate(function () {
       var tables = document.querySelectorAll('table');
@@ -195,6 +237,7 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
       verified: hasData,
       found: hasData,
       details: hasData ? tableData : null,
+      captchaUsed: !!captchaText,
       error: hasData ? '' : 'Could not parse RTO response from browser',
       formatValid: true
     };
@@ -329,8 +372,7 @@ async function checkParivahanHttp(dlNumber) {
   params.append('javax.faces.partial.render', 'form_rcdl:pnl_show form_rcdl:pg_show form_rcdl:rcdl_pnl');
   params.append(firstButtonId, firstButtonId);
   params.append('form_rcdl', 'form_rcdl');
-  params.append('form_rcdl:tf_reg_no1', dlNumber);
-  params.append('form_rcdl:tf_reg_no2', '');
+  params.append('form_rcdl:tf_dlNO', dlNumber);
   params.append('javax.faces.ViewState', viewState);
 
   const postRes = await fetchWithTimeout(PARIVAHAN_POST, {
