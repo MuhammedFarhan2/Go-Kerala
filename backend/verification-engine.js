@@ -87,6 +87,17 @@ function extractDetailsFromOcrText(text) {
           break;
         }
       }
+      if (!details.name && /name/i.test(line)) {
+        var nextIdx = i + 1;
+        while (nextIdx < lines.length) {
+          var nextLine = lines[nextIdx].trim();
+          if (nextLine && /^[A-Z][a-zA-Z\s.]{2,}$/.test(nextLine)) {
+            details.name = nextLine;
+            break;
+          }
+          nextIdx++;
+        }
+      }
     }
   }
 
@@ -312,6 +323,16 @@ async function verifyLicense(params) {
     } catch (ocrErr) {
       result.confidence.ocrConfidence = 'low';
       result.warnings.push('OCR processing failed: ' + (ocrErr.message || 'Unknown error'));
+    }
+  }
+
+  if (!ocrDetails.name && userName && ocrText) {
+    var nameParts = userName.toLowerCase().split(/\s+/).filter(Boolean);
+    if (nameParts.length > 0) {
+      var allFound = nameParts.every(function(part) {
+        return ocrText.toLowerCase().includes(part);
+      });
+      if (allFound) ocrDetails.name = userName;
     }
   }
 
