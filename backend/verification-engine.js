@@ -176,6 +176,7 @@ function determineStatus(params) {
   var documentIntegrity = params.documentIntegrity;
   var ocrConfidence = params.ocrConfidence;
   var ocrDlFound = params.ocrDlFound;
+  var nameMatched = params.nameMatched;
 
   if (documentIntegrity === 'suspicious') {
     return { status: VERIFICATION_STATUS.NEEDS_MANUAL_REVIEW, reason: 'Document appears to be tampered or of suspicious quality.' };
@@ -189,8 +190,7 @@ function determineStatus(params) {
     if (crossCheck.overall === 'mismatch') {
       return { status: VERIFICATION_STATUS.MISMATCH, reason: 'Submitted information conflicts with available records.' };
     }
-    var nameMatch = crossCheck.checks && crossCheck.checks.nameMatch;
-    if (nameMatch === true && ocrDlFound) {
+    if (nameMatched && ocrDlFound) {
       return { status: VERIFICATION_STATUS.VERIFIED, reason: 'Licence number and name match the photo and submission. Verified by OCR cross-check.' };
     }
     if (ocrConfidence === 'high' || ocrConfidence === 'medium') {
@@ -406,13 +406,28 @@ async function verifyLicense(params) {
   else if (crossCheckResult.overall === 'mismatch') result.confidence.dataMatch = 'mismatch';
   else result.confidence.dataMatch = 'none';
 
+  var nameMatched = false;
+  if (userName) {
+    if (ocrDetails.name) {
+      var u = userName.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+      var o = ocrDetails.name.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+      nameMatched = !!(u && o && (u.includes(o) || o.includes(u)));
+    }
+    if (!nameMatched && ocrText) {
+      var nameParts = userName.toLowerCase().split(/\s+/).filter(Boolean);
+      nameMatched = nameParts.length > 0 && nameParts.every(function(p) { return ocrText.toLowerCase().includes(p); });
+    }
+    result.warnings.push('Name match check: userName="' + userName + '" ocrName="' + (ocrDetails.name || 'none') + '" result=' + nameMatched);
+  }
+
   var statusResult = determineStatus({
     official: result.official,
     crossCheck: crossCheckResult,
     ocrResult: ocrResult,
     documentIntegrity: result.confidence.documentIntegrity,
     ocrConfidence: result.confidence.ocrConfidence,
-    ocrDlFound: !!(ocrDetails && ocrDetails.dlNumber)
+    ocrDlFound: !!(ocrDetails && ocrDetails.dlNumber),
+    nameMatched: nameMatched
   });
   result.status = statusResult.status;
   result.statusInfo = STATUS_LABELS[statusResult.status];
