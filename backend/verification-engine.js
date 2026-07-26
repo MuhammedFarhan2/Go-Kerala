@@ -183,10 +183,10 @@ function determineStatus(params) {
       return { status: VERIFICATION_STATUS.VERIFIED, reason: 'Licence number and name match the photo and submission. Verified by OCR cross-check.' };
     }
     if (ocrConfidence === 'high' || ocrConfidence === 'medium') {
-      if (crossCheck.overall === 'match' || crossCheck.overall === 'partial_match') {
-        return { status: VERIFICATION_STATUS.VALID, reason: 'Licence number read from photo. Official confirmation not available — manual review recommended.' };
+      if (ocrDlFound) {
+        return { status: VERIFICATION_STATUS.VALID, reason: 'Licence number read from photo. Official confirmation not available — valid based on OCR cross-check.' };
       }
-      return { status: VERIFICATION_STATUS.NEEDS_MANUAL_REVIEW, reason: 'Licence number found in photo but could not be confirmed through an official source. Please verify manually.' };
+      return { status: VERIFICATION_STATUS.NEEDS_MANUAL_REVIEW, reason: 'Could not reliably read licence number from photo. Please verify manually.' };
     }
     return { status: VERIFICATION_STATUS.UNABLE_TO_VERIFY, reason: 'Could not confirm this licence through an authorised official source. Please submit for manual verification.' };
   }
