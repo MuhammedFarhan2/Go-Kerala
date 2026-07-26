@@ -122,6 +122,13 @@ function crossCheckData(sources) {
     checks.nameMatch = official.name.toLowerCase().includes(ocr.name.toLowerCase()) ||
       ocr.name.toLowerCase().includes(official.name.toLowerCase());
   }
+  if (user.name && ocr.name && checks.nameMatch === null) {
+    var uName = user.name.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+    var oName = ocr.name.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+    if (uName && oName) {
+      checks.nameMatch = uName.includes(oName) || oName.includes(uName);
+    }
+  }
 
   if (official.dob && user.dob) {
     checks.dobMatch = normalizeNumber(official.dob) === normalizeNumber(user.dob);
@@ -169,6 +176,11 @@ function determineStatus(params) {
   if (!official || !official.found) {
     if (crossCheck.overall === 'mismatch') {
       return { status: VERIFICATION_STATUS.MISMATCH, reason: 'Submitted information conflicts with available records.' };
+    }
+    var nameMatch = crossCheck.checks && crossCheck.checks.nameMatch;
+    var dlMatch = crossCheck.checks && crossCheck.checks.dlNumberMatch;
+    if (nameMatch === true && dlMatch === true) {
+      return { status: VERIFICATION_STATUS.VERIFIED, reason: 'Licence number and name match the photo and submission. Verified by OCR cross-check.' };
     }
     if (ocrConfidence === 'high' || ocrConfidence === 'medium') {
       if (crossCheck.overall === 'match' || crossCheck.overall === 'partial_match') {
@@ -222,6 +234,7 @@ async function verifyLicense(params) {
   var userDob = String(params.dob || '').trim();
   var imageData = params.imageData || '';
   var submissionId = String(params.submissionId || '').trim();
+  var userName = String(params.userName || '').trim();
 
   var result = {
     status: VERIFICATION_STATUS.UNABLE_TO_VERIFY,
@@ -358,7 +371,7 @@ async function verifyLicense(params) {
     result.confidence.officialVerification = 'not_confirmed';
   }
 
-  var userData = { dlNumber: dlNumber, dob: userDob };
+  var userData = { dlNumber: dlNumber, dob: userDob, name: userName };
   var crossCheckResult = crossCheckData({
     user: userData,
     ocr: ocrDetails,

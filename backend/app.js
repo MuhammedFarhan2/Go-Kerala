@@ -2474,11 +2474,19 @@ async function handleRtoAiReview(request, response) {
       imageData = fields['owner-heavy-licence-photo-url-1'] || '';
     }
 
+    var userName = fields['owner-name'] || '';
+    if (!userName) {
+      var firstName = fields['owner-first-name'] || '';
+      var lastName = fields['owner-last-name'] || '';
+      if (firstName || lastName) userName = (firstName + ' ' + lastName).trim();
+    }
+
     var verificationResult = await verificationEngine.verifyLicense({
       dlNumber: dlNumber,
       dob: dob,
       imageData: imageData,
-      submissionId: submissionId
+      submissionId: submissionId,
+      userName: userName
     });
 
     var duplicateCheck = null;
