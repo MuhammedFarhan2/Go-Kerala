@@ -373,12 +373,18 @@ async function verifyLicense(params) {
         error: officialResult.error || 'No record found in official database.',
         source: 'parivahan'
       };
+      if (officialResult.systemError) {
+        result.warnings.push('Parivahan system error: ' + officialResult.systemError);
+      }
     } else {
       result.official = {
         found: false,
         error: officialResult && officialResult.error ? officialResult.error : 'Official verification service unavailable.',
         source: 'parivahan'
       };
+      if (officialResult && officialResult.systemError) {
+        result.warnings.push('Parivahan system error: ' + officialResult.systemError);
+      }
     }
   } else if (cleanedDl) {
     result.warnings.push('Licence number format is invalid for official verification.');
