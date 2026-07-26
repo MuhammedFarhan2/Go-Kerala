@@ -196,6 +196,10 @@ function determineStatus(params) {
     return { status: VERIFICATION_STATUS.NEEDS_MANUAL_REVIEW, reason: 'Document appears to be tampered or of suspicious quality.' };
   }
 
+  if (official && official.notFound) {
+    return { status: VERIFICATION_STATUS.INVALID, reason: 'This licence number does not exist in the official RTO database.' };
+  }
+
   if (ocrConfidence === 'low' && !official) {
     return { status: VERIFICATION_STATUS.NEEDS_MANUAL_REVIEW, reason: 'OCR confidence is low and no official verification was available.' };
   }
@@ -382,8 +386,10 @@ async function verifyLicense(params) {
       }
       result.details.lastChecked = new Date().toISOString();
     } else if (officialResult && officialResult.found === false) {
+      var notFound = officialResult.error && (officialResult.error.indexOf('No record') !== -1 || officialResult.error.indexOf('not exist') !== -1);
       result.official = {
         found: false,
+        notFound: notFound,
         error: officialResult.error || 'No record found in official database.',
         source: 'parivahan'
       };
@@ -393,6 +399,7 @@ async function verifyLicense(params) {
     } else {
       result.official = {
         found: false,
+        notFound: false,
         error: officialResult && officialResult.error ? officialResult.error : 'Official verification service unavailable.',
         source: 'parivahan'
       };
