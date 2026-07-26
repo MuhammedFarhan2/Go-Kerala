@@ -2465,7 +2465,12 @@ async function handleRtoAiReview(request, response) {
         return;
       }
       var fields = submission.fields || {};
-      if (!dlNumber) dlNumber = fields['owner-heavy-licence-photo-name-1'] || fields['owner-heavy-licence-photo-name-2'] || '';
+      if (!dlNumber) {
+        var candidate = fields['owner-heavy-licence-photo-name-1'] || fields['owner-heavy-licence-photo-name-2'] || '';
+        if (/^[A-Za-z]{2}\d{2}\d{4,15}$/.test(candidate.replace(/[\s-]/g, ''))) {
+          dlNumber = candidate;
+        }
+      }
       imageData = fields['owner-heavy-licence-photo-url-1'] || '';
     }
 
