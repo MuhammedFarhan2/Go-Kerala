@@ -4,6 +4,8 @@ const PARIVAHAN_BASE = 'https://parivahan.gov.in/rcdlstatus';
 const PARIVAHAN_POST = 'https://parivahan.gov.in/rcdlstatus/vahan/rcDlHome.xhtml';
 const REQUEST_TIMEOUT = 15000;
 
+function delay(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+
 function extractViewState(html) {
   var match = html.match(/name="(?:jakarta|javax)\.faces\.ViewState"\s+value="([^"]+)"/i);
   if (match) return match[1];
@@ -128,7 +130,7 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
 
     await page.click('input[id*="tf_reg_no1"], input[name*="tf_reg_no"], input[type="text"]', { clickCount: 3 });
     await page.type('input[id*="tf_reg_no1"], input[name*="tf_reg_no"], input[type="text"]', cleaned, { delay: 20 });
-    await page.waitForTimeout(300);
+    await delay(300);
 
     var clicked = false;
     try {
@@ -149,7 +151,7 @@ async function verifyDrivingLicenseWithBrowser(dlNumber) {
     try {
       await page.waitForSelector('table, span:has-text("does not exist"), span:has-text("No Record")', { timeout: 20000 });
     } catch (_) {}
-    await page.waitForTimeout(2000);
+    await delay(2000);
 
     var pageText = await page.evaluate(function () { return document.body.innerText; });
 
