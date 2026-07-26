@@ -76,6 +76,8 @@
       const actions = document.querySelector('[data-owner-district-actions]');
       const nextButton = document.querySelector('[data-owner-district-next-btn]');
       const isDistrictReview = reviewItem === 'owner-districts';
+      const districtCountNode = document.querySelector('[data-owner-district-count]');
+      const districtLabelNode = document.querySelector('[data-owner-district-label]');
 
       if (companyNode) {
         companyNode.textContent = sessionStorage.getItem('owner-name') || localStorage.getItem('owner-name') || localStorage.getItem('owner-first-name') || 'This account';
