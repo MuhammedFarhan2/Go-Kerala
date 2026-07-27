@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Login - VECT Movers</title>
+  <meta name="api-base-url" content="https://go-kerala-backend.onrender.com">
+  <link rel="stylesheet" href="style.css?v=20260531-1">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 2rem;
+      height: var(--header-height, 56px);
+      background: #fff;
+      border-bottom: 1px solid #111;
+      position: sticky;
+      top: 0;
+      z-index: 1200;
+    }
+
+    .brand-lockup {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .logo {
+      color: #111;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      line-height: 0.9;
+    }
+
+    .logo-sub {
+      color: #111;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      line-height: 1;
+      margin-left: 7px;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-nav a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid #111;
+      background: #fff;
+      color: #111;
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 700;
+      box-shadow: 0 8px 18px rgba(17, 17, 17, 0.06);
+    }
+
+    .header-nav a.signup {
+      background: #111;
+      color: #fff;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 80px 24px 0;
+      text-align: center;
+    }
+
+    .whatsapp-image {
+      width: 100%;
+      max-width: none;
+      height: auto;
+      object-fit: contain;
+      margin: 0 auto 24px;
+      margin-top: -150px;
+      display: block;
+      position: relative;
+      z-index: 0;
+    }
+
+    .whatsapp-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 24px;
+      line-height: 1.3;
+      text-align: left;
+      width: 100%;
+    }
+
+    .whatsapp-input-wrap {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 380px;
+      border: 1px solid #d8d8d8;
+      border-radius: 16px;
+      background: #f8f8f8;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+    }
+
+    .whatsapp-input-wrap:focus-within {
+      border-color: #111;
+      box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+      background: #fff;
+    }
+
+    .whatsapp-input {
+      flex: 1;
+      min-width: 0;
+      height: 54px;
+      border: none;
+      padding: 0 14px;
+      background: transparent;
+      color: #111;
+      font: inherit;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .whatsapp-input::placeholder {
+      color: #999;
+    }
+
+    .whatsapp-country-code {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px 0 14px;
+      border-right: 1px solid #d8d8d8;
+      white-space: nowrap;
+      height: 36px;
+    }
+
+    .whatsapp-code-text {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .whatsapp-flag-symbol {
+      position: relative;
+      display: inline-block;
+      width: 18px;
+      height: 12px;
+      border: 1px solid #d5d5d5;
+      border-radius: 2px;
+      background: linear-gradient(to bottom, #ff9933 0 33.33%, #ffffff 33.33% 66.66%, #138808 66.66% 100%);
+    }
+
+    .whatsapp-flag-symbol::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #0a4ea1;
+      transform: translate(-50%, -50%);
+    }
+
+    button.whatsapp-submit {
+      width: 100% !important;
+      max-width: 380px !important;
+      height: 50px !important;
+      border: 1px solid #111 !important;
+      border-radius: 16px !important;
+      background: #111 !important;
+      color: #fff !important;
+      font: inherit !important;
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      margin-top: 14px !important;
+    }
+
+    .error-msg {
+      display: none;
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: #d1263f;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .error-msg.is-visible {
+      display: block;
+    }
+
+    .not-registered {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #777;
+      font-weight: 500;
+    }
+
+    .register-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 380px;
+      height: 50px;
+      border: 1px solid #111;
+      border-radius: 16px;
+      background: #fff;
+      color: #111;
+      text-decoration: none;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: none;
+      margin-bottom: 120px;
+    }
+
+    .welcome-overlay {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      transform: translateY(-50%);
+      z-index: 1;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #111;
+      text-align: left;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        padding: 0.65rem 1.2rem;
+      }
+
+      .main {
+        padding: 72px 18px 32px;
+      }
+
+      .whatsapp-title {
+        font-size: 1.2rem;
+      }
+
+      .whatsapp-title:not([style*="position"]) {
+        margin-top: 50px;
+      }
+
+      .image-wrapper {
+        margin-bottom: 20px;
+        width: calc(100% + 46px);
+        margin-left: -3px;
+      }
+
+      .welcome-overlay {
+        margin-top: -65px;
+      }
+
+      .whatsapp-image {
+        margin-top: -2px;
+        width: 100%;
+        height: 100px;
+        object-fit: contain;
+      }
+
+
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <div class="brand-lockup">
+      <h1 class="logo">VECT</h1>
+      <p class="logo-sub">MOVERS</p>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="image-wrapper">
+      <img src="Gemini_Generated_Image_50w0hv50w0hv50w0.png" alt="WhatsApp" class="whatsapp-image">
+      <h2 class="welcome-overlay">Welcome to <strong>valliyavandi</strong></h2>
+    </div>
+    <h2 class="whatsapp-title">Enter the Registered WhatsApp Number</h2>
+    <div class="whatsapp-input-wrap">
+      <span class="whatsapp-country-code" aria-hidden="true">
+        <span class="whatsapp-code-text">+91</span>
+        <span class="whatsapp-flag-symbol"></span>
+      </span>
+      <input type="tel" class="whatsapp-input" id="whatsapp-number" placeholder="WhatsApp Number" autocomplete="tel">
+    </div>
+    <button class="whatsapp-submit" id="submit-btn">Submit</button>
+    <p class="error-msg" id="error-msg">Enter Registered Number / Register your number</p>
+    <p class="not-registered">Didn't registered</p>
+    <a href="https://go-kerala.vercel.app/beginning.html" target="_blank" class="register-btn">Register</a>
+  </main>
+  <script>
+    (function () {
+      var input = document.getElementById('whatsapp-number');
+      var submitBtn = document.getElementById('submit-btn');
+      var errorMsg = document.getElementById('error-msg');
+
+      var params = new URLSearchParams(window.location.search);
+      var expectedNumber = params.get('number') || '';
+
+      function normalizeNumber(val) {
+        return String(val || '').replace(/[^0-9]/g, '');
+      }
+
+      submitBtn.addEventListener('click', function (e) {
+        var entered = normalizeNumber(input.value);
+        if (!entered) {
+          errorMsg.textContent = 'Please enter your WhatsApp number';
+          errorMsg.classList.add('is-visible');
+          return;
+        }
+
+        if (!expectedNumber) {
+          errorMsg.textContent = 'Enter Registered Number / Register your number';
+          errorMsg.classList.add('is-visible');
+          return;
+        }
+
+        if (entered.slice(-10) === normalizeNumber(expectedNumber).slice(-10)) {
+          var returnUrl = params.get('return') || 'owner-blank-sheet.html';
+          window.location.href = returnUrl;
+        } else {
+          errorMsg.textContent = 'Enter Registered Number / Register your number';
+          errorMsg.classList.add('is-visible');
+        }
+      });
+
+      input.addEventListener('input', function () {
+        errorMsg.classList.remove('is-visible');
+      });
+    })();
+  </script>
+</body>
+
+</html>

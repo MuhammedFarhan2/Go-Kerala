@@ -1262,7 +1262,7 @@
         return safePath + (searchParams.toString() ? '?' + searchParams.toString() : '');
       }
 
-      const ACCEPT_WHATSAPP_MESSAGE = 'Congratulation you have selected as a member of VECT Movers. Please open this link after accept: ' + buildLocalPageUrl('../owner-blank-sheet.html');
+      const ACCEPT_WHATSAPP_MESSAGE = 'Congratulations you have selected as valliyavandi owner . for adding vehicles please continue at ';
 
       function setActivePage(pageName, options) {
         const shouldPushHistory = Boolean(options && options.pushHistory);
@@ -2957,9 +2957,10 @@
       function getPerFieldReuploadUrl(submission, section) {
         var currentSubmission = submission || getSelectedSubmission('submission');
         var submissionId = currentSubmission && currentSubmission.id ? String(currentSubmission.id).trim() : '';
+        var submissionWhatsapp = currentSubmission && currentSubmission.whatsappNumber ? String(currentSubmission.whatsappNumber).trim() : '';
         var summary = currentSubmission && currentSubmission.summary ? currentSubmission.summary : {};
         var fields = currentSubmission && currentSubmission.fields ? currentSubmission.fields : {};
-        var rawNumber = String(summary.whatsappNumber || summary.phone || fields['owner-whatsapp-number'] || '').trim();
+        var rawNumber = String(summary.whatsappNumber || summary.phone || submissionWhatsapp || fields['owner-whatsapp-number'] || '').trim();
         var digits = rawNumber.replace(/[^\d]/g, '');
         return buildLocalPageUrl('../owner-add-vehicle.html', {
           submissionId: submissionId,
@@ -3054,7 +3055,13 @@
       }
 
       function buildTouristAcceptWhatsappMessage(submission) {
-        return ACCEPT_WHATSAPP_MESSAGE + '\n' + getBlankSheetLink(submission, []);
+        const submissionWhatsapp = submission && submission.whatsappNumber ? String(submission.whatsappNumber).trim() : '';
+        var summary = submission && submission.summary ? submission.summary : {};
+        var fields = submission && submission.fields ? submission.fields : {};
+        var rawNumber = String(summary.whatsappNumber || summary.phone || submissionWhatsapp || fields['owner-whatsapp-number'] || '').trim();
+        var loginLink = buildLocalPageUrl('../whatsapp-login.html', { number: rawNumber, return: '../owner-add-vehicle.html' });
+        var absoluteUrl = new URL(loginLink, window.location.href).href;
+        return ACCEPT_WHATSAPP_MESSAGE + absoluteUrl;
       }
 
       function buildTouristRejectWhatsappMessage(submission, rejectReason) {
@@ -3089,22 +3096,27 @@
       }
 
       function getWhatsappLink(submission) {
+        const submissionWhatsapp = submission && submission.whatsappNumber ? String(submission.whatsappNumber).trim() : '';
         const summary = submission && submission.summary ? submission.summary : {};
         const fields = submission && submission.fields ? submission.fields : {};
-        const rawNumber = String(summary.whatsappNumber || summary.phone || fields['owner-whatsapp-number'] || '').trim();
+        const rawNumber = String(summary.whatsappNumber || summary.phone || submissionWhatsapp || fields['owner-whatsapp-number'] || '').trim();
         const digits = rawNumber.replace(/[^\d]/g, '');
 
         if (!digits) {
           return '';
         }
 
-        return 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(ACCEPT_WHATSAPP_MESSAGE);
+        var baseUrl = window.location.protocol + '//' + window.location.host;
+        var loginUrl = baseUrl + '/whatsapp-login.html?number=' + digits + '&return=owner-add-vehicle.html';
+        var fullMessage = ACCEPT_WHATSAPP_MESSAGE + loginUrl;
+        return 'https://wa.me/' + encodeURIComponent(digits) + '?text=' + encodeURIComponent(fullMessage);
       }
 
       function getRejectWhatsappLink(submission) {
+        const submissionWhatsapp = submission && submission.whatsappNumber ? String(submission.whatsappNumber).trim() : '';
         const summary = submission && submission.summary ? submission.summary : {};
         const fields = submission && submission.fields ? submission.fields : {};
-        const rawNumber = String(summary.whatsappNumber || summary.phone || fields['owner-whatsapp-number'] || '').trim();
+        const rawNumber = String(summary.whatsappNumber || summary.phone || submissionWhatsapp || fields['owner-whatsapp-number'] || '').trim();
         const digits = rawNumber.replace(/[^\d]/g, '');
 
         if (!digits) {
@@ -3869,11 +3881,19 @@
             .then(function () {
               openSubmission(targetSubmissionId);
 
-              if (nextStatus === 'rejected' && currentSubmission) {
-                const rejectWhatsappLink = getRejectWhatsappLink(currentSubmission);
+              if (currentSubmission) {
+                if (nextStatus === 'accepted') {
+                  const whatsappLink = getWhatsappLink(currentSubmission);
 
-                if (rejectWhatsappLink) {
-                  window.open(rejectWhatsappLink, '_blank');
+                  if (whatsappLink) {
+                    window.open(whatsappLink, '_blank');
+                  }
+                } else if (nextStatus === 'rejected') {
+                  const rejectWhatsappLink = getRejectWhatsappLink(currentSubmission);
+
+                  if (rejectWhatsappLink) {
+                    window.open(rejectWhatsappLink, '_blank');
+                  }
                 }
               }
             })
